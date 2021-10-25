@@ -37,7 +37,6 @@ end
 class TextROM < StandardROM
 	def initialize(binary_file)
 		super
-		puts(@data.length)
 		@data = @data.collect { |a| a.chr }.join("").split().collect { |a| a.to_i }
 	end 
 end 

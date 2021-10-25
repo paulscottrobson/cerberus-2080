@@ -26,6 +26,7 @@ typedef unsigned int   LONG32;														// 32 bit type.
 
 #define AKEY_BACKSPACE	(0x5F)														// Apple Backspace
 
+void CPUSetClock(int mhz);
 BYTE8 CPUIsZ80(void);
 void CPUEnable(BYTE8 isOn);
 void CPUSetZ80(BYTE8 isZ80);
@@ -36,6 +37,7 @@ void CPUWriteMemory(WORD16 address,BYTE8 data);
 WORD16 CPUGetPC(void);
 void CPUSetPC(WORD16 newPC);
 void CPULoadBinary(char *fileName);
+void CPUInterrupt(void);
 
 #ifdef INCLUDE_DEBUGGING_SUPPORT													// Only required for debugging
 

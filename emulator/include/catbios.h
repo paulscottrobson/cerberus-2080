@@ -12,6 +12,16 @@
 
 #define byte BYTE8
 
+#define PS2_ENTER       13
+#define PS2_ESC         (GFXKEY_ESCAPE+1000)
+#define PS2_PAGEUP      (GFXKEY_PAGEUP+1000)
+#define PS2_PAGEDOWN    (GFXKEY_PAGEDOWN+1000)
+#define PS2_UPARROW     (GFXKEY_UP+1000)
+#define PS2_RIGHTARROW  (GFXKEY_RIGHT+1000)
+#define PS2_LEFTARROW   (GFXKEY_LEFT+1000)
+#define PS2_DOWNARROW   (GFXKEY_DOWN+1000)
+#define PS2_DELETE      8
+
 static void enter();
 static char *getNextWord(bool fromTheBeginning);
 static void help();
@@ -37,6 +47,7 @@ static void cprintEditLine();
 static void clearEditLine();
 static void cprintStatus(byte status);
 static void help();
+static void updateProcessorState();
 
 static const BYTE8 default_font[2048] = {
     #include "_char_data.h"
@@ -83,72 +94,74 @@ static void catbios_setup() {
 }
 
 static void catbios_sync() {
-    // char ascii; /** Stores ascii value of key pressed **/
-    // byte i; /** Just a counter **/
-    // /** Wait for a key to be pressed, then take it from there... **/
-    // if (keyboard.available()) {
-    //     ascii = keyboard.read(); /** Read key pressed **/
-    //     tone(SOUND, 750, 5); /** Clicking sound for auditive feedback to key presses **/
-    //     if (!cpurunning) cprintStatus(0); /** Update status bar **/
-    //     if (ascii == PS2_ENTER) {
-    //         /** This happens if ENTER has been pressed... **/
-    //         if (!cpurunning) enter();
-    //     } else if (ascii == PS2_ESC) {
-    //         /** This happens if ESC has been pressed... and so on... **/
-    //         if (cpurunning) {
-    //             /** If a CPU has been running, do the below to quit properly **/
-    //             digitalWrite(CPURST, HIGH); /** Reset the CPU to bring its output signals back to original states **/
-    //             digitalWrite(CPUGO, LOW); /** Tristate its buses to high-Z **/
-    //             delay(50); /** Give it some time **/
-    //             digitalWrite(CPURST, LOW); /** Finish reset cycle **/
-    //             cpurunning = false; /** Reset this flag **/
-    //             load("chardefs.bin", "0xf000", true); /** Silently reset the character definitions in case the CPU changed them **/
-    //             ccls(); /** Clear screen completely **/
-    //             cprintFrames(); /** Reprint the wire frame in case the CPU code messed with it **/
-    //             cprintStatus(0); /** Update status bar **/
-    //             clearEditLine(); /** Clear and display the edit line **/
-    //         }
-    //     } else if (ascii == PS2_PAGEDOWN) {} else if (ascii == PS2_PAGEUP) {} else if (ascii == PS2_RIGHTARROW) {} else if (ascii == PS2_UPARROW) {
-    //         /** On up arrow, load previous edit line contents **/
-    //         if (!cpurunning) {
-    //             for (i = 0; i < 38; i++) editLine[i] = previousEditLine[i];
-    //             i = 0;
-    //             while (editLine[i] != 0) i++;
-    //             pos = i;
-    //             cprintEditLine();
-    //         }
-    //     } else if (ascii == PS2_DOWNARROW) {
-    //         /** On down arrow, reset edit line contents **/
-    //         if (!cpurunning) clearEditLine();
-    //     } else if ((ascii == PS2_DELETE) || (ascii == PS2_LEFTARROW)) {
-    //         /** If DEL, BACKSPACE or LEFT ARROW have been pressed... **/
-    //         if (!cpurunning) {
-    //             editLine[pos] = 32; /** Put an empty space in current cursor position **/
-    //             if (pos > 1) pos--; /** Update cursor position, unless reached left-most position already **/
-    //             editLine[pos] = 0; /** Put cursor on updated position **/
-    //             cprintEditLine(); /** Print the updated edit line **/
-    //         }
-    //         /*********************************************************************************************/
-    //     } else {
-    //         /** This is the 'default' condition **/
-    //         if (!cpurunning) {
-    //             /** If a CPU is not running... **/
-    //             editLine[pos] = ascii; /** Put new character in current cursor position **/
-    //             if (pos < 37) pos++; /** Update cursor position **/
-    //             editLine[pos] = 0; /** Place cursor to the right of new character **/
-    //             cprintEditLine(); /** Print the updated edit line **/
-    //         } else {
-    //             /** Now, if a CPU is running... **/
-    //             digitalWrite(CPUGO, LOW); /** Pause the CPU and tristate its buses to high-Z **/
-    //             cpoke(0x0201, ascii); /** Put token code of pressed key in the CPU's mailbox, at 0x0201 **/
-    //             cpoke(0x0200, 0x01); /** Flag that there is new mail for the CPU waiting at the mailbox **/
-    //             digitalWrite(CPUGO, HIGH); /** Let the CPU go **/
-    //             digitalWrite(CPUIRQ, HIGH); /** Trigger an interrupt **/
-    //             digitalWrite(CPUIRQ, LOW);
-    //         }
-    //     }
-    //     /*********************************************************************************************/
-    // }
+    int ascii; /** Stores ascii value of key pressed **/
+    byte i; /** Just a counter **/
+    /** Wait for a key to be pressed, then take it from there... **/
+    if (pendingKey) {
+            ascii = pendingKey;                                             /** Read key pressed **/
+            pendingKey = 0;
+    //      tone(SOUND, 750, 5);                                            /** Clicking sound for auditive feedback to key presses **/
+            if (!cpurunning) cprintStatus(0);                               /** Update status bar **/
+            switch(ascii) {
+                case PS2_ENTER:
+                    if (!cpurunning) enter();
+                    break;
+
+                case PS2_ESC:
+                    if (cpurunning) {
+                        CPUReset();                    
+                        ccls();
+                        cprintFrames(); 
+                        cprintStatus(0); 
+                        clearEditLine(); 
+                    }
+                    break;
+
+                case PS2_PAGEDOWN:
+                case PS2_PAGEUP:
+                case PS2_RIGHTARROW:
+                    break;
+
+                case PS2_UPARROW:
+                    if (!cpurunning) {
+                        for (i = 0; i < 38; i++) editLine[i] = previousEditLine[i];
+                        i = 0;
+                        while (editLine[i] != 0) i++;
+                        pos = i;
+                        cprintEditLine();
+                    }
+                    break;
+
+                case PS2_DOWNARROW:
+                    if (!cpurunning) clearEditLine();
+                    break;
+
+                case PS2_LEFTARROW:
+                case PS2_DELETE:
+                    if (!cpurunning) {
+                        editLine[pos] = 32; /** Put an empty space in current cursor position **/
+                        if (pos > 1) pos--; /** Update cursor position, unless reached left-most position already **/
+                        editLine[pos] = 0; /** Put cursor on updated position **/
+                        cprintEditLine(); /** Print the updated edit line **/
+                    }
+                    break;
+
+                default:
+                    if (!cpurunning) {
+                        /** If a CPU is not running... **/
+                        editLine[pos] = ascii; /** Put new character in current cursor position **/
+                        if (pos < 37) pos++; /** Update cursor position **/
+                        editLine[pos] = 0; /** Place cursor to the right of new character **/
+                        cprintEditLine(); /** Print the updated edit line **/
+                    } else {
+                        /** Now, if a CPU is running... **/
+                        cpoke(0x0201, ascii); /** Put token code of pressed key in the CPU's mailbox, at 0x0201 **/
+                        cpoke(0x0200, 0x01); /** Flag that there is new mail for the CPU waiting at the mailbox **/
+                        CPUInterrupt();
+                    }
+                    break;
+                }
+        }
 }
 
 /************************************************************************************************/
@@ -658,10 +671,16 @@ static void load(char *filename, char *address, bool silent) {
 }
 
 static void resetCPUs() {
+    cpurunning = false;                     // Stop CPU
     CPUSetZ80(-1);                          // Select/reset Z80
     CPUReset();
     CPUSetZ80(0);                           // Select/reset 6502
     CPUReset();
+    updateProcessorState();
+}
+
+static void updateProcessorState() {
     CPUSetZ80(mode);
-    CPUEnable(0);                           // Stop processor.
+    CPUEnable(cpurunning);                   
+    CPUSetClock(fast ? 8 : 4);
 }

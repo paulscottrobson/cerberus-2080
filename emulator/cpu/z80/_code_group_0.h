@@ -474,8 +474,8 @@ case 0x75: /**** $75:ld (hl),l ****/
 	CYCLES(7);break;
 
 case 0x76: /**** $76:halt ****/
-	{};
-	CYCLES(4);break;
+	PC--;
+	CYCLES(255);break;
 
 case 0x77: /**** $77:ld (hl),a ****/
 	WRITE8(HL(),A);

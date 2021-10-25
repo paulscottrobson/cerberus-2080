@@ -30,6 +30,7 @@ static int cpuClock = 4*1024*1024; 													// 4Mhz Clock.
 
 static BYTE8 runZ80 = 1; 															// non zero Z80 on, zero 6502 on
 static BYTE8 cpuIsRunning = 1; 														// non zero if CPU not in halt.
+static BYTE8 forceRun = 0; 															// Force direct execution.
 
 static BYTE8 A,B,C,D,E,H,L,X,Y,S; 													// Standard register
 static WORD16 AFalt,BCalt,DEalt,HLalt; 												// Alternate data set.
@@ -93,8 +94,13 @@ static inline WORD16 _Fetch16(void) {
 //											 Support macros and functions
 // *******************************************************************************************************************************
 
+void CPUSetClock(int mhz) {
+	cpuClock = mhz * 1024 * 1024;
+}
+
 void CPUEnable(BYTE8 isOn) {
 	cpuIsRunning = isOn;
+	forceRun = 0;
 }
 
 void CPUSetZ80(BYTE8 isZ80) {
@@ -107,7 +113,7 @@ BYTE8 CPUIsZ80(void) {
 
 #ifdef INCLUDE_DEBUGGING_SUPPORT
 #include <stdlib.h>
-#define FAILOPCODE(g,n) exit(fprintf(stderr,"Opcode %02x in group %s\n",n,g))
+#define FAILOPCODE(g,n) exit(fprintf(stderr,"Opcode %02x in group %s %x\n",n,g,PC))
 #else
 #define FAILOPCODE(g,n) {}
 #endif
@@ -137,7 +143,11 @@ void CPUReset(void) {
 	cycles = CYCLES_PER_FRAME;
 
 	// TODO: Remove Initial fudges which CAT will handle.
-	PC = 0x202;
+	ramMemory[0x00] = 0xC3;
+	ramMemory[0x01] = 0x02;
+	ramMemory[0x02] = 0x02;
+	ramMemory[0x38] = 0xED;
+	ramMemory[0x39] = 0x45;
 }
 
 // *******************************************************************************************************************************
@@ -162,7 +172,7 @@ BYTE8 CPUExecuteInstruction(void) {
 	#ifdef INCLUDE_DEBUGGING_SUPPORT
 	if (PC == 0xFFFF) CPUExit();
 	#endif
-	if (cpuIsRunning) {
+	if (cpuIsRunning || forceRun) {
 		BYTE8 opcode = FETCH8();													// Fetch opcode.
 		if (CPUIsZ80()) {
 			switch(opcode) {														// Execute it.
@@ -210,10 +220,23 @@ void CPULoadBinary(char *fileName) {
 		fread(ramMemory+0x202,0x10000-0x202,1,f);
 		fclose(f);	
 	}
+	forceRun = -1;
+}
+
+// *******************************************************************************************************************************
+//															NMI
+// *******************************************************************************************************************************
+
+void CPUInterrupt(void) {
+	if (CPUIsZ80()) {
+		if (READ8(PC) == 0x76) PC++;
+		PUSH(PC);PC = 0x38;
+	} else {
+		// TODO: 6502 NMI.
+	}
 }
 
 #ifdef INCLUDE_DEBUGGING_SUPPORT
-
 
 // *******************************************************************************************************************************
 //		Execute chunk of code, to either of two break points or frame-out, return non-zero frame rate on frame, breakpoint 0

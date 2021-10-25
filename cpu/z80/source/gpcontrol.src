@@ -37,8 +37,8 @@ ED44 "NEG" 8
 00 	"NOP" 4
 		{}
 
-76 	"HALT" 4
-		{}
+76 	"HALT" 255
+		PC--
 
 F3 	"DI" 4
 		intEnabled = 0

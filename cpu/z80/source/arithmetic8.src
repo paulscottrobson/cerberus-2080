@@ -48,3 +48,10 @@ DD34 	"@dir ($I$O)" 23
 		@dir#8(temp8);
 		WRITE8(temp16,temp8);
 
+#
+# 		Undocumented instructions. If people insist, under protest.
+#
+DD2C 	"@dir $I#L" 8
+		temp8 = IZ();
+		@dir#8(temp8);
+		IZ() = (IZ() & 0xFF00) | temp8;

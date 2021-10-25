@@ -33,6 +33,14 @@ case 0x2b: /**** $2b:dec $i ****/
 	IZ() = IZ()-1;
 	CYCLES(10);break;
 
+case 0x2c: /**** $2c:inc $il ****/
+	temp8 = IZ(); INC8(temp8); IZ() = (IZ() & 0xFF00) | temp8;;
+	CYCLES(8);break;
+
+case 0x2d: /**** $2d:dec $il ****/
+	temp8 = IZ(); DEC8(temp8); IZ() = (IZ() & 0xFF00) | temp8;;
+	CYCLES(8);break;
+
 case 0x34: /**** $34:inc ($i$o) ****/
 	temp16 = IZDISP8(); temp8 = READ8(temp16); INC8(temp8); WRITE8(temp16,temp8);;
 	CYCLES(23);break;

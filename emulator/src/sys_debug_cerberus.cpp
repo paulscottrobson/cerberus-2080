@@ -25,52 +25,26 @@
 
 static int renderCount = 0;
 
-static const char *z_mnemonics_0[256] = {
-	#include "z80/_mnemonics_group_0.h"
-};
-static const char *z_mnemonics_cb[256] = {
-	#include "z80/_mnemonics_group_cb.h"
-};
-static const char *z_mnemonics_dd[256] = {
-	#include "z80/_mnemonics_group_dd.h"
-};
-static const char *z_mnemonics_ed[256] = {
-	#include "z80/_mnemonics_group_ed.h"
-};
-static const char *z_mnemonics_ddcb[256] = {
-	#include "z80/_mnemonics_group_ddcb.h"
-};
+#include "debugger_z80.h"
+#include "debugger_6502.h"
 
 // *******************************************************************************************************************************
 //											This renders the debug screen
 // *******************************************************************************************************************************
 
-static const char *labels[] = { "A","F","","BC","DE","HL","IX","IY","SP","PC","BK","CY",NULL };
-
 void DBGXRender(int *address,int showDisplay) {
 
 	int n = 0;
 	char buffer[32];
-	CPUSTATUSZ80 *s = CPUGetStatusZ80();
-	const char *sr = "SZ-H-PNC";
-
+	const char **labels = CPUIsZ80() ? z_labels : c_labels;
 	GFXSetCharacterSize(28,24);
 	DBGVerticalLabel(21,0,labels,DBGC_ADDRESS,-1);									// Draw the labels for the register
 
-	#define DN(v,w) GFXNumber(GRID(24,n++),v,16,w,GRIDSIZE,DBGC_DATA,-1)			// Helper macro
-	#define DN2(v,w) GFXNumber(GRID(29,n++),v,16,w,GRIDSIZE,DBGC_DATA,-1)
-
-	DN(s->AF>>8,2);DN(s->AF & 0xFF,2);n++;
-	DN(s->BC,4);DN(s->DE,4);DN(s->HL,4);DN(s->IX,4);DN(s->IY,4);
-	DN(s->SP,4);DN(s->PC,4);DN(address[3],4);DN(s->cycles,4);
-	n = 0;
-	DN2(s->AFalt,4);n += 2;DN2(s->BCalt,4);DN2(s->DEalt,4);DN2(s->HLalt,4);
-
-	for (int i = 0;i < 8;i++) {
-		int set = (s->AF & (0x80 >> i));
-		GFXCharacter(GRID(24+i,2),sr[i],GRIDSIZE,set ? 0xFF0 : 0x800,-1);
+	if (CPUIsZ80()) { 																// Draw registers
+		z_showRegisters(address);
+	} else {
+		c_showRegisters(address);		
 	}
-	GFXCharacter(GRID(24+5,1),'I',GRIDSIZE,s->IE ? 0xFF0 : 0x800,-1);
 
 	n = 0;
 	int a = address[1];																// Dump Memory.
@@ -88,26 +62,31 @@ void DBGXRender(int *address,int showDisplay) {
 	char indexReg,code;
 
 	for (int row = 0;row < 12;row++) {
-		int isPC = (p == ((s->PC) & 0xFFFF));										// Tests.
+		int isPC = (p == CPUGetPC());												// Tests.
 		int isBrk = (p == address[3]);
 		GFXNumber(GRID(0,row),p,16,4,GRIDSIZE,isPC ? DBGC_HIGHLIGHT:DBGC_ADDRESS,	// Display address / highlight / breakpoint
 																	isBrk ? 0xF00 : -1);
 		opc = CPUReadMemory(p++);													// Read opcode.
-		instr = (char *)z_mnemonics_0[opc]; 										// Base opcode.
-		if (opc == 0xDD || opc == 0xFD) {											// DD/FD shift.
-			indexReg = (opc == 0xDD) ? 'X':'Y';
-			opc = CPUReadMemory(p++);
-			instr = (char *)z_mnemonics_dd[opc];
-			if (opc == 0xCB) {
-				opc = CPUReadMemory(p+1);
-				instr = (char *)z_mnemonics_ddcb[opc];				
+		if (CPUIsZ80()) {
+			instr = (char *)z_mnemonics_0[opc]; 										// Base opcode.
+			if (opc == 0xDD || opc == 0xFD) {											// DD/FD shift.
+				indexReg = (opc == 0xDD) ? 'X':'Y';
+				opc = CPUReadMemory(p++);
+				instr = (char *)z_mnemonics_dd[opc];
+				if (opc == 0xCB) {
+					opc = CPUReadMemory(p+1);
+					instr = (char *)z_mnemonics_ddcb[opc];				
+				}
 			}
+			if (opc == 0xED || opc == 0xCB) {
+				osel = opc;
+				opc = CPUReadMemory(p++);
+				instr = (char *)(osel == 0xED ? z_mnemonics_ed[opc] : z_mnemonics_cb[opc]);			
+			}
+		} else {
+			// TODO: 6502 Decode instruction, way simpler :)
 		}
-		if (opc == 0xED || opc == 0xCB) {
-			osel = opc;
-			opc = CPUReadMemory(p++);
-			instr = (char *)(osel == 0xED ? z_mnemonics_ed[opc] : z_mnemonics_cb[opc]);			
-		}
+
 		t = buffer;
 		while (*instr != '\0') {
 			if (*instr == '$') {
@@ -181,7 +160,7 @@ void DBGXRender(int *address,int showDisplay) {
 		 				int f = CPUReadMemory(ch*8+0xF000+y);
 				 		for (int x = 0;x < 8;x++) {						// 8 Across
 			 				if (f & 0x80) {		
-			 					GFXRectangle(&rc,0xF80);			
+			 					GFXRectangle(&rc,0xC60);			
 			 				}
 			 				f <<= 1;
 			 				rc.x += xSize;

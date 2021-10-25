@@ -16,10 +16,10 @@ CC = g++
 all: emulator
 
 run: emulator 
-	.$(S)$(APPNAME) xxx go
+	.$(S)$(APPNAME) storage$(S)cellz80.bin go
 
 debug: emulator 
-	.$(S)$(APPNAME) 
+	.$(S)$(APPNAME) storage$(S)cellz80.bin 
 	
 test : emulator
 	$(CDEL) memory.dump $(CDELQ)

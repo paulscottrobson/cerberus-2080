@@ -14,6 +14,7 @@
 #ifndef _DEBUG_SYS_H
 #define _DEBUG_SYS_H
 #include "sys_processor.h"
+#include "cat.h"
 
 #define WIN_TITLE 		"Cerberus 2080 Emulator"									// Initial Window stuff
 #define WIN_WIDTH		(34*8*4)
@@ -39,7 +40,7 @@
 #define DEBUG_RAMSTART 		(0x0000)												// Initial RAM address for debugger.
 #define DEBUG_SHIFT(d,v)	((((d) << 4) | v) & 0xFFFF)								// Shifting into displayed address.
 
-#define DEBUG_KEYMAP(k,r)	(k)
+#define DEBUG_KEYMAP(k,r)	CatKeyHandler(k,r)
 
 void DBGXRender(int *address,int isRunMode);										// Render the debugger screen.
 

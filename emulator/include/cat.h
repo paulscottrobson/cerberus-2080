@@ -1,30 +1,19 @@
 // *******************************************************************************************************************************
 // *******************************************************************************************************************************
 //
-//		Name:		main.c
-//		Purpose:	Main program
+//		Name:		cat.h
+//		Purpose:	CAT include
 //		Created:	25th October 2021
 //		Author:		Paul Robson (paul@robsons.org.uk)
 //
 // *******************************************************************************************************************************
 // *******************************************************************************************************************************
 
-#include <stdio.h>
-#include "gfx.h"
-#include "cat.h"
-#include "sys_processor.h"
-#include "sys_debug_system.h"
-#include "debugger.h"
+#ifndef _CAT_H
+#define _CAT_H
 
-int main(int argc,char *argv[]) {
-	DEBUG_RESET();
-	DEBUG_ARGUMENTS(argc,argv);
-	CatSetup();
-	GFXOpenWindow(WIN_TITLE,WIN_WIDTH,WIN_HEIGHT,WIN_BACKCOLOUR);
-	GFXStart(argc == 3);
-	CPUEndRun();
-	GFXCloseWindow();
-	return(0);
-}
+void CatSetup(void);
+void CatSync(void);
+int CatKeyHandler(int key,int isInRunMode);
 
-
+#endif

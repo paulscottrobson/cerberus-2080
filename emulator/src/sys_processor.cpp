@@ -14,6 +14,7 @@
 #include "sys_processor.h"
 #include "sys_debug_system.h"
 #include "hardware.h"
+#include "cat.h"
 
 // *******************************************************************************************************************************
 //														   Timing
@@ -171,6 +172,7 @@ BYTE8 CPUExecuteInstruction(void) {
 	if (cycles >= 0 ) return 0;														// Not completed a frame.
 	cycles = cycles + cyclesPerFrame;												// Adjust this frame rate, up to x16 on HS
 	HWSync();																		// Update any hardware
+	CatSync();
 	frameCount++;
 	return FRAME_RATE;																// Return frame rate.
 }

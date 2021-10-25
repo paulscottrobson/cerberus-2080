@@ -7,7 +7,7 @@ endif
 APPNAME = cerberus$(APPSTEM)
 
 SOURCES = 	src$(S)sys_processor.o  framework$(S)main.o framework$(S)gfx.o framework$(S)debugger.o \
-			src$(S)sys_debug_cerberus.o src$(S)hardware.o src$(S)hardware_emu.o 
+			src$(S)sys_debug_cerberus.o src$(S)hardware.o src$(S)hardware_emu.o src$(S)cat.o
   
 CC = g++
 
@@ -19,7 +19,7 @@ run: emulator
 	.$(S)$(APPNAME) storage$(S)cellz80.bin go
 
 debug: emulator 
-	.$(S)$(APPNAME) storage$(S)cellz80.bin 
+	.$(S)$(APPNAME) storage$(S)typez80.bin 
 	
 test : emulator
 	$(CDEL) memory.dump $(CDELQ)

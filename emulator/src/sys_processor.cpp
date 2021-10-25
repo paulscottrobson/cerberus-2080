@@ -28,6 +28,8 @@ static int cpuClock = 4*1024*1024; 													// 4Mhz Clock.
 //														CPU / Memory
 // *******************************************************************************************************************************
 
+static BYTE8 runZ80 = 1; 															// non zero Z80 on, zero 6502 on
+
 static BYTE8 A,B,C,D,E,H,L,X,Y,S; 													// Standard register
 static WORD16 AFalt,BCalt,DEalt,HLalt; 												// Alternate data set.
 static WORD16 PC,SP; 																// 16 bit registers
@@ -90,8 +92,12 @@ static inline WORD16 _Fetch16(void) {
 //											 Support macros and functions
 // *******************************************************************************************************************************
 
+void CPUSetZ80(BYTE8 isZ80) {
+	runZ80 = isZ80;
+}
+
 BYTE8 CPUIsZ80(void) {
-	return -1;
+	return runZ80;
 }
 
 #ifdef INCLUDE_DEBUGGING_SUPPORT

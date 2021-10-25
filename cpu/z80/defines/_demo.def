@@ -1,0 +1,15 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		_demo.def
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		25th October 2021
+#		Reviewed: 	No
+#		Purpose:	Test define class (_ prefixed are ignored)
+#
+# *****************************************************************************
+# *****************************************************************************
+
+@tgtreg [ shift:3,B,C,D,E,H,L,_,A ]
+@srcreg [ Shift:0,B,C,D,E,H,L,(HL):READ8(HL()),A ]
+@aluop [ Shift:3,ADD,ADC,SUB,SBC,AND,OR,XOR,CMP ]

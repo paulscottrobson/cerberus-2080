@@ -1,0 +1,74 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		shiftrotate.src
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		25th October 2021
+#		Reviewed: 	No
+#		Purpose:	Shift & Rotates (pp218-256)
+#
+# *****************************************************************************
+# *****************************************************************************
+
+#
+#		8080 inherited Rotates
+#
+07 		"RLCA" 4
+		SETCARRY((A & 0x80) != 0);
+		A = (A << 1) | (A >> 7);
+		SETHALFCARRY(0);SETNFLAG(0);
+
+17 		"RLA" 4
+		temp16 = (A << 1) | (c_Flag ? 1 : 0);		
+		SETCARRY((A & 0x80) != 0);
+		A = temp16;
+		SETHALFCARRY(0);SETNFLAG(0);		
+
+0F 		"RRCA" 4
+		SETCARRY((A & 0x01) != 0);
+		A = (A >> 1) | (A << 7);
+		SETHALFCARRY(0);SETNFLAG(0);
+
+1F 		"RRA" 4
+		temp16 = A | (c_Flag ? 0x100 : 0);		
+		SETCARRY((A & 0x01) != 0);
+		A = temp16 >> 1;
+		SETHALFCARRY(0);SETNFLAG(0);		
+
+#
+#		Z80 CB Group
+#
+CB00 	"@rotate @source.8.nohl" 8
+		@source.8.nohl = SR@rotate(@source.8.nohl)
+
+CB06 	"@rotate (HL)" 15
+		temp8 = READ8(HL());
+		temp8 = SR@rotate(temp8);		
+		WRITE8(HL(),temp8);
+
+DDCB06	"@rotate ($I$S)" 23	
+		temp16 = IZ()+offset;
+		temp8 = READ8(temp16);
+		temp8 = SR@rotate(temp8);		
+		WRITE8(temp16,temp8);
+
+#
+# 		RLD/RRD
+#
+ED6F 	"RLD" 	18
+		temp8 = READ8(HL());
+		WRITE8(HL(),(temp8 << 4) | (A & 0x0F));
+		A = (A & 0xF0) | (temp8 >> 4);
+		SETNZ(A);
+		SETPARITY(A);
+		SETNFLAG(0);
+		SETHALFCARRY(0);
+
+ED67 	"RRD" 	18
+		temp8 = READ8(HL());
+		WRITE8(HL(),(temp8 >> 4) | ((A & 0x0F) << 4));
+		A = (A & 0xF0) | (temp8 & 0x0F);
+		SETNZ(A);
+		SETPARITY(A);
+		SETNFLAG(0);
+		SETHALFCARRY(0);

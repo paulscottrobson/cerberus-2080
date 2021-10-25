@@ -1,0 +1,75 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		inputoutput.src
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		24th October 2021
+#		Reviewed: 	No
+#		Purpose:	I/O opcodes
+#
+# *****************************************************************************
+# *****************************************************************************
+
+#
+# 		Basic Input/Output
+#
+
+DB 		"IN A,($1)" 11
+		temp8 = FETCH8();
+		A = INPORT((A << 8)|temp8)
+
+ED40 	"IN @source.8.nohl3,(C)"	12	
+		@source.8.nohl3 = INPORT(BC());
+		SETNZ(@source.8.nohl3);
+		SETHALFCARRY(0);
+		SETPARITY(@source.8.nohl3);
+		SETNFLAG(0);
+
+D3 		"OUT ($1),A" 11
+		temp8 = FETCH8();
+		OUTPORT(temp8,A)
+
+ED41 	"OUT (C),@source.8.nohl3"		12
+		OUTPORT(C,@source.8.nohl3)
+
+#
+# 		IN[ID] and OUT[ID]
+#
+
+EDA2 	"IN@direction" 16
+		WRITE8(HL(),INPORT(BC()));
+		B--;
+		@direction#HL();
+		SETNZ(B);
+		SETNFLAG(1);
+
+EDA3 	"OUT@direction"	16
+		OUTPORT(C,READ8(HL()));
+		B--;
+		@direction#HL();
+		SETNZ(B);
+		SETNFLAG(1);
+
+#
+#		Repeated ones
+#
+EDB2 	"IN@direction#R" 16
+		do {
+			WRITE8(HL(),INPORT(BC()));
+			B--;
+			@direction#HL();
+			SETNZ(B);
+			SETNFLAG(1);
+			CYCLES(21);
+		} while (B != 0);
+		
+EDB3 	"OT@direction#R" 16
+		do {
+			OUTPORT(C,READ8(HL()));
+			B--;
+			@direction#HL();
+			SETNZ(B);
+			SETNFLAG(1);
+			CYCLES(21);
+		} while (B != 0);
+

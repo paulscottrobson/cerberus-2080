@@ -1,0 +1,101 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		load8.src
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		25th October 2021
+#		Reviewed: 	No
+#		Purpose:	8 bit load operations (pp84-111)
+#
+# *****************************************************************************
+# *****************************************************************************
+
+#
+# 		Load register from register/memory. 		LD r,r' 	LD r,(HL)
+#
+
+40 		"LD @target.8,@source.8" 4
+			@target.8 = @source.8
+
+#
+# 		Constant load LD to register/memory 		LD r,n 	
+#
+
+06 		"LD @target.8,$1" 7
+			@target.8 = FETCH8()
+
+#
+# 		Load register via index register 			LD r,(IX+d)
+#
+DD46 	"LD @target.8,($I$O)" 19
+			@target.8 = READ8(IZDISP8())
+
+#
+# 		Load memory from register 					LD (HL),r  	
+#
+70 		"LD (HL),@source.8.nohl" 7
+			WRITE8(HL(),@source.8.nohl)
+
+#
+# 		Store register via index register 			LD (IX+d),r
+#
+DD70 	"LD ($I$O),@source.8.nohl" 19
+			WRITE8(IZDISP8(),@source.8.nohl)
+
+#
+# 		Load memory constant 						LD (HL),n LD (IX+d),n
+#
+36 		"LD (HL),$1" 7
+			WRITE8(HL(),FETCH8())
+
+DD36 	"LD ($I$O),$1" 19					
+			temp16 = IZDISP8();
+			WRITE8(temp16,FETCH8());
+
+
+#
+# 		Read via register pair 						LD A,(BC) LD A,(DE)
+#
+0A 		"LD A,(@double.2)" 	7						
+			A = READ8(@double.2())
+
+#
+# 		Read memory direct 							LD A,(nnnn)
+#
+3A 		"LD A,($2)" 13
+			A = READ8(FETCH16());
+
+#
+#		Write via register pair 					LD (BC),A LD (DE),A
+#			
+02 		"LD (@double.2),A" 7
+			WRITE8(@double.2(),A)
+
+#
+# 		Write memory direct 						LD (nnnn),A
+#			
+32 		"LD ($2),A" 13
+			WRITE8(FETCH16(),A)
+
+#
+# 		I/R Access 									LD A,I LD A,R LD R,A LD I,A
+#
+ED57 	"LD A,I" 9
+		A = I;
+		SETNZ(A);
+		SETPARITY(A);
+		SETHALFCARRY(0);
+		SETNFLAG(0);
+
+ED5F 	"LD A,R" 9
+		A = (cycles & 0x7F);
+		SETNZ(A);
+		SETPARITY(A);
+		SETHALFCARRY(0);
+		SETNFLAG(0);
+
+ED47 	"LD I,A" 9
+		I = A
+
+ED4F 	"LD R,A" 9
+		R = A

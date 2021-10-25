@@ -1,0 +1,80 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		base.def
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		25th October 2021
+#		Reviewed: 	No
+#		Purpose:	Standard definitions
+#
+# *****************************************************************************
+# *****************************************************************************
+
+#
+# 		8 bit source registers
+#
+@source.8 [ Shift:0,B,C,D,E,H,L,(HL):READ8(HL()),A ]
+
+#
+# 		8 bit source without HL, one with a 3 shift
+#
+@source.8.nohl [ Shift:0,B,C,D,E,H,L,_,A ]
+@source.8.nohl3 [ Shift:3,B,C,D,E,H,L,_,A ]
+
+#
+# 		8 bit Target registers, excludes (HL)
+#
+@target.8 [ shift:3,B,C,D,E,H,L,_,A ]
+
+#
+# 		Standard ALU operations
+#
+@alu.op [ Shift:3,ADD,ADC,SUB,SBC,AND,XOR,OR,CP ]
+
+#
+# 		Two Double registers
+#
+@double.2 [ Shift:4,BC,DE ]
+
+#
+# 		Four Double registers
+#
+@double.4 [ Shift:4,BC,DE,HL,SP ]
+@double.4x [ Shift:4,BC,DE,IX:IZ,SP ]
+#
+# 		Stack use registes
+#
+@double.stack [ Shift:4,BC,DE,HL,AF]
+
+#
+# 		Directions for INC and DEC
+#
+@dir [Shift:0,INC,DEC]
+@dir.3 [Shift:3,INC,DEC]
+
+
+#
+# 		Directions for LDI/LDD
+#
+@direction [ Shift:3,I:INC,D:DEC]
+
+#
+# 		Rotations
+#
+@rotate [Shift:3,RLC,RRC,RL,RR,SLA,SRA,_,SRL]
+
+#
+# 		Bit flags
+#
+@bit [Shift:3,0:1,1:2,2:4,3:8,4:16,5:32,6:64,7:128]
+
+#
+# 		Branch tests
+#
+@test [Shift:3,NZ,Z,NC,C,PO,PE,P,M]
+@test.4 [Shift:3,NZ,Z,NC,C]
+
+#
+# 		Reset vectors
+#
+@reset [Shift:3,00,08,10,18,20,28,30,38]

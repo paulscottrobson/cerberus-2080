@@ -1,0 +1,50 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		arithmetic8.src
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		25th October 2021
+#		Reviewed: 	No
+#		Purpose:	8 bit ALU operations (pp158-184)
+#
+# *****************************************************************************
+# *****************************************************************************
+
+#
+# 		ALU Register-HL
+#
+
+80 		"@alu.op @source.8" 4
+		ALU@alu.op(@source.8)
+
+
+#
+# 		ALU Register-Constant
+#		
+C6 		"@alu.op $1" 7
+		ALU@alu.op(FETCH8())
+
+#
+# 		ALU Register, IndexRegister
+#		
+DD86 	"@alu.op ($I$O)" 19
+		ALU@alu.op(READ8(IZDISP8()))
+
+#
+# 		Increment and Decrement
+#		
+
+04 		"@dir @source.8.nohl3" 4
+		@dir#8(@source.8.nohl3)
+
+34 		"@dir (HL)"	11	
+		temp8 = READ8(HL());
+		@dir#8(temp8);
+		WRITE8(HL(),temp8);
+
+DD34 	"@dir ($I$O)" 23	
+		temp16 = IZDISP8();		
+		temp8 = READ8(temp16);
+		@dir#8(temp8);
+		WRITE8(temp16,temp8);
+

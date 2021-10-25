@@ -1,0 +1,53 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		bit.src
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		25th October 2021
+#		Reviewed: 	No
+#		Purpose:	Bit modification adn tests (pp256-275)
+#
+# *****************************************************************************
+# *****************************************************************************
+
+#
+#		SET
+#
+CBC0 	"set @bit,@source.8.nohl" 8
+		@source.8.nohl |= @bit
+
+CBC6 	"set @bit,(HL)" 12
+		temp8 = READ8(HL());
+		WRITE8(HL(),temp8|@bit);
+
+DDCBC6	"set @bit,($I$S)" 20	
+		temp16 = IZ()+offset;
+		temp8 = READ8(temp16);
+		WRITE8(temp16,temp8|@bit);
+#
+#		RESET
+#
+CB80 	"res @bit,@source.8.nohl" 8
+		@source.8.nohl &= (~@bit)
+
+CB86 	"res @bit,(HL)" 12
+		temp8 = READ8(HL());
+		WRITE8(HL(),temp8 & (~@bit));
+
+DDCB86	"res @bit,($I$S)" 20	
+		temp16 = IZ()+offset;
+		temp8 = READ8(temp16);
+		WRITE8(temp16,temp8 & (~@bit));
+
+#
+#		BIT
+#
+CB40 	"bit @bit,@source.8.nohl" 8
+		bitOp(@source.8.nohl & @bit)
+
+CB46 	"bit @bit,(HL)" 12
+		bitOp(READ8(HL()) & @bit)
+
+DDCB46	"bit @bit,($I$S)" 20	
+		temp16 = IZ()+offset;
+		bitOp(READ8(temp16) & @bit);

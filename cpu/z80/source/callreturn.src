@@ -1,0 +1,44 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		callreturn.src
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		25th October 2021
+#		Reviewed: 	No
+#		Purpose:	Call and Return
+#
+# *****************************************************************************
+# *****************************************************************************
+
+#
+# 		16 bit calls
+#
+CD 		"CALL $2" 10
+		CALL(1)
+
+C4 		"CALL @test,$2" 10
+		CALL(TEST@test())
+
+#
+# 		Returns
+#
+C9 		"RET" 4
+		RETURN(1)		
+
+C0 		"RET @test" 5
+		RETURN(TEST@test())		
+
+#
+# 		Restarts
+#		
+C7 		"RST @reset" 11
+		PUSH(PC);PC = 0x@reset;
+
+#
+# 		Semi functional interrupt returns.
+#
+ED4D 	"RETI" 14
+		RETURN(1)		
+
+ED45 	"RETN" 14
+		RETURN(1)		

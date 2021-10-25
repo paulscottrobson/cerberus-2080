@@ -1,0 +1,41 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		links.src
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		25th October 2021
+#		Reviewed: 	No
+#		Purpose:	Links between various levels.
+#
+# *****************************************************************************
+# *****************************************************************************
+
+#
+# 		Handle DD/FD Shift
+#
+
+DD 		"[IX]" 0
+		pIXY = &IX;
+		ExecuteDDGroup();
+
+FD 		"[IY]" 0
+		pIXY = &IY;
+		ExecuteDDGroup();
+		
+#
+# 		Handle ED shift
+#
+ED 		"[ED]" 0
+		ExecuteEDGroup();
+
+#
+# 		Handle CB shift
+#
+CB 		"[CB]" 0
+		ExecuteCBGroup();
+
+#
+# 		Handle DDCB shift
+#
+DDCB 	"[DDCB]" 0
+		ExecuteDDCBGroup();

@@ -1,0 +1,51 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		arithmetic16.src
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		25th October 2021
+#		Reviewed: 	No
+#		Purpose:	8 bit ALU operations (pp201-217)
+#
+# *****************************************************************************
+# *****************************************************************************
+
+#
+# 		16 bit ADD without any carry out.
+#
+
+09 		"ADD HL,@double.4" 11
+		temp16 = add16(HL(),@double.4());
+		SETHL(temp16);
+
+DD09 	"ADD $I,@double.4x" 15
+		IZ() = add16(IZ(),@double.4x())
+
+#
+# 		16 bit ADC with carry in.
+#
+ED4A 	"ADC HL,@double.4" 15
+		temp16 = adc16(HL(),@double.4());
+		SETHL(temp16);
+
+#
+# 		16 bit SBC with borrow in.
+#
+ED42	"SBC HL,@double.4" 15
+		temp16 = sbc16(HL(),@double.4());
+		SETHL(temp16);
+
+#
+# 		16 bit INC/DEC
+#
+03 		"@dir.3 @double.4" 6
+			@dir.3#@double.4()
+
+#
+# 		IX done seperately here for simplicity
+#			
+DD23 	"INC $I" 10
+		IZ() = IZ()+1
+
+DD2B 	"DEC $I" 10
+		IZ() = IZ()-1		

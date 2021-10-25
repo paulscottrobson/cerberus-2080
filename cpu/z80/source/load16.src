@@ -1,0 +1,76 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		load16.src
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		25th October 2021
+#		Reviewed: 	No
+#		Purpose:	16 bit load operations (pp112-136)
+#
+# *****************************************************************************
+# *****************************************************************************
+
+#
+# 		16 bit load immediate 							LD dd,nnnn LD Ix,nnnn
+#
+01 		"LD @double.4,$2" 10
+		temp16 = FETCH16();
+		SET@double.4(temp16);
+
+DD21	"LD $I,$2" 14
+		IZ() = FETCH16();
+
+#
+# 		HL load and save 								LD HL,(nnnn) LD (nnnn),HL
+#
+2A 		"LD HL,($2)" 16
+		temp16 = FETCH16();SETHL(READ16(temp16))
+
+22 		"LD ($2),HL" 20		
+		temp16 = FETCH16();WRITE16(temp16,HL())
+
+#
+#		Register Pair Read/Write 						LD dd,(nnnn) LD (nnnn),dd
+#		
+ED4B 	"LD @double.4,($2)" 20
+		temp16 = FETCH16();SET@double.4(READ16(temp16))
+
+ED43	"LD ($2),@double.4"	20	
+		temp16 = FETCH16();WRITE16(temp16,@double.4())
+
+#
+# 		IZ read/write
+#
+DD2A 	"LD $I,($2)" 20
+		temp16 = FETCH16();IZ() = READ16(temp16)
+
+DD22 	"LD ($2),$I" 20	
+		temp16 = FETCH16();WRITE16(temp16,IZ())
+		
+#
+#		Copy SP/IX/IY to HL 							LD SP,HL LD SP,IZ
+#		
+F9 		"LD SP,HL" 6
+		SETSP(HL())
+
+DDF9 	"LD SP,$I" 10
+		SETSP(IZ())
+
+#
+# 		Push registers 									PUSH xx
+#
+C5 		"PUSH @double.stack" 11
+			PUSH(@double.stack())
+
+DDE5 	"PUSH $I" 15
+			PUSH(IZ())
+
+#
+# 		Pop registers 									POP xx
+#
+C1		"POP @double.stack" 10
+			temp16 = POP();SET@double.stack(temp16)
+
+DDE1 	"POP $I" 14
+			IZ() = POP()
+

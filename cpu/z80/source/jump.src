@@ -1,0 +1,44 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		jump.src
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		25th October 2021
+#		Reviewed: 	No
+#		Purpose:	Jump Group
+#
+# *****************************************************************************
+# *****************************************************************************
+
+#
+#		16 bit address jumps
+#
+C3 	"JP $2" 10
+	JUMP(1)
+
+
+C2 	"JP @test,$2" 10
+	JUMP(TEST@test())
+#
+# 		8 bit relative jumps
+#
+18 	"JR $O"	7
+	JUMPR(1)
+
+20 "JR @test.4,$O" 7
+	JUMPR(TEST@test.4())
+
+#
+# 		Indirect jumps
+#
+E9 	"JP (HL)" 4 
+	PC = HL()
+
+DDE9 "JP ($I)" 8 
+	PC = IZ()
+
+#
+# 		Decrement Jump Non Zero
+#
+10 	"DJNZ $O" 8
+	B--;JUMPR(B != 0)

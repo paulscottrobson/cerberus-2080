@@ -29,6 +29,7 @@ test : emulator
 emulator: prebuild $(APPNAME)
 
 prebuild:
+	make -C ..$(S)programs
 	make -C ..$(S)cpu$(S)z80
 	$(CCOPY) ..$(S)cpu$(S)z80$(S)code$(S)*.h cpu$(S)z80
 

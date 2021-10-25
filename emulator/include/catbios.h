@@ -38,6 +38,14 @@ static void clearEditLine();
 static void cprintStatus(byte status);
 static void help();
 
+static const BYTE8 default_font[2048] = {
+    #include "_char_data.h"
+};
+
+static const BYTE8 cerberus_image[] = {
+    #include "_img_data.h"
+};
+
 #define delay(a)        {}
 #define tone(PIN,pitch,len) {}
 
@@ -54,40 +62,18 @@ bool fast = false;                     /** true = 8 MHz CPU clock, false = 4 MHz
 static void catbios_setup() {    
     mode = true;
     resetCPUs();
-
-    /******************************************************/
-    /** Load character definitions into character memory **/
-    /**                                                  **/
-    /** The sequence of instructions below does the same **/
-    /** as the function load(). That function is         **/
-    /** not called from here, in the setup(), to avoid a **/
-    /** seeming bug that prevents the same file from     **/
-    /** being opened from both setup() and loop().       **/
-    /******************************************************/
-    load((char *)"chardefs.bin",(char *)"f000",true);
+    for (int i = 0;i < 0x800;i++) cpoke(0xF000+i,default_font[i]);
     ccls();
     cprintFrames();
     clearEditLine();
     strcpy(previousEditLine,editLine);
 
-//     /** Load the CERBERUS icon image on the screen ************/
-//     int inChar;
-//     if (!SD.exists("cerbicon.img")) tone(SOUND, 50, 150); /** Tone out an error if file is not available **/
-//     else {
-//         File dataFile2 = SD.open("cerbicon.img"); /** Open the image file **/
-//         if (!dataFile2) tone(SOUND, 50, 150); * Tone out an error if file can't be opened  *
-//         else {
-//             for (byte y = 2; y <= 25; y++)
-//                 for (byte x = 2; x <= 39; x++) {
-//                     char *tokenText = "";
-//                     while (isDigit(inChar = dataFile2.read())) tokenText += char(inChar);
-//                     cprintChar(x, y, tokenText.toInt());
-//                 }
-//             dataFile2.close();
-//         }
-//     }
-
-   /**********************************************************/
+    int p = 0;
+    for (byte y = 2; y <= 25; y++) {
+        for (byte x = 2; x <= 39; x++) {
+            cprintChar(x, y, cerberus_image[p++]);
+        }
+    }
     cprintStatus(1);
     /** Play a little jingle while keyboard finishes initializing ... no don't **/
     // playJingle();
@@ -672,9 +658,10 @@ static void load(char *filename, char *address, bool silent) {
 }
 
 static void resetCPUs() {
-    CPUSetZ80(-1);
+    CPUSetZ80(-1);                          // Select/reset Z80
     CPUReset();
-    CPUSetZ80(0);
+    CPUSetZ80(0);                           // Select/reset 6502
     CPUReset();
     CPUSetZ80(mode);
+    CPUEnable(0);                           // Stop processor.
 }

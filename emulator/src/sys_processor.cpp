@@ -29,6 +29,7 @@ static int cpuClock = 4*1024*1024; 													// 4Mhz Clock.
 // *******************************************************************************************************************************
 
 static BYTE8 runZ80 = 1; 															// non zero Z80 on, zero 6502 on
+static BYTE8 cpuIsRunning = 1; 														// non zero if CPU not in halt.
 
 static BYTE8 A,B,C,D,E,H,L,X,Y,S; 													// Standard register
 static WORD16 AFalt,BCalt,DEalt,HLalt; 												// Alternate data set.
@@ -92,6 +93,10 @@ static inline WORD16 _Fetch16(void) {
 //											 Support macros and functions
 // *******************************************************************************************************************************
 
+void CPUEnable(BYTE8 isOn) {
+	cpuIsRunning = isOn;
+}
+
 void CPUSetZ80(BYTE8 isZ80) {
 	runZ80 = isZ80;
 }
@@ -133,10 +138,6 @@ void CPUReset(void) {
 
 	// TODO: Remove Initial fudges which CAT will handle.
 	PC = 0x202;
-	FILE *f = fopen("chardefs.bin","rb");
-	if (f == NULL) exit(fprintf(stderr,"No chardefs.bin file\n"));
-	fread(ramMemory+0xF000,2048,1,f);
-	fclose(f);
 }
 
 // *******************************************************************************************************************************
@@ -161,22 +162,26 @@ BYTE8 CPUExecuteInstruction(void) {
 	#ifdef INCLUDE_DEBUGGING_SUPPORT
 	if (PC == 0xFFFF) CPUExit();
 	#endif
-	BYTE8 opcode = FETCH8();														// Fetch opcode.
-	if (CPUIsZ80()) {
-		switch(opcode) {															// Execute it.
-			#include "z80/_code_group_0.h"
-			default:
-				FAILOPCODE("-",opcode);
+	if (cpuIsRunning) {
+		BYTE8 opcode = FETCH8();													// Fetch opcode.
+		if (CPUIsZ80()) {
+			switch(opcode) {														// Execute it.
+				#include "z80/_code_group_0.h"
+				default:
+					FAILOPCODE("-",opcode);
+			}
+		} else {
+			switch(opcode) {														// Execute it.
+				// TODO: 6502 Execute one instruction
+				default:
+					FAILOPCODE("-",opcode);
+			}
 		}
-	} else {
-		switch(opcode) {															// Execute it.
-			// TODO: 6502 Execute one instruction
-			default:
-				FAILOPCODE("-",opcode);
-		}
+	} else { 																		// If CPU not running end this frame.
+		cycles = -1;
 	}
 	if (cycles >= 0 ) return 0;														// Not completed a frame.
-	cycles = cycles + cyclesPerFrame;												// Adjust this frame rate, up to x16 on HS
+	cycles = cyclesPerFrame;														// Adjust this frame rate, up to x16 on HS
 	HWSync();																		// Update any hardware
 	CatSync();
 	frameCount++;

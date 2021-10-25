@@ -27,6 +27,7 @@ typedef unsigned int   LONG32;														// 32 bit type.
 #define AKEY_BACKSPACE	(0x5F)														// Apple Backspace
 
 BYTE8 CPUIsZ80(void);
+void CPUEnable(BYTE8 isOn);
 void CPUSetZ80(BYTE8 isZ80);
 void CPUReset(void);
 BYTE8 CPUExecuteInstruction(void);

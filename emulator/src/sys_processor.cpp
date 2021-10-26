@@ -141,13 +141,6 @@ void CPUReset(void) {
 		// TODO: 6502 Reset
 	}
 	cycles = CYCLES_PER_FRAME;
-
-	// TODO: Remove Initial fudges which CAT will handle.
-	ramMemory[0x00] = 0xC3;
-	ramMemory[0x01] = 0x02;
-	ramMemory[0x02] = 0x02;
-	ramMemory[0x38] = 0xED;
-	ramMemory[0x39] = 0x45;
 }
 
 // *******************************************************************************************************************************

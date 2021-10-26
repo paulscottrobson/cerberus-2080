@@ -10,10 +10,12 @@
 // *******************************************************************************************************************************
 // *******************************************************************************************************************************
 
+#include <ctype.h>
+
 #define byte BYTE8
 
 #define PS2_ENTER       13
-#define PS2_ESC         (GFXKEY_ESCAPE+1000)
+#define PS2_ESC         9                               // Using TAB as we use ESC for exit.
 #define PS2_PAGEUP      (GFXKEY_PAGEUP+1000)
 #define PS2_PAGEDOWN    (GFXKEY_PAGEDOWN+1000)
 #define PS2_UPARROW     (GFXKEY_UP+1000)
@@ -48,6 +50,8 @@ static void clearEditLine();
 static void cprintStatus(byte status);
 static void help();
 static void updateProcessorState();
+static int strToHex(char *s);
+static void binMove(char *startAddr, char *endAddr, char *destAddr);
 
 static const BYTE8 default_font[2048] = {
     #include "_char_data.h"
@@ -109,7 +113,7 @@ static void catbios_sync() {
 
                 case PS2_ESC:
                     if (cpurunning) {
-                        CPUReset();                    
+                        resetCPUs();                    
                         ccls();
                         cprintFrames(); 
                         cprintStatus(0); 
@@ -166,133 +170,146 @@ static void catbios_sync() {
 
 /************************************************************************************************/
 static void enter() {
-    // /** Called when the user presses ENTER, unless a CPU program is being executed **/
-    // /************************************************************************************************/
-    // unsigned int addr; /** Memory addresses **/
-    // byte data; /** A byte to be stored in memory **/
-    // byte i; /** Just a counter **/
-    // char *nextWord, nextNextWord, nextNextNextWord; /** General-purpose strings **/
-    // nextWord = getNextWord(true); /** Get the first word in the edit line **/
-    // nextWord.toLowerCase(); /** Ignore capitals **/
-    // /** MANUAL ENTRY OF OPCODES AND DATA INTO MEMORY *******************************************/
-    // if ((nextWord.charAt(0) == '0') && (nextWord.charAt(1) == 'x')) {
-    //     /** The user is entering data into memory **/
-    //     nextWord.remove(0, 2); /** Removes the "0x" at the beginning of the char *to keep only a HEX number **/
-    //     addr = strtol(nextWord.c_str(), NULL, 16); /** Converts to HEX number type **/
-    //     nextNextWord = getNextWord(false); /** Get next byte **/
-    //     while (nextNextWord != "") {
-    //         /** For as long as user has typed in a byte, store it **/
-    //         data = strtol(nextNextWord.c_str(), NULL, 16); /** Converts to HEX number type **/
-    //         cpoke(addr, data);
-    //         addr++;
-    //         nextNextWord = getNextWord(false); /** Get next byte **/
-    //     }
-    //     cprintStatus(2);
-    //     /** LIST ***********************************************************************************/
-    // } else if (nextWord == F("list")) {
-    //     /** Lists contents of memory in compact format **/
-    //     cls();
-    //     nextWord = getNextWord(false); /** Get address **/
-    //     list(nextWord);
-    //     cprintStatus(2);
-    //     /** CLS ************************************************************************************/
-    // } else if (nextWord == F("cls")) {
-    //     /** Clear the main window **/
-    //     cls();
-    //     cprintStatus(2);
-    //     /** TESTMEM ********************************************************************************/
-    // } else if (nextWord == F("testmem")) {
-    //     /** Checks whether all four memories can be written to and read from **/
-    //     cls();
-    //     testMem();
-    //     cprintStatus(2);
-    //     /** 6502 ***********************************************************************************/
-    // } else if (nextWord == F("6502")) {
-    //     /** Switches to 6502 mode **/
-    //     mode = false;
-    //     digitalWrite(CPUSLC, LOW); /** Tell CAT of the new mode **/
-    //     cprintStatus(2);
-    //     /** Z80 ***********************************************************************************/
-    // } else if (nextWord == F("z80")) {
-    //     /** Switches to Z80 mode **/
-    //     mode = true;
-    //     digitalWrite(CPUSLC, HIGH); /** Tell CAT of the new mode **/
-    //     cprintStatus(2);
-    //     /** RESET *********************************************************************************/
-    // } else if (nextWord == F("reset")) {
-    //     resetFunc(); /** This resets CAT and, therefore, the CPUs too **/
-    //     /** FAST **********************************************************************************/
-    // } else if (nextWord == F("fast")) {
-    //     /** Sets CPU clock at 8 MHz **/
-    //     digitalWrite(CPUSPD, HIGH);
-    //     fast = true;
-    //     cprintStatus(2);
-    //     /** SLOW **********************************************************************************/
-    // } else if (nextWord == F("slow")) {
-    //     /** Sets CPU clock at 4 MHz **/
-    //     digitalWrite(CPUSPD, LOW);
-    //     fast = false;
-    //     cprintStatus(2);
-    //     /** DIR ***********************************************************************************/
-    // } else if (nextWord == F("dir")) {
-    //     /** Lists files on uSD card **/
-    //     dir();
-    //     /** DEL ***********************************************************************************/
-    // } else if (nextWord == F("del")) {
-    //     /** Deletes a file on uSD card **/
-    //     nextWord = getNextWord(false);
-    //     delFile(nextWord);
-    //     /** LOAD **********************************************************************************/
-    // } else if (nextWord == F("load")) {
-    //     /** Loads a binary file into memory, at specified location **/
-    //     nextWord = getNextWord(false); /** Get the file name from the edit line **/
-    //     nextNextWord = getNextWord(false); /** Get memory address **/
-    //     load(nextWord, nextNextWord, false);
-    //     /** RUN ***********************************************************************************/
-    // } else if (nextWord == F("run")) {
-    //     /** Runs the code in memory **/
-    //     for (i = 0; i < 38; i++) previousEditLine[i] = editLine[i]; /** Store edit line just executed **/
-    //     runCode();
-    //     /** SAVE **********************************************************************************/
-    // } else if (nextWord == F("save")) {
-    //     nextWord = getNextWord(false); /** Get start address **/
-    //     nextNextWord = getNextWord(false);
-    //     nextNextNextWord = getNextWord(false);
-    //     save(nextWord, nextNextWord, nextNextNextWord);
-    //     /** MOVE **********************************************************************************/
-    // } else if (nextWord == F("move")) {
-    //     nextWord = getNextWord(false);
-    //     nextNextWord = getNextWord(false);
-    //     nextNextNextWord = getNextWord(false);
-    //     binMove(nextWord, nextNextWord, nextNextNextWord);
-    //     /** HELP **********************************************************************************/
-    // } else if ((nextWord == F("help")) || (nextWord == F("?"))) {
-    //     help();
-    //     cprintStatus(10);
-    //     /** ALL OTHER CASES ***********************************************************************/
-    // } else cprintStatus(3);
-    // if (!cpurunning) {
-    //     for (i = 0; i < 38; i++) previousEditLine[i] = editLine[i]; /** Store edit line just executed **/
-    //     clearEditLine(); /** Reset edit line **/
-    //}
+    int addr;                           /** Memory addresses **/
+    int data;                           /** A byte to be stored in memory **/
+    byte i;                             /** Just a counter **/
+    char *nextWord, *nextNextWord, *nextNextNextWord; /** General-purpose strings **/
+
+    nextWord = getNextWord(true);       /** Get the first word in the edit line **/
+    if (nextWord[0] == '0' && nextWord[1] == 'x') {
+        addr = strToHex(nextWord+2);
+        if (addr >= 0) {
+            do 
+            {
+                nextNextWord = getNextWord(false);
+                data = strToHex(nextNextWord);
+                if (data >= 0) {
+                    cpoke(addr & 0xFFFF,data & 0xFF);
+                    addr = (addr + 1) & 0xFFFF;
+                }
+            } while(data >= 0);         
+        }
+        cprintStatus(2);
+    }
+
+        /** LIST ***********************************************************************************/
+    if (strcmp(nextWord,"list") == 0) {
+        /** Lists contents of memory in compact format **/
+        cls();
+        nextWord = getNextWord(false); /** Get address **/
+        list(nextWord);
+        cprintStatus(2);
+        /** CLS ************************************************************************************/
+    } else if (strcmp(nextWord,"cls") == 0) {
+        /** Clear the main window **/
+        cls();
+        cprintStatus(2);
+        /** TESTMEM ********************************************************************************/
+    } else if (strcmp(nextWord,"testmem") == 0) {
+        /** Checks whether all four memories can be written to and read from **/
+        cls();
+        testMem();
+        cprintStatus(2);
+        /** 6502 ***********************************************************************************/
+    } else if (strcmp(nextWord,"6502") == 0) {
+        /** Switches to 6502 mode **/
+        mode = false;
+        updateProcessorState();
+        cprintStatus(2);
+        /** Z80 ***********************************************************************************/
+    } else if (strcmp(nextWord,"z80") == 0) {
+        /** Switches to Z80 mode **/
+        mode = true;
+        updateProcessorState();
+        cprintStatus(2);
+        /** RESET *********************************************************************************/
+    } else if (strcmp(nextWord,"reset") == 0) {
+        cprintStatus(2);
+        //resetFunc(); /** This resets CAT and, therefore, the CPUs too **/
+        /** FAST **********************************************************************************/
+    } else if (strcmp(nextWord,"fast") == 0) {
+        /** Sets CPU clock at 8 MHz **/
+        fast = true;
+        updateProcessorState();
+        cprintStatus(2);
+        /** SLOW **********************************************************************************/
+    } else if (strcmp(nextWord,"slow") == 0) {
+        /** Sets CPU clock at 4 MHz **/
+        fast = false;
+        updateProcessorState();
+        cprintStatus(2);
+        /** DIR ***********************************************************************************/
+    } else if (strcmp(nextWord,"dir") == 0) {
+        /** Lists files on uSD card **/
+        dir();
+        /** DEL ***********************************************************************************/
+    } else if (strcmp(nextWord,"del") == 0) {
+        /** Deletes a file on uSD card **/
+        nextWord = getNextWord(false);
+        delFile(nextWord);
+        /** LOAD **********************************************************************************/
+    } else if (strcmp(nextWord,"load") == 0) {
+        /** Loads a binary file into memory, at specified location **/
+        nextWord = getNextWord(false); /** Get the file name from the edit line **/
+        nextNextWord = getNextWord(false); /** Get memory address **/
+        load(nextWord, nextNextWord, false);
+        /** RUN ***********************************************************************************/
+    } else if (strcmp(nextWord,"run") == 0) {
+        /** Runs the code in memory **/
+        for (i = 0; i < 38; i++) previousEditLine[i] = editLine[i]; /** Store edit line just executed **/
+        runCode();
+        /** SAVE **********************************************************************************/
+    } else if (strcmp(nextWord,"save") == 0) {
+        nextWord = getNextWord(false); /** Get start address **/
+        nextNextWord = getNextWord(false);
+        nextNextNextWord = getNextWord(false);
+        save(nextWord, nextNextWord, nextNextNextWord);
+        /** MOVE **********************************************************************************/
+    } else if (strcmp(nextWord,"move") == 0) {
+        nextWord = getNextWord(false);
+        nextNextWord = getNextWord(false);
+        nextNextNextWord = getNextWord(false);
+        binMove(nextWord, nextNextWord, nextNextNextWord);
+        /** HELP **********************************************************************************/
+    } else if ((strcmp(nextWord,"help") == 0) || (strcmp(nextWord,"?") == 0)) {
+        help();
+        cprintStatus(10);
+        /** ALL OTHER CASES ***********************************************************************/
+    } else cprintStatus(3);
+
+    if (!cpurunning) {
+        for (i = 0; i < 38; i++) previousEditLine[i] = editLine[i]; /** Store edit line just executed **/
+        clearEditLine(); /** Reset edit line **/
+    }
 }
 
 static char *getNextWord(bool fromTheBeginning) {
-    // /** A very simple parser that returns the next word in the edit line **/
-    // static byte initialPosition; /** Start parsing from this point in the edit line **/
-    // byte i, j, k; /** General-purpose indices **/
-    // if (fromTheBeginning) initialPosition = 1; /** Starting from the beginning of the edit line **/
-    // i = initialPosition; /** Otherwise, continuing on from where we left off in previous call **/
-    // while ((editLine[i] == 32) || (editLine[i] == 44)) i++; /** Ignore leading spaces or commas **/
-    // j = i + 1; * Now start indexing the next word proper *
-    // /** Find the end of the word, marked either by a space, a comma or the cursor **/
-    // while ((editLine[j] != 32) && (editLine[j] != 44) && (editLine[j] != 0)) j++;
-    // char nextWord[j - i + 1]; /** Create a buffer (the +1 is to make space for null-termination) **/
-    // for (k = i; k < j; k++) nextWord[k - i] = editLine[k]; /** Transfer the word to the buffer **/
-    // nextWord[j - i] = 0; /** Null-termination **/
-    // initialPosition = j; /** Next time round, start from here, unless... **/
-    // return (nextWord); /** Return the contents of the buffer **/
-    return NULL;
+    static char *currentPos = editLine+1;
+    if (fromTheBeginning) currentPos = editLine+1;
+    while (*currentPos == ' ') currentPos++;
+    if (*currentPos == '\0') return currentPos;
+    //
+    char *thisPos = currentPos;
+    while (*currentPos > ' ') {
+        *currentPos = tolower(*currentPos);
+        currentPos++;
+    }
+    if (*currentPos == ' ') *currentPos++ = '\0';
+    return thisPos;
+}
+
+static int strToHex(char *s) {
+    int n = 0;
+    if (*s == '\0') return -1;
+    while (*s != '\0') {
+        if ((*s >= '0' && *s <= '9') || (*s >= 'a' && *s <= 'f')) {
+            n = (n << 4) + ((*s >= 'a') ? (*s - 'a' + 10) : (*s - '0'));
+            s++;
+        } else {
+            return -1;
+        }
+    }
+    return n;
 }
 
 static void help() {
@@ -321,7 +338,7 @@ static void help() {
     cprintString(3, 24, F("ESC key: Quits CPU program"));
 }
 
-void binMove(char *startAddr, char *endAddr, char *destAddr) {
+static void binMove(char *startAddr, char *endAddr, char *destAddr) {
     // unsigned int start, finish, destination; /** Memory addresses **/
     // unsigned int i; /** Address counter **/
     // if (startAddr == "") cprintStatus(6); /** Missing the file's name **/
@@ -363,41 +380,38 @@ static void list(char *address) {
 }
 
 static void runCode() {
-    // ccls();
-    // /** REMEMBER:                           **/
-    // /** Byte at 0x0200 is the new mail flag **/
-    // /** Byte at 0x0201 is the mail box      **/
-    // cpoke(0x0200, 0x00); /** Reset mail flag **/
-    // cpoke(0x0201, 0x00); /** Reset mailbox **/
-    // if (!mode) {
-    //     /** We are in 6502 mode **/
-    //     /** Non-maskable interrupt vector points to 0xFCB0, just after video area **/
-    //     cpoke(0xFFFA, 0xB0);
-    //     cpoke(0xFFFB, 0xFC);
-    //     /** The interrupt service routine simply returns **/
-    //     // FCB0        RTI             40
-    //     cpoke(0xFCB0, 0x40);
-    //     /** Set reset vector to 0x0202, the beginning of the code area **/
-    //     cpoke(0xFFFC, 0x02);
-    //     cpoke(0xFFFD, 0x02);
-        // } else {
-    //     /** We are in Z80 mode **/
-    //     /** The NMI service routine of the Z80 is at 0x0066 **/
-    //     /** It simply returns **/
-    //     // 0066   ED 45                  RETN 
-    //     cpoke(0x0066, 0xED);
-    //     cpoke(0x0067, 0x45);
-    //     /** The Z80 fetches the first instruction from 0x0000, so put a jump to the code area there **/
-    //     // 0000   C3 00 01               JP   $0202
-    //     cpoke(0x0000, 0xC3);
-    //     cpoke(0x0001, 0x02);
-    //     cpoke(0x0002, 0x02);
-    // }
-    // cpurunning = true;
-    // digitalWrite(CPURST, HIGH); /** Reset the CPU **/
-    // digitalWrite(CPUGO, HIGH); /** Enable CPU buses and clock **/
-    // delay(50);
-    // digitalWrite(CPURST, LOW); /** CPU should now initialize and then go to its reset vector **/
+    ccls();
+    /** REMEMBER:                           **/
+    /** Byte at 0x0200 is the new mail flag **/
+    /** Byte at 0x0201 is the mail box      **/
+    cpoke(0x0200, 0x00); /** Reset mail flag **/
+    cpoke(0x0201, 0x00); /** Reset mailbox **/
+    if (!mode) {
+        /** We are in 6502 mode **/
+        /** Non-maskable interrupt vector points to 0xFCB0, just after video area **/
+        cpoke(0xFFFA, 0xB0);
+        cpoke(0xFFFB, 0xFC);
+        /** The interrupt service routine simply returns **/
+        // FCB0        RTI             40
+        cpoke(0xFCB0, 0x40);
+        /** Set reset vector to 0x0202, the beginning of the code area **/
+        cpoke(0xFFFC, 0x02);
+        cpoke(0xFFFD, 0x02);
+    } else {
+        /** We are in Z80 mode **/
+        /** The NMI service routine of the Z80 is at 0x0066 **/
+        /** It simply returns **/
+        // 0066   ED 45                  RETN 
+        cpoke(0x0066, 0xED);
+        cpoke(0x0067, 0x45);
+        /** The Z80 fetches the first instruction from 0x0000, so put a jump to the code area there **/
+        // 0000   C3 00 01               JP   $0202
+        cpoke(0x0000, 0xC3);
+        cpoke(0x0001, 0x02);
+        cpoke(0x0002, 0x02);
+    }
+    cpurunning = true;
+    updateProcessorState();
 }
 
 static void dir() {

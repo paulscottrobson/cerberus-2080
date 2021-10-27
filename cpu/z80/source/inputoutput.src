@@ -39,14 +39,14 @@ ED41 	"OUT (C),@source.8.nohl3"		12
 EDA2 	"IN@direction" 16
 		WRITE8(HL(),INPORT(BC()));
 		B--;
-		@direction#HL();
+		Z@direction#HL();
 		SETNZ(B);
 		SETNFLAG(1);
 
 EDA3 	"OUT@direction"	16
 		OUTPORT(C,READ8(HL()));
 		B--;
-		@direction#HL();
+		Z@direction#HL();
 		SETNZ(B);
 		SETNFLAG(1);
 
@@ -57,7 +57,7 @@ EDB2 	"IN@direction#R" 16
 		do {
 			WRITE8(HL(),INPORT(BC()));
 			B--;
-			@direction#HL();
+			Z@direction#HL();
 			SETNZ(B);
 			SETNFLAG(1);
 			CYCLES(21);
@@ -67,7 +67,7 @@ EDB3 	"OT@direction#R" 16
 		do {
 			OUTPORT(C,READ8(HL()));
 			B--;
-			@direction#HL();
+			Z@direction#HL();
 			SETNZ(B);
 			SETNFLAG(1);
 			CYCLES(21);

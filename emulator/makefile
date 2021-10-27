@@ -42,6 +42,7 @@ emulator: prebuild $(APPNAME)
 prebuild:
 	make -C ..$(S)programs
 	make -C ..$(S)cpu$(S)z80
+	make -C ..$(S)cpu$(S)6502
 	$(CCOPY) ..$(S)cpu$(S)z80$(S)code$(S)*.h cpu$(S)z80
 	$(CCOPY) ..$(S)cpu$(S)6502$(S)code$(S)*.h cpu$(S)6502
 

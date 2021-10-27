@@ -1,44 +1,33 @@
 # *****************************************************************************
 # *****************************************************************************
 #
-#		Name:		jump.src
+#		Name:		group1.src
 #		Author:		Paul Robson (paul@robsons.org.uk)
-#		Date:		25th October 2021
+#		Date:		27th October 2021
 #		Reviewed: 	No
-#		Purpose:	Jump Group
+#		Purpose:	Group 1 operations
 #
 # *****************************************************************************
 # *****************************************************************************
 
 #
-#		16 bit address jumps
+# 		Std 6502, not STA
 #
-C3 	"JP $2" 10
-	ZJUMP(1)
-
-
-C2 	"JP @test,$2" 10
-	ZJUMP(TEST@test())
+01 	"@g1op.std @g1mode.std"	4
+		temp16 = EAC@g1mode.std();
+		CALU@g1op.std()
 #
-# 		8 bit relative jumps
+# 		6502 (nn) mode
 #
-18 	"JR $O"	7
-	ZJUMPR(1)
-
-20 "JR @test.4,$O" 7
-	ZJUMPR(TEST@test.4())
+12 	"@g1op.std ($1)" 4
+		temp16 = EACIND();
+		CALU@g1op.std()
 
 #
-# 		Indirect jumps
+# 		Store (no immediate)
 #
-E9 	"JP (HL)" 4 
-	PC = HL()
+81 	"sta @g1mode.sta" 4
+		temp16 = EAC@g1mode.sta();
+		WRITE16(temp16,A)
 
-DDE9 "JP ($I)" 8 
-	PC = IZ()
 
-#
-# 		Decrement Jump Non Zero
-#
-10 	"DJNZ $O" 8
-	B--;ZJUMPR(B != 0)

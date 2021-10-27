@@ -119,6 +119,7 @@ BYTE8 CPUIsZ80(void) {
 #endif
 
 #include "z80_cpu_support.h"
+#include "c6502_cpu_support.h"
 
 WORD16 CPUGetPC(void) {
 	return PC;
@@ -227,7 +228,7 @@ void CPULoadBinary(char *fileName) {
 void CPUInterrupt(void) {
 	if (CPUIsZ80()) {
 		if (READ8(PC) == 0x76) PC++;
-		PUSH(PC);PC = 0x38;
+		ZPUSH(PC);PC = 0x38;
 	} else {
 		// TODO: 6502 NMI.
 	}

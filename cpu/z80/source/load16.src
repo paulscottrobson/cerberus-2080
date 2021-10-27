@@ -60,17 +60,17 @@ DDF9 	"LD SP,$I" 10
 # 		Push registers 									PUSH xx
 #
 C5 		"PUSH @double.stack" 11
-			PUSH(@double.stack())
+			ZPUSH(@double.stack())
 
 DDE5 	"PUSH $I" 15
-			PUSH(IZ())
+			ZPUSH(IZ())
 
 #
 # 		Pop registers 									POP xx
 #
 C1		"POP @double.stack" 10
-			temp16 = POP();SET@double.stack(temp16)
+			temp16 = ZPOP();SET@double.stack(temp16)
 
 DDE1 	"POP $I" 14
-			IZ() = POP()
+			IZ() = ZPOP()
 

@@ -13,7 +13,7 @@
 
 
 27  "DAA" 4
-		DAA();
+		zDAA();
 
 2F 	"CPL" 4
 		A = A ^ 0xFF;
@@ -22,7 +22,7 @@
 
 ED44 "NEG" 8		
 		temp8 = A;A = 0;
-		ALUSUB(temp8);
+		ZALUSUB(temp8);
 
 3F 	"CCF" 4
 		SETHALFCARRY(c_Flag);

@@ -43,9 +43,9 @@ DDE3 	"EX (SP),$I" 23
 
 EDA0 	"LD@direction" 16
 		WRITE8(DE(),READ8(HL()));
-		@direction#DE();
-		@direction#HL();
-		DECBC();
+		Z@direction#DE();
+		Z@direction#HL();
+		ZDECBC();
 		SETOVERFLOW(BC() != 0);
 		SETHALFCARRY(0);
 		SETNFLAG(0);
@@ -53,9 +53,9 @@ EDA0 	"LD@direction" 16
 EDB0 	"LD@direction#R" 16
 		do {
 			WRITE8(DE(),READ8(HL()));
-			@direction#DE();
-			@direction#HL();
-			DECBC();
+			Z@direction#DE();
+			Z@direction#HL();
+			ZDECBC();
 			SETOVERFLOW(BC() != 0);
 			CYCLES(21);
 		} while (BC() != 0);
@@ -68,19 +68,19 @@ EDB0 	"LD@direction#R" 16
 #
 EDA1 	"CP@direction" 16
 		oldCarry = c_Flag;
-		ALUCP(READ8(HL()));
+		ZALUCP(READ8(HL()));
 		c_Flag = oldCarry;
-		@direction#HL();
-		DECBC()
+		Z@direction#HL();
+		ZDECBC()
 		SETOVERFLOW(BC() != 0);
 
 EDB1 	"CP@direction#R" 16
 		do {
 			oldCarry = c_Flag;
-			ALUCP(READ8(HL()));
+			ZALUCP(READ8(HL()));
 			c_Flag = oldCarry;
-			@direction#HL();
-			DECBC()
+			Z@direction#HL();
+			ZDECBC()
 			SETOVERFLOW(BC() != 0);
 			CYCLES(21);
 		} while( (BC()!= 0) && (z_Flag == 0) );

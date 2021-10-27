@@ -52,7 +52,6 @@
 @dir [Shift:0,INC,DEC]
 @dir.3 [Shift:3,INC,DEC]
 
-
 #
 # 		Directions for LDI/LDD
 #
@@ -78,3 +77,4 @@
 # 		Reset vectors
 #
 @reset [Shift:3,00,08,10,18,20,28,30,38]
+

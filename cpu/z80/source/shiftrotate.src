@@ -39,17 +39,17 @@
 #		Z80 CB Group
 #
 CB00 	"@rotate @source.8.nohl" 8
-		@source.8.nohl = SR@rotate(@source.8.nohl)
+		@source.8.nohl = ZSR@rotate(@source.8.nohl)
 
 CB06 	"@rotate (HL)" 15
 		temp8 = READ8(HL());
-		temp8 = SR@rotate(temp8);		
+		temp8 = ZSR@rotate(temp8);		
 		WRITE8(HL(),temp8);
 
 DDCB06	"@rotate ($I$S)" 23	
 		temp16 = IZ()+offset;
 		temp8 = READ8(temp16);
-		temp8 = SR@rotate(temp8);		
+		temp8 = ZSR@rotate(temp8);		
 		WRITE8(temp16,temp8);
 
 #

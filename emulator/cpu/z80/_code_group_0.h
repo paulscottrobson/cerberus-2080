@@ -14,15 +14,15 @@ case 0x02: /**** $02:ld (bc),a ****/
 	CYCLES(7);break;
 
 case 0x03: /**** $03:inc bc ****/
-	INCBC();
+	ZINCBC();
 	CYCLES(6);break;
 
 case 0x04: /**** $04:inc b ****/
-	INC8(B);
+	ZINC8(B);
 	CYCLES(4);break;
 
 case 0x05: /**** $05:dec b ****/
-	DEC8(B);
+	ZDEC8(B);
 	CYCLES(4);break;
 
 case 0x06: /**** $06:ld b,$1 ****/
@@ -38,7 +38,7 @@ case 0x08: /**** $08:ex af,af' ****/
 	CYCLES(4);break;
 
 case 0x09: /**** $09:add hl,bc ****/
-	temp16 = add16(HL(),BC()); SETHL(temp16);;
+	temp16 = zAdd16(HL(),BC()); SETHL(temp16);;
 	CYCLES(11);break;
 
 case 0x0a: /**** $0a:ld a,(bc) ****/
@@ -46,15 +46,15 @@ case 0x0a: /**** $0a:ld a,(bc) ****/
 	CYCLES(7);break;
 
 case 0x0b: /**** $0b:dec bc ****/
-	DECBC();
+	ZDECBC();
 	CYCLES(6);break;
 
 case 0x0c: /**** $0c:inc c ****/
-	INC8(C);
+	ZINC8(C);
 	CYCLES(4);break;
 
 case 0x0d: /**** $0d:dec c ****/
-	DEC8(C);
+	ZDEC8(C);
 	CYCLES(4);break;
 
 case 0x0e: /**** $0e:ld c,$1 ****/
@@ -66,7 +66,7 @@ case 0x0f: /**** $0f:rrca ****/
 	CYCLES(4);break;
 
 case 0x10: /**** $10:djnz $o ****/
-	B--;JUMPR(B != 0);
+	B--;ZJUMPR(B != 0);
 	CYCLES(8);break;
 
 case 0x11: /**** $11:ld de,$2 ****/
@@ -78,15 +78,15 @@ case 0x12: /**** $12:ld (de),a ****/
 	CYCLES(7);break;
 
 case 0x13: /**** $13:inc de ****/
-	INCDE();
+	ZINCDE();
 	CYCLES(6);break;
 
 case 0x14: /**** $14:inc d ****/
-	INC8(D);
+	ZINC8(D);
 	CYCLES(4);break;
 
 case 0x15: /**** $15:dec d ****/
-	DEC8(D);
+	ZDEC8(D);
 	CYCLES(4);break;
 
 case 0x16: /**** $16:ld d,$1 ****/
@@ -98,11 +98,11 @@ case 0x17: /**** $17:rla ****/
 	CYCLES(4);break;
 
 case 0x18: /**** $18:jr $o ****/
-	JUMPR(1);
+	ZJUMPR(1);
 	CYCLES(7);break;
 
 case 0x19: /**** $19:add hl,de ****/
-	temp16 = add16(HL(),DE()); SETHL(temp16);;
+	temp16 = zAdd16(HL(),DE()); SETHL(temp16);;
 	CYCLES(11);break;
 
 case 0x1a: /**** $1a:ld a,(de) ****/
@@ -110,15 +110,15 @@ case 0x1a: /**** $1a:ld a,(de) ****/
 	CYCLES(7);break;
 
 case 0x1b: /**** $1b:dec de ****/
-	DECDE();
+	ZDECDE();
 	CYCLES(6);break;
 
 case 0x1c: /**** $1c:inc e ****/
-	INC8(E);
+	ZINC8(E);
 	CYCLES(4);break;
 
 case 0x1d: /**** $1d:dec e ****/
-	DEC8(E);
+	ZDEC8(E);
 	CYCLES(4);break;
 
 case 0x1e: /**** $1e:ld e,$1 ****/
@@ -130,7 +130,7 @@ case 0x1f: /**** $1f:rra ****/
 	CYCLES(4);break;
 
 case 0x20: /**** $20:jr nz,$o ****/
-	JUMPR(TESTNZ());
+	ZJUMPR(TESTNZ());
 	CYCLES(7);break;
 
 case 0x21: /**** $21:ld hl,$2 ****/
@@ -142,15 +142,15 @@ case 0x22: /**** $22:ld ($2),hl ****/
 	CYCLES(20);break;
 
 case 0x23: /**** $23:inc hl ****/
-	INCHL();
+	ZINCHL();
 	CYCLES(6);break;
 
 case 0x24: /**** $24:inc h ****/
-	INC8(H);
+	ZINC8(H);
 	CYCLES(4);break;
 
 case 0x25: /**** $25:dec h ****/
-	DEC8(H);
+	ZDEC8(H);
 	CYCLES(4);break;
 
 case 0x26: /**** $26:ld h,$1 ****/
@@ -158,15 +158,15 @@ case 0x26: /**** $26:ld h,$1 ****/
 	CYCLES(7);break;
 
 case 0x27: /**** $27:daa ****/
-	DAA();;
+	zDAA();;
 	CYCLES(4);break;
 
 case 0x28: /**** $28:jr z,$o ****/
-	JUMPR(TESTZ());
+	ZJUMPR(TESTZ());
 	CYCLES(7);break;
 
 case 0x29: /**** $29:add hl,hl ****/
-	temp16 = add16(HL(),HL()); SETHL(temp16);;
+	temp16 = zAdd16(HL(),HL()); SETHL(temp16);;
 	CYCLES(11);break;
 
 case 0x2a: /**** $2a:ld hl,($2) ****/
@@ -174,15 +174,15 @@ case 0x2a: /**** $2a:ld hl,($2) ****/
 	CYCLES(16);break;
 
 case 0x2b: /**** $2b:dec hl ****/
-	DECHL();
+	ZDECHL();
 	CYCLES(6);break;
 
 case 0x2c: /**** $2c:inc l ****/
-	INC8(L);
+	ZINC8(L);
 	CYCLES(4);break;
 
 case 0x2d: /**** $2d:dec l ****/
-	DEC8(L);
+	ZDEC8(L);
 	CYCLES(4);break;
 
 case 0x2e: /**** $2e:ld l,$1 ****/
@@ -194,7 +194,7 @@ case 0x2f: /**** $2f:cpl ****/
 	CYCLES(4);break;
 
 case 0x30: /**** $30:jr nc,$o ****/
-	JUMPR(TESTNC());
+	ZJUMPR(TESTNC());
 	CYCLES(7);break;
 
 case 0x31: /**** $31:ld sp,$2 ****/
@@ -206,15 +206,15 @@ case 0x32: /**** $32:ld ($2),a ****/
 	CYCLES(13);break;
 
 case 0x33: /**** $33:inc sp ****/
-	INCSP();
+	ZINCSP();
 	CYCLES(6);break;
 
 case 0x34: /**** $34:inc (hl) ****/
-	temp8 = READ8(HL()); INC8(temp8); WRITE8(HL(),temp8);;
+	temp8 = READ8(HL()); ZINC8(temp8); WRITE8(HL(),temp8);;
 	CYCLES(11);break;
 
 case 0x35: /**** $35:dec (hl) ****/
-	temp8 = READ8(HL()); DEC8(temp8); WRITE8(HL(),temp8);;
+	temp8 = READ8(HL()); ZDEC8(temp8); WRITE8(HL(),temp8);;
 	CYCLES(11);break;
 
 case 0x36: /**** $36:ld (hl),$1 ****/
@@ -226,11 +226,11 @@ case 0x37: /**** $37:scf ****/
 	CYCLES(4);break;
 
 case 0x38: /**** $38:jr c,$o ****/
-	JUMPR(TESTC());
+	ZJUMPR(TESTC());
 	CYCLES(7);break;
 
 case 0x39: /**** $39:add hl,sp ****/
-	temp16 = add16(HL(),SP()); SETHL(temp16);;
+	temp16 = zAdd16(HL(),SP()); SETHL(temp16);;
 	CYCLES(11);break;
 
 case 0x3a: /**** $3a:ld a,($2) ****/
@@ -238,15 +238,15 @@ case 0x3a: /**** $3a:ld a,($2) ****/
 	CYCLES(13);break;
 
 case 0x3b: /**** $3b:dec sp ****/
-	DECSP();
+	ZDECSP();
 	CYCLES(6);break;
 
 case 0x3c: /**** $3c:inc a ****/
-	INC8(A);
+	ZINC8(A);
 	CYCLES(4);break;
 
 case 0x3d: /**** $3d:dec a ****/
-	DEC8(A);
+	ZDEC8(A);
 	CYCLES(4);break;
 
 case 0x3e: /**** $3e:ld a,$1 ****/
@@ -514,303 +514,303 @@ case 0x7f: /**** $7f:ld a,a ****/
 	CYCLES(4);break;
 
 case 0x80: /**** $80:add b ****/
-	ALUADD(B);
+	ZALUADD(B);
 	CYCLES(4);break;
 
 case 0x81: /**** $81:add c ****/
-	ALUADD(C);
+	ZALUADD(C);
 	CYCLES(4);break;
 
 case 0x82: /**** $82:add d ****/
-	ALUADD(D);
+	ZALUADD(D);
 	CYCLES(4);break;
 
 case 0x83: /**** $83:add e ****/
-	ALUADD(E);
+	ZALUADD(E);
 	CYCLES(4);break;
 
 case 0x84: /**** $84:add h ****/
-	ALUADD(H);
+	ZALUADD(H);
 	CYCLES(4);break;
 
 case 0x85: /**** $85:add l ****/
-	ALUADD(L);
+	ZALUADD(L);
 	CYCLES(4);break;
 
 case 0x86: /**** $86:add (hl) ****/
-	ALUADD(READ8(HL()));
+	ZALUADD(READ8(HL()));
 	CYCLES(4);break;
 
 case 0x87: /**** $87:add a ****/
-	ALUADD(A);
+	ZALUADD(A);
 	CYCLES(4);break;
 
 case 0x88: /**** $88:adc b ****/
-	ALUADC(B);
+	ZALUADC(B);
 	CYCLES(4);break;
 
 case 0x89: /**** $89:adc c ****/
-	ALUADC(C);
+	ZALUADC(C);
 	CYCLES(4);break;
 
 case 0x8a: /**** $8a:adc d ****/
-	ALUADC(D);
+	ZALUADC(D);
 	CYCLES(4);break;
 
 case 0x8b: /**** $8b:adc e ****/
-	ALUADC(E);
+	ZALUADC(E);
 	CYCLES(4);break;
 
 case 0x8c: /**** $8c:adc h ****/
-	ALUADC(H);
+	ZALUADC(H);
 	CYCLES(4);break;
 
 case 0x8d: /**** $8d:adc l ****/
-	ALUADC(L);
+	ZALUADC(L);
 	CYCLES(4);break;
 
 case 0x8e: /**** $8e:adc (hl) ****/
-	ALUADC(READ8(HL()));
+	ZALUADC(READ8(HL()));
 	CYCLES(4);break;
 
 case 0x8f: /**** $8f:adc a ****/
-	ALUADC(A);
+	ZALUADC(A);
 	CYCLES(4);break;
 
 case 0x90: /**** $90:sub b ****/
-	ALUSUB(B);
+	ZALUSUB(B);
 	CYCLES(4);break;
 
 case 0x91: /**** $91:sub c ****/
-	ALUSUB(C);
+	ZALUSUB(C);
 	CYCLES(4);break;
 
 case 0x92: /**** $92:sub d ****/
-	ALUSUB(D);
+	ZALUSUB(D);
 	CYCLES(4);break;
 
 case 0x93: /**** $93:sub e ****/
-	ALUSUB(E);
+	ZALUSUB(E);
 	CYCLES(4);break;
 
 case 0x94: /**** $94:sub h ****/
-	ALUSUB(H);
+	ZALUSUB(H);
 	CYCLES(4);break;
 
 case 0x95: /**** $95:sub l ****/
-	ALUSUB(L);
+	ZALUSUB(L);
 	CYCLES(4);break;
 
 case 0x96: /**** $96:sub (hl) ****/
-	ALUSUB(READ8(HL()));
+	ZALUSUB(READ8(HL()));
 	CYCLES(4);break;
 
 case 0x97: /**** $97:sub a ****/
-	ALUSUB(A);
+	ZALUSUB(A);
 	CYCLES(4);break;
 
 case 0x98: /**** $98:sbc b ****/
-	ALUSBC(B);
+	ZALUSBC(B);
 	CYCLES(4);break;
 
 case 0x99: /**** $99:sbc c ****/
-	ALUSBC(C);
+	ZALUSBC(C);
 	CYCLES(4);break;
 
 case 0x9a: /**** $9a:sbc d ****/
-	ALUSBC(D);
+	ZALUSBC(D);
 	CYCLES(4);break;
 
 case 0x9b: /**** $9b:sbc e ****/
-	ALUSBC(E);
+	ZALUSBC(E);
 	CYCLES(4);break;
 
 case 0x9c: /**** $9c:sbc h ****/
-	ALUSBC(H);
+	ZALUSBC(H);
 	CYCLES(4);break;
 
 case 0x9d: /**** $9d:sbc l ****/
-	ALUSBC(L);
+	ZALUSBC(L);
 	CYCLES(4);break;
 
 case 0x9e: /**** $9e:sbc (hl) ****/
-	ALUSBC(READ8(HL()));
+	ZALUSBC(READ8(HL()));
 	CYCLES(4);break;
 
 case 0x9f: /**** $9f:sbc a ****/
-	ALUSBC(A);
+	ZALUSBC(A);
 	CYCLES(4);break;
 
 case 0xa0: /**** $a0:and b ****/
-	ALUAND(B);
+	ZALUAND(B);
 	CYCLES(4);break;
 
 case 0xa1: /**** $a1:and c ****/
-	ALUAND(C);
+	ZALUAND(C);
 	CYCLES(4);break;
 
 case 0xa2: /**** $a2:and d ****/
-	ALUAND(D);
+	ZALUAND(D);
 	CYCLES(4);break;
 
 case 0xa3: /**** $a3:and e ****/
-	ALUAND(E);
+	ZALUAND(E);
 	CYCLES(4);break;
 
 case 0xa4: /**** $a4:and h ****/
-	ALUAND(H);
+	ZALUAND(H);
 	CYCLES(4);break;
 
 case 0xa5: /**** $a5:and l ****/
-	ALUAND(L);
+	ZALUAND(L);
 	CYCLES(4);break;
 
 case 0xa6: /**** $a6:and (hl) ****/
-	ALUAND(READ8(HL()));
+	ZALUAND(READ8(HL()));
 	CYCLES(4);break;
 
 case 0xa7: /**** $a7:and a ****/
-	ALUAND(A);
+	ZALUAND(A);
 	CYCLES(4);break;
 
 case 0xa8: /**** $a8:xor b ****/
-	ALUXOR(B);
+	ZALUXOR(B);
 	CYCLES(4);break;
 
 case 0xa9: /**** $a9:xor c ****/
-	ALUXOR(C);
+	ZALUXOR(C);
 	CYCLES(4);break;
 
 case 0xaa: /**** $aa:xor d ****/
-	ALUXOR(D);
+	ZALUXOR(D);
 	CYCLES(4);break;
 
 case 0xab: /**** $ab:xor e ****/
-	ALUXOR(E);
+	ZALUXOR(E);
 	CYCLES(4);break;
 
 case 0xac: /**** $ac:xor h ****/
-	ALUXOR(H);
+	ZALUXOR(H);
 	CYCLES(4);break;
 
 case 0xad: /**** $ad:xor l ****/
-	ALUXOR(L);
+	ZALUXOR(L);
 	CYCLES(4);break;
 
 case 0xae: /**** $ae:xor (hl) ****/
-	ALUXOR(READ8(HL()));
+	ZALUXOR(READ8(HL()));
 	CYCLES(4);break;
 
 case 0xaf: /**** $af:xor a ****/
-	ALUXOR(A);
+	ZALUXOR(A);
 	CYCLES(4);break;
 
 case 0xb0: /**** $b0:or b ****/
-	ALUOR(B);
+	ZALUOR(B);
 	CYCLES(4);break;
 
 case 0xb1: /**** $b1:or c ****/
-	ALUOR(C);
+	ZALUOR(C);
 	CYCLES(4);break;
 
 case 0xb2: /**** $b2:or d ****/
-	ALUOR(D);
+	ZALUOR(D);
 	CYCLES(4);break;
 
 case 0xb3: /**** $b3:or e ****/
-	ALUOR(E);
+	ZALUOR(E);
 	CYCLES(4);break;
 
 case 0xb4: /**** $b4:or h ****/
-	ALUOR(H);
+	ZALUOR(H);
 	CYCLES(4);break;
 
 case 0xb5: /**** $b5:or l ****/
-	ALUOR(L);
+	ZALUOR(L);
 	CYCLES(4);break;
 
 case 0xb6: /**** $b6:or (hl) ****/
-	ALUOR(READ8(HL()));
+	ZALUOR(READ8(HL()));
 	CYCLES(4);break;
 
 case 0xb7: /**** $b7:or a ****/
-	ALUOR(A);
+	ZALUOR(A);
 	CYCLES(4);break;
 
 case 0xb8: /**** $b8:cp b ****/
-	ALUCP(B);
+	ZALUCP(B);
 	CYCLES(4);break;
 
 case 0xb9: /**** $b9:cp c ****/
-	ALUCP(C);
+	ZALUCP(C);
 	CYCLES(4);break;
 
 case 0xba: /**** $ba:cp d ****/
-	ALUCP(D);
+	ZALUCP(D);
 	CYCLES(4);break;
 
 case 0xbb: /**** $bb:cp e ****/
-	ALUCP(E);
+	ZALUCP(E);
 	CYCLES(4);break;
 
 case 0xbc: /**** $bc:cp h ****/
-	ALUCP(H);
+	ZALUCP(H);
 	CYCLES(4);break;
 
 case 0xbd: /**** $bd:cp l ****/
-	ALUCP(L);
+	ZALUCP(L);
 	CYCLES(4);break;
 
 case 0xbe: /**** $be:cp (hl) ****/
-	ALUCP(READ8(HL()));
+	ZALUCP(READ8(HL()));
 	CYCLES(4);break;
 
 case 0xbf: /**** $bf:cp a ****/
-	ALUCP(A);
+	ZALUCP(A);
 	CYCLES(4);break;
 
 case 0xc0: /**** $c0:ret nz ****/
-	RETURN(TESTNZ());
+	ZRETURN(TESTNZ());
 	CYCLES(5);break;
 
 case 0xc1: /**** $c1:pop bc ****/
-	temp16 = POP();SETBC(temp16);
+	temp16 = ZPOP();SETBC(temp16);
 	CYCLES(10);break;
 
 case 0xc2: /**** $c2:jp nz,$2 ****/
-	JUMP(TESTNZ());
+	ZJUMP(TESTNZ());
 	CYCLES(10);break;
 
 case 0xc3: /**** $c3:jp $2 ****/
-	JUMP(1);
+	ZJUMP(1);
 	CYCLES(10);break;
 
 case 0xc4: /**** $c4:call nz,$2 ****/
-	CALL(TESTNZ());
+	ZCALL(TESTNZ());
 	CYCLES(10);break;
 
 case 0xc5: /**** $c5:push bc ****/
-	PUSH(BC());
+	ZPUSH(BC());
 	CYCLES(11);break;
 
 case 0xc6: /**** $c6:add $1 ****/
-	ALUADD(FETCH8());
+	ZALUADD(FETCH8());
 	CYCLES(7);break;
 
 case 0xc7: /**** $c7:rst 00 ****/
-	PUSH(PC);PC = 0x00;;
+	ZPUSH(PC);PC = 0x00;;
 	CYCLES(11);break;
 
 case 0xc8: /**** $c8:ret z ****/
-	RETURN(TESTZ());
+	ZRETURN(TESTZ());
 	CYCLES(5);break;
 
 case 0xc9: /**** $c9:ret ****/
-	RETURN(1);
+	ZRETURN(1);
 	CYCLES(4);break;
 
 case 0xca: /**** $ca:jp z,$2 ****/
-	JUMP(TESTZ());
+	ZJUMP(TESTZ());
 	CYCLES(10);break;
 
 case 0xcb: /**** $cb:[cb] ****/
@@ -818,31 +818,31 @@ case 0xcb: /**** $cb:[cb] ****/
 	CYCLES(0);break;
 
 case 0xcc: /**** $cc:call z,$2 ****/
-	CALL(TESTZ());
+	ZCALL(TESTZ());
 	CYCLES(10);break;
 
 case 0xcd: /**** $cd:call $2 ****/
-	CALL(1);
+	ZCALL(1);
 	CYCLES(10);break;
 
 case 0xce: /**** $ce:adc $1 ****/
-	ALUADC(FETCH8());
+	ZALUADC(FETCH8());
 	CYCLES(7);break;
 
 case 0xcf: /**** $cf:rst 08 ****/
-	PUSH(PC);PC = 0x08;;
+	ZPUSH(PC);PC = 0x08;;
 	CYCLES(11);break;
 
 case 0xd0: /**** $d0:ret nc ****/
-	RETURN(TESTNC());
+	ZRETURN(TESTNC());
 	CYCLES(5);break;
 
 case 0xd1: /**** $d1:pop de ****/
-	temp16 = POP();SETDE(temp16);
+	temp16 = ZPOP();SETDE(temp16);
 	CYCLES(10);break;
 
 case 0xd2: /**** $d2:jp nc,$2 ****/
-	JUMP(TESTNC());
+	ZJUMP(TESTNC());
 	CYCLES(10);break;
 
 case 0xd3: /**** $d3:out ($1),a ****/
@@ -850,23 +850,23 @@ case 0xd3: /**** $d3:out ($1),a ****/
 	CYCLES(11);break;
 
 case 0xd4: /**** $d4:call nc,$2 ****/
-	CALL(TESTNC());
+	ZCALL(TESTNC());
 	CYCLES(10);break;
 
 case 0xd5: /**** $d5:push de ****/
-	PUSH(DE());
+	ZPUSH(DE());
 	CYCLES(11);break;
 
 case 0xd6: /**** $d6:sub $1 ****/
-	ALUSUB(FETCH8());
+	ZALUSUB(FETCH8());
 	CYCLES(7);break;
 
 case 0xd7: /**** $d7:rst 10 ****/
-	PUSH(PC);PC = 0x10;;
+	ZPUSH(PC);PC = 0x10;;
 	CYCLES(11);break;
 
 case 0xd8: /**** $d8:ret c ****/
-	RETURN(TESTC());
+	ZRETURN(TESTC());
 	CYCLES(5);break;
 
 case 0xd9: /**** $d9:exx ****/
@@ -874,7 +874,7 @@ case 0xd9: /**** $d9:exx ****/
 	CYCLES(4);break;
 
 case 0xda: /**** $da:jp c,$2 ****/
-	JUMP(TESTC());
+	ZJUMP(TESTC());
 	CYCLES(10);break;
 
 case 0xdb: /**** $db:in a,($1) ****/
@@ -882,7 +882,7 @@ case 0xdb: /**** $db:in a,($1) ****/
 	CYCLES(11);break;
 
 case 0xdc: /**** $dc:call c,$2 ****/
-	CALL(TESTC());
+	ZCALL(TESTC());
 	CYCLES(10);break;
 
 case 0xdd: /**** $dd:[ix] ****/
@@ -890,23 +890,23 @@ case 0xdd: /**** $dd:[ix] ****/
 	CYCLES(0);break;
 
 case 0xde: /**** $de:sbc $1 ****/
-	ALUSBC(FETCH8());
+	ZALUSBC(FETCH8());
 	CYCLES(7);break;
 
 case 0xdf: /**** $df:rst 18 ****/
-	PUSH(PC);PC = 0x18;;
+	ZPUSH(PC);PC = 0x18;;
 	CYCLES(11);break;
 
 case 0xe0: /**** $e0:ret po ****/
-	RETURN(TESTPO());
+	ZRETURN(TESTPO());
 	CYCLES(5);break;
 
 case 0xe1: /**** $e1:pop hl ****/
-	temp16 = POP();SETHL(temp16);
+	temp16 = ZPOP();SETHL(temp16);
 	CYCLES(10);break;
 
 case 0xe2: /**** $e2:jp po,$2 ****/
-	JUMP(TESTPO());
+	ZJUMP(TESTPO());
 	CYCLES(10);break;
 
 case 0xe3: /**** $e3:ex (sp),hl ****/
@@ -914,23 +914,23 @@ case 0xe3: /**** $e3:ex (sp),hl ****/
 	CYCLES(19);break;
 
 case 0xe4: /**** $e4:call po,$2 ****/
-	CALL(TESTPO());
+	ZCALL(TESTPO());
 	CYCLES(10);break;
 
 case 0xe5: /**** $e5:push hl ****/
-	PUSH(HL());
+	ZPUSH(HL());
 	CYCLES(11);break;
 
 case 0xe6: /**** $e6:and $1 ****/
-	ALUAND(FETCH8());
+	ZALUAND(FETCH8());
 	CYCLES(7);break;
 
 case 0xe7: /**** $e7:rst 20 ****/
-	PUSH(PC);PC = 0x20;;
+	ZPUSH(PC);PC = 0x20;;
 	CYCLES(11);break;
 
 case 0xe8: /**** $e8:ret pe ****/
-	RETURN(TESTPE());
+	ZRETURN(TESTPE());
 	CYCLES(5);break;
 
 case 0xe9: /**** $e9:jp (hl) ****/
@@ -938,7 +938,7 @@ case 0xe9: /**** $e9:jp (hl) ****/
 	CYCLES(4);break;
 
 case 0xea: /**** $ea:jp pe,$2 ****/
-	JUMP(TESTPE());
+	ZJUMP(TESTPE());
 	CYCLES(10);break;
 
 case 0xeb: /**** $eb:ex de,hl ****/
@@ -946,7 +946,7 @@ case 0xeb: /**** $eb:ex de,hl ****/
 	CYCLES(4);break;
 
 case 0xec: /**** $ec:call pe,$2 ****/
-	CALL(TESTPE());
+	ZCALL(TESTPE());
 	CYCLES(10);break;
 
 case 0xed: /**** $ed:[ed] ****/
@@ -954,23 +954,23 @@ case 0xed: /**** $ed:[ed] ****/
 	CYCLES(0);break;
 
 case 0xee: /**** $ee:xor $1 ****/
-	ALUXOR(FETCH8());
+	ZALUXOR(FETCH8());
 	CYCLES(7);break;
 
 case 0xef: /**** $ef:rst 28 ****/
-	PUSH(PC);PC = 0x28;;
+	ZPUSH(PC);PC = 0x28;;
 	CYCLES(11);break;
 
 case 0xf0: /**** $f0:ret p ****/
-	RETURN(TESTP());
+	ZRETURN(TESTP());
 	CYCLES(5);break;
 
 case 0xf1: /**** $f1:pop af ****/
-	temp16 = POP();SETAF(temp16);
+	temp16 = ZPOP();SETAF(temp16);
 	CYCLES(10);break;
 
 case 0xf2: /**** $f2:jp p,$2 ****/
-	JUMP(TESTP());
+	ZJUMP(TESTP());
 	CYCLES(10);break;
 
 case 0xf3: /**** $f3:di ****/
@@ -978,23 +978,23 @@ case 0xf3: /**** $f3:di ****/
 	CYCLES(4);break;
 
 case 0xf4: /**** $f4:call p,$2 ****/
-	CALL(TESTP());
+	ZCALL(TESTP());
 	CYCLES(10);break;
 
 case 0xf5: /**** $f5:push af ****/
-	PUSH(AF());
+	ZPUSH(AF());
 	CYCLES(11);break;
 
 case 0xf6: /**** $f6:or $1 ****/
-	ALUOR(FETCH8());
+	ZALUOR(FETCH8());
 	CYCLES(7);break;
 
 case 0xf7: /**** $f7:rst 30 ****/
-	PUSH(PC);PC = 0x30;;
+	ZPUSH(PC);PC = 0x30;;
 	CYCLES(11);break;
 
 case 0xf8: /**** $f8:ret m ****/
-	RETURN(TESTM());
+	ZRETURN(TESTM());
 	CYCLES(5);break;
 
 case 0xf9: /**** $f9:ld sp,hl ****/
@@ -1002,7 +1002,7 @@ case 0xf9: /**** $f9:ld sp,hl ****/
 	CYCLES(6);break;
 
 case 0xfa: /**** $fa:jp m,$2 ****/
-	JUMP(TESTM());
+	ZJUMP(TESTM());
 	CYCLES(10);break;
 
 case 0xfb: /**** $fb:ei ****/
@@ -1010,7 +1010,7 @@ case 0xfb: /**** $fb:ei ****/
 	CYCLES(4);break;
 
 case 0xfc: /**** $fc:call m,$2 ****/
-	CALL(TESTM());
+	ZCALL(TESTM());
 	CYCLES(10);break;
 
 case 0xfd: /**** $fd:[iy] ****/
@@ -1018,11 +1018,11 @@ case 0xfd: /**** $fd:[iy] ****/
 	CYCLES(0);break;
 
 case 0xfe: /**** $fe:cp $1 ****/
-	ALUCP(FETCH8());
+	ZALUCP(FETCH8());
 	CYCLES(7);break;
 
 case 0xff: /**** $ff:rst 38 ****/
-	PUSH(PC);PC = 0x38;;
+	ZPUSH(PC);PC = 0x38;;
 	CYCLES(11);break;
 
 

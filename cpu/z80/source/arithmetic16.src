@@ -15,31 +15,31 @@
 #
 
 09 		"ADD HL,@double.4" 11
-		temp16 = add16(HL(),@double.4());
+		temp16 = zAdd16(HL(),@double.4());
 		SETHL(temp16);
 
 DD09 	"ADD $I,@double.4x" 15
-		IZ() = add16(IZ(),@double.4x())
+		IZ() = zAdd16(IZ(),@double.4x())
 
 #
 # 		16 bit ADC with carry in.
 #
 ED4A 	"ADC HL,@double.4" 15
-		temp16 = adc16(HL(),@double.4());
+		temp16 = zAdc16(HL(),@double.4());
 		SETHL(temp16);
 
 #
 # 		16 bit SBC with borrow in.
 #
 ED42	"SBC HL,@double.4" 15
-		temp16 = sbc16(HL(),@double.4());
+		temp16 = zSbc16(HL(),@double.4());
 		SETHL(temp16);
 
 #
 # 		16 bit INC/DEC
 #
 03 		"@dir.3 @double.4" 6
-			@dir.3#@double.4()
+			Z@dir.3#@double.4()
 
 #
 # 		IX done seperately here for simplicity

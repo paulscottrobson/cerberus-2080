@@ -10,7 +10,7 @@ case 0x41: /**** $41:out (c),b ****/
 	CYCLES(12);break;
 
 case 0x42: /**** $42:sbc hl,bc ****/
-	temp16 = sbc16(HL(),BC()); SETHL(temp16);;
+	temp16 = zSbc16(HL(),BC()); SETHL(temp16);;
 	CYCLES(15);break;
 
 case 0x43: /**** $43:ld ($2),bc ****/
@@ -18,11 +18,11 @@ case 0x43: /**** $43:ld ($2),bc ****/
 	CYCLES(20);break;
 
 case 0x44: /**** $44:neg ****/
-	temp8 = A;A = 0; ALUSUB(temp8);;
+	temp8 = A;A = 0; ZALUSUB(temp8);;
 	CYCLES(8);break;
 
 case 0x45: /**** $45:retn ****/
-	RETURN(1);
+	ZRETURN(1);
 	CYCLES(14);break;
 
 case 0x46: /**** $46:im0 ****/
@@ -42,7 +42,7 @@ case 0x49: /**** $49:out (c),c ****/
 	CYCLES(12);break;
 
 case 0x4a: /**** $4a:adc hl,bc ****/
-	temp16 = adc16(HL(),BC()); SETHL(temp16);;
+	temp16 = zAdc16(HL(),BC()); SETHL(temp16);;
 	CYCLES(15);break;
 
 case 0x4b: /**** $4b:ld bc,($2) ****/
@@ -50,7 +50,7 @@ case 0x4b: /**** $4b:ld bc,($2) ****/
 	CYCLES(20);break;
 
 case 0x4d: /**** $4d:reti ****/
-	RETURN(1);
+	ZRETURN(1);
 	CYCLES(14);break;
 
 case 0x4f: /**** $4f:ld r,a ****/
@@ -66,7 +66,7 @@ case 0x51: /**** $51:out (c),d ****/
 	CYCLES(12);break;
 
 case 0x52: /**** $52:sbc hl,de ****/
-	temp16 = sbc16(HL(),DE()); SETHL(temp16);;
+	temp16 = zSbc16(HL(),DE()); SETHL(temp16);;
 	CYCLES(15);break;
 
 case 0x53: /**** $53:ld ($2),de ****/
@@ -90,7 +90,7 @@ case 0x59: /**** $59:out (c),e ****/
 	CYCLES(12);break;
 
 case 0x5a: /**** $5a:adc hl,de ****/
-	temp16 = adc16(HL(),DE()); SETHL(temp16);;
+	temp16 = zAdc16(HL(),DE()); SETHL(temp16);;
 	CYCLES(15);break;
 
 case 0x5b: /**** $5b:ld de,($2) ****/
@@ -114,7 +114,7 @@ case 0x61: /**** $61:out (c),h ****/
 	CYCLES(12);break;
 
 case 0x62: /**** $62:sbc hl,hl ****/
-	temp16 = sbc16(HL(),HL()); SETHL(temp16);;
+	temp16 = zSbc16(HL(),HL()); SETHL(temp16);;
 	CYCLES(15);break;
 
 case 0x63: /**** $63:ld ($2),hl ****/
@@ -134,7 +134,7 @@ case 0x69: /**** $69:out (c),l ****/
 	CYCLES(12);break;
 
 case 0x6a: /**** $6a:adc hl,hl ****/
-	temp16 = adc16(HL(),HL()); SETHL(temp16);;
+	temp16 = zAdc16(HL(),HL()); SETHL(temp16);;
 	CYCLES(15);break;
 
 case 0x6b: /**** $6b:ld hl,($2) ****/
@@ -146,7 +146,7 @@ case 0x6f: /**** $6f:rld ****/
 	CYCLES(18);break;
 
 case 0x72: /**** $72:sbc hl,sp ****/
-	temp16 = sbc16(HL(),SP()); SETHL(temp16);;
+	temp16 = zSbc16(HL(),SP()); SETHL(temp16);;
 	CYCLES(15);break;
 
 case 0x73: /**** $73:ld ($2),sp ****/
@@ -162,7 +162,7 @@ case 0x79: /**** $79:out (c),a ****/
 	CYCLES(12);break;
 
 case 0x7a: /**** $7a:adc hl,sp ****/
-	temp16 = adc16(HL(),SP()); SETHL(temp16);;
+	temp16 = zAdc16(HL(),SP()); SETHL(temp16);;
 	CYCLES(15);break;
 
 case 0x7b: /**** $7b:ld sp,($2) ****/
@@ -170,67 +170,67 @@ case 0x7b: /**** $7b:ld sp,($2) ****/
 	CYCLES(20);break;
 
 case 0xa0: /**** $a0:ldi ****/
-	WRITE8(DE(),READ8(HL())); INCDE(); INCHL(); DECBC(); SETOVERFLOW(BC() != 0); SETHALFCARRY(0); SETNFLAG(0);;
+	WRITE8(DE(),READ8(HL())); ZINCDE(); ZINCHL(); ZDECBC(); SETOVERFLOW(BC() != 0); SETHALFCARRY(0); SETNFLAG(0);;
 	CYCLES(16);break;
 
 case 0xa1: /**** $a1:cpi ****/
-	oldCarry = c_Flag; ALUCP(READ8(HL())); c_Flag = oldCarry; INCHL(); DECBC() SETOVERFLOW(BC() != 0);;
+	oldCarry = c_Flag; ZALUCP(READ8(HL())); c_Flag = oldCarry; ZINCHL(); ZDECBC() SETOVERFLOW(BC() != 0);;
 	CYCLES(16);break;
 
 case 0xa2: /**** $a2:ini ****/
-	WRITE8(HL(),INPORT(BC())); B--; INCHL(); SETNZ(B); SETNFLAG(1);;
+	WRITE8(HL(),INPORT(BC())); B--; ZINCHL(); SETNZ(B); SETNFLAG(1);;
 	CYCLES(16);break;
 
 case 0xa3: /**** $a3:outi ****/
-	OUTPORT(C,READ8(HL())); B--; INCHL(); SETNZ(B); SETNFLAG(1);;
+	OUTPORT(C,READ8(HL())); B--; ZINCHL(); SETNZ(B); SETNFLAG(1);;
 	CYCLES(16);break;
 
 case 0xa8: /**** $a8:ldd ****/
-	WRITE8(DE(),READ8(HL())); DECDE(); DECHL(); DECBC(); SETOVERFLOW(BC() != 0); SETHALFCARRY(0); SETNFLAG(0);;
+	WRITE8(DE(),READ8(HL())); ZDECDE(); ZDECHL(); ZDECBC(); SETOVERFLOW(BC() != 0); SETHALFCARRY(0); SETNFLAG(0);;
 	CYCLES(16);break;
 
 case 0xa9: /**** $a9:cpd ****/
-	oldCarry = c_Flag; ALUCP(READ8(HL())); c_Flag = oldCarry; DECHL(); DECBC() SETOVERFLOW(BC() != 0);;
+	oldCarry = c_Flag; ZALUCP(READ8(HL())); c_Flag = oldCarry; ZDECHL(); ZDECBC() SETOVERFLOW(BC() != 0);;
 	CYCLES(16);break;
 
 case 0xaa: /**** $aa:ind ****/
-	WRITE8(HL(),INPORT(BC())); B--; DECHL(); SETNZ(B); SETNFLAG(1);;
+	WRITE8(HL(),INPORT(BC())); B--; ZDECHL(); SETNZ(B); SETNFLAG(1);;
 	CYCLES(16);break;
 
 case 0xab: /**** $ab:outd ****/
-	OUTPORT(C,READ8(HL())); B--; DECHL(); SETNZ(B); SETNFLAG(1);;
+	OUTPORT(C,READ8(HL())); B--; ZDECHL(); SETNZ(B); SETNFLAG(1);;
 	CYCLES(16);break;
 
 case 0xb0: /**** $b0:ldir ****/
-	do { WRITE8(DE(),READ8(HL())); INCDE(); INCHL(); DECBC(); SETOVERFLOW(BC() != 0); CYCLES(21); } while (BC() != 0); SETHALFCARRY(0); SETNFLAG(0);;
+	do { WRITE8(DE(),READ8(HL())); ZINCDE(); ZINCHL(); ZDECBC(); SETOVERFLOW(BC() != 0); CYCLES(21); } while (BC() != 0); SETHALFCARRY(0); SETNFLAG(0);;
 	CYCLES(16);break;
 
 case 0xb1: /**** $b1:cpir ****/
-	do { oldCarry = c_Flag; ALUCP(READ8(HL())); c_Flag = oldCarry; INCHL(); DECBC() SETOVERFLOW(BC() != 0); CYCLES(21); } while( (BC()!= 0) && (z_Flag == 0) );;
+	do { oldCarry = c_Flag; ZALUCP(READ8(HL())); c_Flag = oldCarry; ZINCHL(); ZDECBC() SETOVERFLOW(BC() != 0); CYCLES(21); } while( (BC()!= 0) && (z_Flag == 0) );;
 	CYCLES(16);break;
 
 case 0xb2: /**** $b2:inir ****/
-	do { WRITE8(HL(),INPORT(BC())); B--; INCHL(); SETNZ(B); SETNFLAG(1); CYCLES(21); } while (B != 0);;
+	do { WRITE8(HL(),INPORT(BC())); B--; ZINCHL(); SETNZ(B); SETNFLAG(1); CYCLES(21); } while (B != 0);;
 	CYCLES(16);break;
 
 case 0xb3: /**** $b3:otir ****/
-	do { OUTPORT(C,READ8(HL())); B--; INCHL(); SETNZ(B); SETNFLAG(1); CYCLES(21); } while (B != 0);;
+	do { OUTPORT(C,READ8(HL())); B--; ZINCHL(); SETNZ(B); SETNFLAG(1); CYCLES(21); } while (B != 0);;
 	CYCLES(16);break;
 
 case 0xb8: /**** $b8:lddr ****/
-	do { WRITE8(DE(),READ8(HL())); DECDE(); DECHL(); DECBC(); SETOVERFLOW(BC() != 0); CYCLES(21); } while (BC() != 0); SETHALFCARRY(0); SETNFLAG(0);;
+	do { WRITE8(DE(),READ8(HL())); ZDECDE(); ZDECHL(); ZDECBC(); SETOVERFLOW(BC() != 0); CYCLES(21); } while (BC() != 0); SETHALFCARRY(0); SETNFLAG(0);;
 	CYCLES(16);break;
 
 case 0xb9: /**** $b9:cpdr ****/
-	do { oldCarry = c_Flag; ALUCP(READ8(HL())); c_Flag = oldCarry; DECHL(); DECBC() SETOVERFLOW(BC() != 0); CYCLES(21); } while( (BC()!= 0) && (z_Flag == 0) );;
+	do { oldCarry = c_Flag; ZALUCP(READ8(HL())); c_Flag = oldCarry; ZDECHL(); ZDECBC() SETOVERFLOW(BC() != 0); CYCLES(21); } while( (BC()!= 0) && (z_Flag == 0) );;
 	CYCLES(16);break;
 
 case 0xba: /**** $ba:indr ****/
-	do { WRITE8(HL(),INPORT(BC())); B--; DECHL(); SETNZ(B); SETNFLAG(1); CYCLES(21); } while (B != 0);;
+	do { WRITE8(HL(),INPORT(BC())); B--; ZDECHL(); SETNZ(B); SETNFLAG(1); CYCLES(21); } while (B != 0);;
 	CYCLES(16);break;
 
 case 0xbb: /**** $bb:otdr ****/
-	do { OUTPORT(C,READ8(HL())); B--; DECHL(); SETNZ(B); SETNFLAG(1); CYCLES(21); } while (B != 0);;
+	do { OUTPORT(C,READ8(HL())); B--; ZDECHL(); SETNZ(B); SETNFLAG(1); CYCLES(21); } while (B != 0);;
 	CYCLES(16);break;
 
 

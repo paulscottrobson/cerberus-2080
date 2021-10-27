@@ -34,7 +34,7 @@ static void BuildParityTable(void) {
 //
 // *******************************************************************************************************************************
 
-static BYTE8 ConstructStatusByte(void) {
+static BYTE8 ZConstructStatusByte(void) {
 	BYTE8 f = 0;												
 	if (s_Flag != 0) f |= 0x80;													// Get S value Bit 7
 	if (z_Flag != 0) f |= 0x40;													// Get Z value Bit 6 
@@ -51,7 +51,7 @@ static BYTE8 ConstructStatusByte(void) {
 //
 // *******************************************************************************************************************************
 
-static void ExplodeStatusByte(BYTE8 f) {
+static void ZExplodeStatusByte(BYTE8 f) {
 	s_Flag = (f & 0x80) != 0;													// Bit 7, sign
 	z_Flag = (f & 0x40) != 0;													// Bit 6, if zero flag clear make value nz 
 	h_Flag = (f & 0x10) != 0;													// Bit 4 H
@@ -68,7 +68,7 @@ static void ExplodeStatusByte(BYTE8 f) {
 
 #define MAKE16(r1,r2) 	(((r1) << 8) | (r2))
 
-#define AF() MAKE16(A,ConstructStatusByte())
+#define AF() MAKE16(A,ZConstructStatusByte())
 #define BC() MAKE16(B,C)
 #define DE() MAKE16(D,E)
 #define HL() MAKE16(H,L)
@@ -76,7 +76,7 @@ static void ExplodeStatusByte(BYTE8 f) {
 
 #define SET16(r1,r2,n) { r1 = ((n) >> 8);r2 = ((n) & 0xFF); }
 
-#define SETAF(n) { A = ((n) >> 8);ExplodeStatusByte((n) & 0xFF); }
+#define SETAF(n) { A = ((n) >> 8);ZExplodeStatusByte((n) & 0xFF); }
 #define SETBC(n) SET16(B,C,n)
 #define SETDE(n) SET16(D,E,n)
 #define SETHL(n) SET16(H,L,n)
@@ -104,15 +104,15 @@ static inline WORD16 _Fetch8Signed(void) { 										// Support function.
 //
 // *******************************************************************************************************************************
 
-#define PUSH(v) 		_Push(v)
-#define POP()  			_Pop()
+#define ZPUSH(v) 		_ZPush(v)
+#define ZPOP()  			_ZPop()
 
-static inline void _Push(WORD16 d) {
+static inline void _ZPush(WORD16 d) {
 	SP -= 2;
 	WRITE16(SP,d);
 }
 
-static inline WORD16 _Pop(void) {
+static inline WORD16 _ZPop(void) {
 	WORD16 d = READ16(SP);
 	SP += 2;
 	return d;
@@ -124,18 +124,18 @@ static inline WORD16 _Pop(void) {
 //
 // *******************************************************************************************************************************
 
-#define INC16(r1,r2) 	{ r2++;if (r2 == 0) r1++; }
-#define DEC16(r1,r2) 	{ if (r2 == 0) {r1--;}  r2--; }
+#define ZINC16(r1,r2) 	{ r2++;if (r2 == 0) r1++; }
+#define ZDEC16(r1,r2) 	{ if (r2 == 0) {r1--;}  r2--; }
 
-#define INCBC()  	INC16(B,C)
-#define INCDE()  	INC16(D,E)
-#define INCHL()  	INC16(H,L)
-#define INCSP()  	SP++
+#define ZINCBC()  	ZINC16(B,C)
+#define ZINCDE()  	ZINC16(D,E)
+#define ZINCHL()  	ZINC16(H,L)
+#define ZINCSP()  	SP++
 
-#define DECBC()  	DEC16(B,C)
-#define DECDE()  	DEC16(D,E)
-#define DECHL()  	DEC16(H,L)
-#define DECSP()  	SP--
+#define ZDECBC()  	ZDEC16(B,C)
+#define ZDECDE()  	ZDEC16(D,E)
+#define ZDECHL()  	ZDEC16(H,L)
+#define ZDECSP()  	SP--
 
 // *******************************************************************************************************************************
 //
@@ -143,8 +143,8 @@ static inline WORD16 _Pop(void) {
 //
 // *******************************************************************************************************************************
 
-#define INC8(r) 		{ r++;SETNZ(r);SETHALFCARRY((r & 0x0F) == 0x0);SETNFLAG(0);SETOVERFLOW(r == 0x80); }
-#define DEC8(r) 		{ r--;SETNZ(r);SETHALFCARRY((r & 0x0F) == 0xF);SETNFLAG(1);SETOVERFLOW(r == 0x7F); }
+#define ZINC8(r) 		{ r++;SETNZ(r);SETHALFCARRY((r & 0x0F) == 0x0);SETNFLAG(0);SETOVERFLOW(r == 0x80); }
+#define ZDEC8(r) 		{ r--;SETNZ(r);SETHALFCARRY((r & 0x0F) == 0xF);SETNFLAG(1);SETOVERFLOW(r == 0x7F); }
 
 // *******************************************************************************************************************************
 //
@@ -166,19 +166,19 @@ static inline WORD16 _Pop(void) {
 //
 // *******************************************************************************************************************************
 
-#define ALUADD(n) 		{ A = _add(n,0); }
-#define ALUADC(n) 		{ A = _add(n,c_Flag ? 1 : 0); }
-#define ALUSUB(n) 		{ A = _sub(n,0); }
-#define ALUSBC(n) 		{ A = _sub(n,c_Flag ? 1 : 0); }
-#define ALUCP(n) 		{ _sub(n,0); }
+#define ZALUADD(n) 		{ A = _zadd(n,0); }
+#define ZALUADC(n) 		{ A = _zadd(n,c_Flag ? 1 : 0); }
+#define ZALUSUB(n) 		{ A = _zsub(n,0); }
+#define ZALUSBC(n) 		{ A = _zsub(n,c_Flag ? 1 : 0); }
+#define ZALUCP(n) 		{ _zsub(n,0); }
 
-#define ALUAND(n) 		ALU_LOGIC(A & (n),1)
-#define ALUOR(n) 		ALU_LOGIC(A | (n),0)
-#define ALUXOR(n) 		ALU_LOGIC(A ^ (n),0)
+#define ZALUAND(n) 		ALU_LOGIC(A & (n),1)
+#define ZALUOR(n) 		ALU_LOGIC(A | (n),0)
+#define ZALUXOR(n) 		ALU_LOGIC(A ^ (n),0)
 
 #define ALU_LOGIC(r,h) 	{ A = (r);c_Flag = n_Flag = 0;h_Flag = h; SETNZ(A);SETPARITY(A); }
 
-static BYTE8 _add(BYTE8 n,BYTE8 c) {
+static BYTE8 _zadd(BYTE8 n,BYTE8 c) {
 	temp16 = A + n + c;
 	c_Flag = (temp16 & 0x100) != 0;
 	n_Flag = 0;
@@ -190,7 +190,7 @@ static BYTE8 _add(BYTE8 n,BYTE8 c) {
 	return temp16;
 }
 
-static BYTE8 _sub(BYTE8 n,BYTE8 c) {
+static BYTE8 _zsub(BYTE8 n,BYTE8 c) {
 	temp16 = A - n - c;
 	c_Flag = (temp16 & 0x100) != 0;
 	n_Flag = 1;
@@ -202,7 +202,7 @@ static BYTE8 _sub(BYTE8 n,BYTE8 c) {
 	return temp16;
 }
 
-static void DAA()
+static void zDAA()
 {
    int t = 0;
     
@@ -251,7 +251,7 @@ static void DAA()
 //
 // *******************************************************************************************************************************
 
-static WORD16 add16(WORD16 r1,WORD16 r2) {
+static WORD16 zAdd16(WORD16 r1,WORD16 r2) {
 	long r = r1 + r2;
 	SETHALFCARRY((r1 & 0xFFF)+(r2 & 0xFFF) >= 0x1000);
 	SETNFLAG(0);
@@ -267,7 +267,7 @@ static void _setNZ16(WORD16 w) {
 	}
 }
 
-static WORD16 adc16(WORD16 r1,WORD16 r2) {
+static WORD16 zAdc16(WORD16 r1,WORD16 r2) {
 	temp32 = r1 + r2 + (c_Flag ? 1 : 0);
 	_setNZ16(temp32 & 0xFFFF);
 	SETHALFCARRY((r1 & 0xFFF)+(r2 & 0xFFF)+(c_Flag ? 1 : 0) >= 0x1000);
@@ -277,7 +277,7 @@ static WORD16 adc16(WORD16 r1,WORD16 r2) {
 	return temp32 & 0xFFFF;
 }
 
-static WORD16 sbc16(WORD16 r1,WORD16 r2) {
+static WORD16 zSbc16(WORD16 r1,WORD16 r2) {
 	temp32 = r1 - r2 - (c_Flag ? 1 : 0);
 	_setNZ16(temp32 & 0xFFFF);
 	SETHALFCARRY((((r1 & 0xFFF)-(r2 & 0xFFF)-(c_Flag ? 1 : 0)) & 0x8000) != 0);
@@ -302,13 +302,13 @@ static BYTE8 _RotateMake(BYTE8 v,BYTE8 c) {
 	return v;
 }
 
-#define SRRLC(a) 	_RotateMake((a << 1)|(a >> 7),a & 0x80)
-#define SRRRC(a) 	_RotateMake((a >> 1)|(a << 7),a & 0x01)
-#define SRRL(a) 	_RotateMake((a << 1) | (c_Flag ? 0x01:0x00),a & 0x80)
-#define SRRR(a) 	_RotateMake((a >> 1) | (c_Flag ? 0x80:0x00),a & 0x01)
-#define SRSLA(a) 	_RotateMake(a << 1,a & 0x80)
-#define SRSRA(a) 	_RotateMake((a >> 1) | (a & 0x80),a & 0x01)
-#define SRSRL(a) 	_RotateMake(a >> 1,a & 0x01)
+#define ZSRRLC(a) 	_RotateMake((a << 1)|(a >> 7),a & 0x80)
+#define ZSRRRC(a) 	_RotateMake((a >> 1)|(a << 7),a & 0x01)
+#define ZSRRL(a) 	_RotateMake((a << 1) | (c_Flag ? 0x01:0x00),a & 0x80)
+#define ZSRRR(a) 	_RotateMake((a >> 1) | (c_Flag ? 0x80:0x00),a & 0x01)
+#define ZSRSLA(a) 	_RotateMake(a << 1,a & 0x80)
+#define ZSRSRA(a) 	_RotateMake((a >> 1) | (a & 0x80),a & 0x01)
+#define ZSRSRL(a) 	_RotateMake(a >> 1,a & 0x01)
 
 // *******************************************************************************************************************************
 //
@@ -316,7 +316,7 @@ static BYTE8 _RotateMake(BYTE8 v,BYTE8 c) {
 //
 // *******************************************************************************************************************************
 
-static void bitOp(BYTE8 test) {
+static void zBitOp(BYTE8 test) {
 	SETNZ(test);
 	SETHALFCARRY(1);
 	SETNFLAG(0);
@@ -329,21 +329,21 @@ static void bitOp(BYTE8 test) {
 //
 // *******************************************************************************************************************************
 
-#define 	JUMP(t) 	{ temp16 = FETCH16(); if (t) { PC = temp16; }}
-#define 	JUMPR(t) 	{ temp16 = FETCHDISP8(); if (t) { PC += temp16;CYCLES(5); }}
+#define 	ZJUMP(t) 	{ temp16 = FETCH16(); if (t) { PC = temp16; }}
+#define 	ZJUMPR(t) 	{ temp16 = FETCHDISP8(); if (t) { PC += temp16;CYCLES(5); }}
 
-#define 	CALL(t) 	{ temp16 = FETCH16(); if (t) { PUSH(PC);PC = temp16;CYCLES(7); }}
-#define 	RETURN(t) 	{ if (t) { PC = POP();CYCLES(6); }}
+#define 	ZCALL(t) 	{ temp16 = FETCH16(); if (t) { ZPUSH(PC);PC = temp16;CYCLES(7); }}
+#define 	ZRETURN(t) 	{ if (t) { PC = ZPOP();CYCLES(6); }}
 
 #define 	TESTNZ() 	(z_Flag == 0)
-#define 	TESTNC()	(c_Flag == 0)
+#define 	TESTNC()		(c_Flag == 0)
 #define 	TESTPO() 	(p_Flag == 0)
-#define 	TESTP() 	(s_Flag == 0)
+#define 	TESTP() 		(s_Flag == 0)
 
-#define 	TESTZ() 	(z_Flag != 0)
+#define 	TESTZ() 		(z_Flag != 0)
 #define 	TESTC()		(c_Flag != 0)
 #define 	TESTPE() 	(p_Flag != 0)
-#define 	TESTM() 	(s_Flag != 0)
+#define 	TESTM() 		(s_Flag != 0)
 
 // *******************************************************************************************************************************
 //

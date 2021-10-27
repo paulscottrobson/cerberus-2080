@@ -27,7 +27,7 @@ class Generator
 
 	def run
 		Dir.glob('source/*').each do |f| 
-			load_process(f).each { |d| load_definition d }
+			load_process(f).each { |d| load_definition d } unless f.include?("_")
 		end 
 		self
 	end

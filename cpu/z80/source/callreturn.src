@@ -14,31 +14,31 @@
 # 		16 bit calls
 #
 CD 		"CALL $2" 10
-		CALL(1)
+		ZCALL(1)
 
 C4 		"CALL @test,$2" 10
-		CALL(TEST@test())
+		ZCALL(TEST@test())
 
 #
 # 		Returns
 #
 C9 		"RET" 4
-		RETURN(1)		
+		ZRETURN(1)		
 
 C0 		"RET @test" 5
-		RETURN(TEST@test())		
+		ZRETURN(TEST@test())		
 
 #
 # 		Restarts
 #		
 C7 		"RST @reset" 11
-		PUSH(PC);PC = 0x@reset;
+		ZPUSH(PC);PC = 0x@reset;
 
 #
 # 		Semi functional interrupt returns.
 #
 ED4D 	"RETI" 14
-		RETURN(1)		
+		ZRETURN(1)		
 
 ED45 	"RETN" 14
-		RETURN(1)		
+		ZRETURN(1)		

@@ -1,0 +1,28 @@
+# *****************************************************************************
+# *****************************************************************************
+#
+#		Name:		base.def
+#		Author:		Paul Robson (paul@robsons.org.uk)
+#		Date:		27th October 2021
+#		Reviewed: 	No
+#		Purpose:	Definitions
+#
+# *****************************************************************************
+# *****************************************************************************
+
+@g1mode.std [ Shift:2,$1.X:ABSX,$1:ZERO,#$1:IMM,$2:ABS,($1).Y:INDY,$1.X:ZEROX,$2.Y:ABSY,$2.X:ABSX ]
+
+@g1op.std   [ Shift:5,ORA,AND,EOR,ADC,_,LDA,CMP,SBC ]
+
+@g1mode.sta [ Shift:2,$1.X:ABSX,$1:ZERO,_,$2:ABS,($1).Y:INDY,$1.X:ZEROX,$2.Y:ABSY,$2.X:ABSX ]
+
+@rot.ops 	[ Shift:5,ASL,ROL,LSR,ROR ]
+
+@rot.mode 	[ Shift:2,_,$1:ZERO,_,$2:ABS,_,$1.X:ZEROX,_,$2.X:ABSX ]
+@stx.mode 	[ Shift:2,_,$1:ZERO,_,$2:ABS]
+@ldx.mode 	[ Shift:2,#$1:IMM,$1:ZERO,_,$2:ABS]
+@dec.mode 	[ Shift:2,_,$1:ZERO,_,$2:ABS,_,$1.X:ZEROX,_,$1.Y:ABSX]
+@stz.mode 	[ Shift:2,_,$1:ZERO,_,_,_,$1.X:ZEROX]
+@sty.mode 	[ Shift:2,_,$1:ZERO,_,$2:ABS,_,$1.X:ZEROX ]
+@cpy.mode 	[ Shift:2,#$1:IMM,$1:ZERO,_,$2:ABS,_,$1.X:ZEROX ]
+@cpx.mode 	[ Shift:2,#$1:IMM,$1:ZERO,_,$2:ABS ]

@@ -4,4 +4,11 @@ TODO
 	NMI
 	Release without ESP32 functionality and note.
 
-	
+
+TSB
+TRB
+JSR
+JMP
+
+Fill in gaps
+go through fixing the flags as many LDX etc. not done.

@@ -32,6 +32,7 @@ void CPUEnable(BYTE8 isOn);
 void CPUSetZ80(BYTE8 isZ80);
 void CPUReset(void);
 BYTE8 CPUExecuteInstruction(void);
+BYTE8 *CPUMemoryAddress(WORD16 address);
 BYTE8 CPUReadMemory(WORD16 address);
 void CPUWriteMemory(WORD16 address,BYTE8 data);
 WORD16 CPUGetPC(void);

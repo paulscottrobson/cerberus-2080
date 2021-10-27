@@ -21,7 +21,7 @@ int main(int argc,char *argv[]) {
 	DEBUG_ARGUMENTS(argc,argv);
 	CatSetup();
 	GFXOpenWindow(WIN_TITLE,WIN_WIDTH,WIN_HEIGHT,WIN_BACKCOLOUR);
-	GFXStart(argc == 3);
+	GFXStart(argc == 3 || argc == 1);
 	CPUEndRun();
 	GFXCloseWindow();
 	return(0);

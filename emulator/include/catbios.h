@@ -11,6 +11,7 @@
 // *******************************************************************************************************************************
 
 #include <ctype.h>
+#include "hardware.h"
 
 #define byte BYTE8
 
@@ -77,7 +78,11 @@ bool fast = false;                     /** true = 8 MHz CPU clock, false = 4 MHz
 static void catbios_setup() {    
     mode = true;
     resetCPUs();
+    //
+    //      Built in font, but can be overridden in storage.
+    //
     for (int i = 0;i < 0x800;i++) cpoke(0xF000+i,default_font[i]);
+    load((char *)"chardefs.bin",(char *)"f000",true);
     ccls();
     cprintFrames();
     clearEditLine();
@@ -339,44 +344,42 @@ static void help() {
 }
 
 static void binMove(char *startAddr, char *endAddr, char *destAddr) {
-    // unsigned int start, finish, destination; /** Memory addresses **/
-    // unsigned int i; /** Address counter **/
-    // if (startAddr == "") cprintStatus(6); /** Missing the file's name **/
-    // else {
-    //     start = strtol(startAddr.c_str(), NULL, 16); /** Convert hexadecimal address char *to unsigned int **/
-    //     if (endAddr == "") cprintStatus(6); /** Missing the file's name **/
-    //     else {
-    //         finish = strtol(endAddr.c_str(), NULL, 16); /** Convert hexadecimal address char *to unsigned int **/
-    //         if (destAddr == "") cprintStatus(6); /** Missing the file's name **/
-    //         else {
-    //             destination = strtol(destAddr.c_str(), NULL, 16); /** Convert hexadecimal address char *to unsigned int **/
-    //             if (finish < start) cprintStatus(9); /** Invalid address range **/
-    //             else if ((destination <= finish) && (destination >= start)) cprintStatus(9); /** Destination cannot be within original range **/
-    //             else {
-    //                 for (i = start; i <= finish; i++) {
-    //                     cpoke(destination, cpeek(i));
-    //                     destination++;
-    //                 }
-    //                 cprintStatus(2);
-    //             }
-    //         }
-    //     }
-    // }
+    int start, finish, destination; /** Memory addresses **/
+    int i; /** Address counter **/
+    start = strToHex(startAddr);
+    finish = strToHex(endAddr);
+    destination = strToHex(destAddr);
+
+    if (start < 0 || finish < 0 || destination < 0) {
+        cprintStatus(6);        
+    } else {
+        for (int i = start;i <= finish;i++) {
+            cpoke(destination,cpeek(i));
+            destination++;
+        }
+    }
 }
 
 static void list(char *address) {
-    // /** Lists the contents of memory from the given address, in a compact format **/
-    // byte i, j; /** Just counters **/
-    // unsigned int addr; /** Memory address **/
-    // if (address == "") addr = 0;
-    // else addr = strtol(address.c_str(), NULL, 16); * Convert hexadecimal address char *to unsigned int *
-    // for (i = 2; i < 25; i++) {
-    //     cprintString(3, i, "0x");
-    //     cprintString(5, i, String(addr, HEX));
-    //     for (j = 0; j < 8; j++) {
-    //         cprintString(12 + (j * 3), i, String(cpeek(addr++), HEX)); /** Print bytes in HEX **/
-    //     }
-    // }
+    /** Lists the contents of memory from the given address, in a compact format **/
+    byte i, j; /** Just counters **/
+    char buffer[64];
+    int addr; /** Memory address **/
+    addr = strToHex(address); 
+    if (addr < 0) addr = 0;
+    for (i = 2; i < 25; i++) {
+        sprintf(buffer,"%04x",addr);
+        for (j = 0; j < 8; j++) {
+            sprintf(buffer+strlen(buffer)," %02x",cpeek(addr+j));
+        }
+        strcat(buffer," ");
+        for (j = 0; j < 8; j++) {
+            int ch = cpeek(addr+j) & 0x7F;
+            sprintf(buffer+strlen(buffer),"%c",ch < 0x20 ? '.':ch);
+        }
+        addr += 8;
+        cprintString(3, i, buffer);
+    }
 }
 
 static void runCode() {
@@ -414,43 +417,22 @@ static void runCode() {
     updateProcessorState();
 }
 
+static BYTE8 dirBuffer[8192];
+
 static void dir() {
-//     /** Lists the files in the root directory of uSD card, if available **/
-//     byte y = 2; /** Screen line **/
-//     byte x = 0; /** Screen column **/
-//     File root; /** Root directory of uSD card **/
-//     File entry; /** A file on the uSD card **/
-//     cls();
-//     root = SD.open("/"); /** Go to the root directory of uSD card **/
-//     while (true) {
-//         entry = root.openNextFile(); /** Open next file **/
-//         if (!entry) {
-//             /** No more files on the uSD card **/
-//             root.close(); /** Close root directory **/
-//             cprintStatus(2); /** Announce completion **/
-//             break; /** Get out of this otherwise infinite while() loop **/
-//         }
-//         cprintString(3, y, entry.name());
-//         cprintString(20, y, String(entry.size(), DEC));
-//         entry.close(); /** Close file as soon as it is no longer needed **/
-//         if (y < 24) y++; * Go to the next screen line *
-//         else {
-//             cprintStatus(7); /** End of screen has been reached, needs to scrow down **/
-//             for (x = 2; x < 40; x++) cprintChar(x, 29, ' '); /** Hide editline while waiting for key press **/
-//             while (!keyboard.available()); /** Wait for a key to be pressed **/
-//             if (keyboard.read() == PS2_ESC) {
-//                 /** If the user pressed ESC, break and exit **/
-//                 tone(SOUND, 750, 5); /** Clicking sound for auditive feedback to key press **/
-//                 root.close(); /** Close the directory before exiting **/
-//                 cprintStatus(2);
-//                 break;
-//             } else {
-//                 tone(SOUND, 750, 5); /** Clicking sound for auditive feedback to key press **/
-//                 cls(); /** Clear the screen and... **/
-//                 y = 2; /** ...go back tot he top of the screen **/
-//             }
-//         }
-//     }
+    int y = 2;
+    HWXLoadDirectory(dirBuffer);
+    BYTE8 *p = dirBuffer;
+    cls();
+    while (*p != '\0') {
+        int x = 3;
+        while (*p != '\0') {
+            cprintChar(x++,y,*p++);
+        }
+        y++;
+        p++;
+    }
+    cprintStatus(2);
 }
 
 
@@ -615,73 +597,22 @@ static void delFile(char *filename) {
 }
 
 static void save(char *startAddr, char *endAddr, char *filename) {
-    // /** Saves contents of a region of memory to a file on uSD card **/
-    // unsigned int start, finish;
-    // unsigned int i; /** Memory address counter **/
-    // byte data; /** Data from memory **/
-    // File dataFile; /** File to be created and written to **/
-    // if (startAddr == "") cprintStatus(6); /** Missing operand **/
-    // else {
-    //     start = strtol(startAddr.c_str(), NULL, 16); /** Convert to hexadecimal number **/
-    //     if (endAddr == "") cprintStatus(6); /** Missing operand **/
-    //     else {
-    //         finish = strtol(endAddr.c_str(), NULL, 16); /** Convert to hexadecimal number **/
-    //         if (finish < start) cprintStatus(9); /** Invalid address range **/
-    //         else {
-    //             if (filename == "") cprintStatus(6); /** Missing the file's name **/
-    //             else {
-    //                 if (SD.exists(filename)) cprintStatus(8); /** The file already exists, so stop with error **/
-    //                 else {
-    //                     dataFile = SD.open(filename, FILE_WRITE); /** Try to create the file **/
-    //                     if (!dataFile) cprintStatus(5); /** Cannot create the file **/
-    //                     else {
-    //                         /** Now we can finally write into the created file **/
-    //                         for (i = start; i <= finish; i++) {
-    //                             data = cpeek(i);
-    //                             dataFile.write(data);
-    //                         }
-    //                         dataFile.close();
-    //                         cprintStatus(2);
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
+    int start = strToHex(startAddr);
+    int end = strToHex(endAddr);
+    if (start >= 0 && end >= 0 && start+end < 0x10000) {
+        if (HWXSaveFile(filename,CPUMemoryAddress(start),end-start+1)) {
+            cprintStatus(5);
+        }
+    } else {
+        cprintStatus(2);
+    }
 }
 
 static void load(char *filename, char *address, bool silent) {
-    // /** Loads a binary file from the uSD card into memory **/
-    // File dataFile; /** File for reading from on SD Card, if present **/
-    // unsigned int addr; /** Address where to load the file into memory **/
-    // if (filename == "") {
-    //     if (!silent) cprintStatus(6);
-    // } /** Missing file name, so stop **/
-    // else {
-    //     if (address == "") addr = 0x0202; /** If not otherwise specified, load file into start of code area **/
-    //     else addr = strtol(address.c_str(), NULL, 16); /** Convert address char *to hexadecimal number **/
-    //     if (!SD.exists(filename)) {
-    //         if (!silent) cprintStatus(4);
-    //     } /** The file does not exist, so stop with error **/
-    //     else {
-    //         dataFile = SD.open(filename); /** Open the binary file **/
-    //         if (!dataFile) cprintStatus(5); /** Cannot open the file **/
-    //         else {
-    //             while (dataFile.available()) {
-    //                 /** While there is data to be read... **/
-    //                 cpoke(addr, dataFile.read()); /** Read data from file and store it in memory **/
-    //                 addr++; /** Increment address **/
-    //                 if (addr == 0) {
-    //                     /** Break if address wraps around to the start of memory **/
-    //                     dataFile.close();
-    //                     break;
-    //                 }
-    //             }
-    //             dataFile.close();
-    //             if (!silent) cprintStatus(2);
-    //         }
-    //     }
-    // }
+    int addr = strToHex(address);
+    if (HWXLoadFile(filename,CPUMemoryAddress(addr < 0 ? 0x202:addr))) {
+        if (!silent) cprintStatus(5);
+    }
 }
 
 static void resetCPUs() {

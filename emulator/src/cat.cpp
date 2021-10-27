@@ -18,15 +18,26 @@ static int pendingKey;
 static void catbios_setup();
 static void catbios_sync();
 
+#include "catbios.h"
+
 // *******************************************************************************************************************************
 //
 // 														The Cat Setup function
 //
 // *******************************************************************************************************************************
 
-void CatSetup(void) {
+void CatSetup(int argc,char **argv) {
 	pendingKey = 0;
+
+	mode = true;
+	cpurunning = (argc == 3);
+	fast = false;
+	
 	catbios_setup();
+	if (argc >= 2) {
+		if (strstr(argv[1],"65") != NULL) mode = false;
+		runCode();
+	}
 }
 
 // *******************************************************************************************************************************
@@ -53,5 +64,4 @@ int CatKeyHandler(int key,int isInRunMode) {
 	return key;
 }
 
-#include "catbios.h"
 

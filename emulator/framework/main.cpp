@@ -19,10 +19,9 @@
 int main(int argc,char *argv[]) {
 	DEBUG_RESET();
 	DEBUG_ARGUMENTS(argc,argv);
-	CatSetup();
+	CatSetup(argc,argv);
 	GFXOpenWindow(WIN_TITLE,WIN_WIDTH,WIN_HEIGHT,WIN_BACKCOLOUR);
-	GFXStart(argc == 3 || argc == 1);
-	CPUEndRun();
+	GFXStart(argc != 2);
 	GFXCloseWindow();
 	return(0);
 }

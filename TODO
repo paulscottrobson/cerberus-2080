@@ -1,13 +1,7 @@
 TODO
-
-	Run with one argument, console.
-	Run with two arguments => PC : $202 and ready to run.
-	Run with three arguments => Same as typing run
-
-	Add 65C02 and autoswitch.
-		$5B = LD E,E in Z80
-		$5B = NOP 1 in 65C02
-
-	Starts in Z80 mode, $5B switches to 65C02 mode.
-
+	Debugging.
+	65C02 opcodes
+	NMI
 	Release without ESP32 functionality and note.
+
+	

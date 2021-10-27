@@ -142,7 +142,7 @@ void CPUReset(void) {
 		BuildParityTable();															// Build the parity flag table.
 		PC = 0; 																	// Zero PC.
 	} else {
-		// TODO: 6502 Reset
+		PC = READ16(0xFFFC);
 	}
 	cycles = CYCLES_PER_FRAME;
 }
@@ -179,7 +179,7 @@ BYTE8 CPUExecuteInstruction(void) {
 			}
 		} else {
 			switch(opcode) {														// Execute it.
-				// TODO: 6502 Execute one instruction
+				#include "6502/_code_group_0.h"
 				default:
 					FAILOPCODE("-",opcode);
 			}

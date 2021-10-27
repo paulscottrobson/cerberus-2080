@@ -13,7 +13,7 @@ SOURCES = 	src$(S)sys_processor.o  framework$(S)main.o framework$(S)gfx.o framew
   
 CC = g++
 
-.PHONY: all clean emulator prebuild release
+.PHONY: all clean emulator prebuild release run debug test run65 debug65
 
 all: emulator
 
@@ -26,12 +26,16 @@ run: emulator
 	.$(S)$(APPNAME) storage$(S)cellz80.bin go
 
 debug: emulator 
-	.$(S)$(APPNAME) storage$(S)typez80.bin 
+	.$(S)$(APPNAME) storage$(S)cellz80.bin 
+
+run65: emulator 
+	.$(S)$(APPNAME) storage$(S)cell6502.bin go
+
+debug65: emulator 
+	.$(S)$(APPNAME) storage$(S)type6502.bin 
 	
 test : emulator
-	$(CDEL) memory.dump $(CDELQ)
-	zasm -u test.asm
-	.$(S)$(APPNAME) test.rom
+	.$(S)$(APPNAME) 
 
 emulator: prebuild $(APPNAME)
 
@@ -39,6 +43,7 @@ prebuild:
 	make -C ..$(S)programs
 	make -C ..$(S)cpu$(S)z80
 	$(CCOPY) ..$(S)cpu$(S)z80$(S)code$(S)*.h cpu$(S)z80
+	$(CCOPY) ..$(S)cpu$(S)6502$(S)code$(S)*.h cpu$(S)6502
 
 %.o:%.cpp
 	$(CC) $(CXXFLAGS) -D INCLUDE_DEBUGGING_SUPPORT -I cpu -I framework -I include -c -o $@ $<

@@ -84,7 +84,7 @@ void DBGXRender(int *address,int showDisplay) {
 				instr = (char *)(osel == 0xED ? z_mnemonics_ed[opc] : z_mnemonics_cb[opc]);			
 			}
 		} else {
-			// TODO: 6502 Decode instruction, way simpler :)
+			instr = (char *)c_mnemonics_0[opc];
 		}
 
 		t = buffer;

@@ -61,7 +61,6 @@ WORD16 HWXLoadFile(char * fileName,BYTE8 *target) {
 	if (fileName[0] == 0) return 1;
 	MKSTORAGE();
 	sprintf(fullName,"%sstorage%c%s",SDL_GetBasePath(),FILESEP,fileName);
-	printf("%s\n",fullName);
 	FILE *f = fopen(fullName,"rb");
 	//printf("%s\n",fullName);
 	if (f != NULL) {

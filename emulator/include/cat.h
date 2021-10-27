@@ -12,7 +12,7 @@
 #ifndef _CAT_H
 #define _CAT_H
 
-void CatSetup(void);
+void CatSetup(int argc,char **argv);
 void CatSync(void);
 int CatKeyHandler(int key,int isInRunMode);
 

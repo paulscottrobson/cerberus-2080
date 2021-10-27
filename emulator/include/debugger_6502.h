@@ -11,6 +11,10 @@
 
 static const char * c_labels[] = { "A","X","Y","S","ST","","PC","BK","CY",NULL };
 
+static const char *c_mnemonics_0[256] = {
+	#include "6502/_mnemonics_group_0.h"
+};
+
 static void c_showRegisters(int *address) {
 	CPUSTATUS6502 *s = CPUGetStatus6502();
 	// TODO: Show 6502 Registers

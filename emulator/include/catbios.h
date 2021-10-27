@@ -76,7 +76,6 @@ bool cpurunning = false;               /** true = CPU is running, CAT should not
 bool fast = false;                     /** true = 8 MHz CPU clock, false = 4 MHz CPU clock **/
 
 static void catbios_setup() {    
-    mode = true;
     resetCPUs();
     //
     //      Built in font, but can be overridden in storage.
@@ -112,10 +111,6 @@ static void catbios_sync() {
     //      tone(SOUND, 750, 5);                                            /** Clicking sound for auditive feedback to key presses **/
             if (!cpurunning) cprintStatus(0);                               /** Update status bar **/
             switch(ascii) {
-                case PS2_ENTER:
-                    if (!cpurunning) enter();
-                    break;
-
                 case PS2_ESC:
                     if (cpurunning) {
                         resetCPUs();                    
@@ -157,12 +152,16 @@ static void catbios_sync() {
 
                 default:
                     if (!cpurunning) {
-                        /** If a CPU is not running... **/
-                        editLine[pos] = ascii; /** Put new character in current cursor position **/
-                        if (pos < 37) pos++; /** Update cursor position **/
-                        editLine[pos] = 0; /** Place cursor to the right of new character **/
-                        cprintEditLine(); /** Print the updated edit line **/
-                    } else {
+                        if (ascii == PS2_ENTER) {
+                            enter();
+                        } else {
+                            /** If a CPU is not running... **/
+                            editLine[pos] = ascii; /** Put new character in current cursor position **/
+                            if (pos < 37) pos++; /** Update cursor position **/
+                            editLine[pos] = 0; /** Place cursor to the right of new character **/
+                            cprintEditLine(); /** Print the updated edit line **/
+                        }
+                    } else {                        
                         /** Now, if a CPU is running... **/
                         cpoke(0x0201, ascii); /** Put token code of pressed key in the CPU's mailbox, at 0x0201 **/
                         cpoke(0x0200, 0x01); /** Flag that there is new mail for the CPU waiting at the mailbox **/
@@ -415,6 +414,7 @@ static void runCode() {
     }
     cpurunning = true;
     updateProcessorState();
+    CPUReset();
 }
 
 static BYTE8 dirBuffer[8192];
@@ -616,7 +616,6 @@ static void load(char *filename, char *address, bool silent) {
 }
 
 static void resetCPUs() {
-    cpurunning = false;                     // Stop CPU
     CPUSetZ80(-1);                          // Select/reset Z80
     CPUReset();
     CPUSetZ80(0);                           // Select/reset 6502

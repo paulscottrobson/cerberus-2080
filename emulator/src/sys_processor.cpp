@@ -245,7 +245,7 @@ BYTE8 CPUExecute(WORD16 breakPoint1,WORD16 breakPoint2) {
 		BYTE8 r = CPUExecuteInstruction();											// Execute an instruction
 		if (r != 0) return r; 														// Frame out.
 		next = CPUReadMemory(PC);
-	} while (PC != breakPoint1 && PC != breakPoint2 && next != 0x40);				// Stop on breakpoint or $40 LD B,B break
+	} while (PC != breakPoint1 && PC != breakPoint2 && next != 0xf3);				// Stop on breakpoint or $F3 break
 	return 0; 
 }
 

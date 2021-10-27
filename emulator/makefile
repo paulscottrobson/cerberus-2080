@@ -19,7 +19,8 @@ all: emulator
 
 release: emulator
 	$(CDEL) ..$(S)release$(S)cerberus_$(VERSION)_$(OSNAME).zip $(CDELQ)
-	zip -r ..$(S)release$(S)cerberus_$(VERSION)_$(OSNAME).zip $(APPNAME) storage $(EXTRAFILES)
+	$(CCOPY) ..$(S)documents$(S)readme.txt .
+	zip -r ..$(S)release$(S)cerberus_$(VERSION)_$(OSNAME).zip $(APPNAME) storage readme.txt $(EXTRAFILES)
 
 run: emulator 
 	.$(S)$(APPNAME) storage$(S)cellz80.bin go

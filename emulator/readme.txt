@@ -13,7 +13,8 @@ Windows
 	
 	Builds were done on VirtualBox install of 8.1, so no idea if it works in Windows paintjob etc.
 
-Behaviour is not identical as the CPUs are not seperated, the emulator shell was written for a one CPU system :)
+Behaviour is not identical as the CPUs are not seperated, the emulator shell was written for a one CPU system,
+and the CPU generators are completely different and glued together to work.
 
 	ESC Exit emulator
 	TAB (does ESC in machine)
@@ -27,15 +28,13 @@ Behaviour is not identical as the CPUs are not seperated, the emulator shell was
 Probably builds on a Macintosh but don't have one.
 
 cerberus 			Runs in console mode
-cerberus <bin>		Loads bin to $202 in Z80 mode and enters debugger
+cerberus <bin>		Loads bin to $202 in 6502/Z80 mode and enters debugger
+					(a 6502 mode file contains the characters "65" in it's name somewhere)
 cerberus <bin> run 	Loads and runs binary.
 
 F3 is an incode to debugger breakpoint. 
 	Z80 	: DI which is meaningless as no IRQ.
 	65C02 	: Single byte NOP.
-
-To switch to 6502 mode use the opcode $FB as the first instruction. This can be removed from final build or
-simply left in, as it is a one byte NOP on a 65C02. FB will cause a direct switch to running 65C02 code.
 
 All files are kept in the 'storage' subdirectory.
 

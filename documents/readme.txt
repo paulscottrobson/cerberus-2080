@@ -13,7 +13,8 @@ Windows
 	
 	Builds were done on VirtualBox install of 8.1, so no idea if it works in Windows paintjob etc.
 
-Behaviour is not identical as the CPUs are not seperated, the emulator shell was written for a one CPU system :)
+Behaviour is not identical as the CPUs are not seperated, the emulator shell was written for a one CPU system,
+and the CPU generators are completely different and glued together to work.
 
 	ESC Exit emulator
 	TAB (does ESC in machine)

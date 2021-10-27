@@ -32,13 +32,15 @@ static BYTE8 runZ80 = 1; 															// non zero Z80 on, zero 6502 on
 static BYTE8 cpuIsRunning = 1; 														// non zero if CPU not in halt.
 static BYTE8 forceRun = 0; 															// Force direct execution.
 
-static BYTE8 A,B,C,D,E,H,L,X,Y,S; 													// Standard register
+static BYTE8 A,B,C,D,E,H,L; 														// Standard register
 static WORD16 AFalt,BCalt,DEalt,HLalt; 												// Alternate data set.
 static WORD16 PC,SP; 																// 16 bit registers
 static WORD16 IX,IY; 																// IX IY accessed indirectly.
 
-static BYTE8 s_Flag,z_Flag,c_Flag,h_Flag,n_Flag,p_Flag,b_Flag,d_Flag; 				// Flag Registers
+static BYTE8 s_Flag,z_Flag,c_Flag,h_Flag,n_Flag,p_Flag;								// Flag Registers
 static BYTE8 I,R,intEnabled; 														// We don't really bother with these much.
+
+static BYTE8 zValue,sValue,overflowFlag,carryFlag,a,x,y,s,decimalFlag,interruptDisableFlag,breakFlag;
 
 static BYTE8 ramMemory[0x10000];													// Memory at $0000 upwards
 
@@ -48,7 +50,7 @@ static BYTE8 temp8,oldCarry;
 static int frameCount = 0;
 
 static int cycles;																	// Cycle Count.
-static WORD16 cyclesPerFrame = CYCLES_PER_FRAME;									// Cycles per frame
+static int cyclesPerFrame = CYCLES_PER_FRAME;										// Cycles per frame
 
 #define CYCLES(n) cycles -= (n)
 
@@ -119,7 +121,7 @@ BYTE8 CPUIsZ80(void) {
 #endif
 
 #include "z80_cpu_support.h"
-#include "c6502_cpu_support.h"
+#include "cpu/6502/c6502_cpu_support.h"
 
 WORD16 CPUGetPC(void) {
 	return PC;
@@ -143,7 +145,7 @@ void CPUReset(void) {
 		BuildParityTable();															// Build the parity flag table.
 		PC = 0; 																	// Zero PC.
 	} else {
-		PC = READ16(0xFFFC);
+		resetProcessor();
 	}
 	cycles = CYCLES_PER_FRAME;
 }
@@ -230,7 +232,8 @@ void CPUInterrupt(void) {
 		if (READ8(PC) == 0x76) PC++;
 		ZPUSH(PC);PC = 0x38;
 	} else {
-		// TODO: 6502 NMI.
+		if (READ8(PC) == 0xCB) PC++;
+		nmiCode();
 	}
 }
 
@@ -298,6 +301,11 @@ CPUSTATUSZ80 *CPUGetStatusZ80(void) {
 
 CPUSTATUS6502 *CPUGetStatus6502(void) {
 	st2.cycles = cycles;
+	st2.A = a;
+	st2.X = x;
+	st2.Y = y;
+	st2.S = s;
+	st2.ST = constructFlagRegister();
 	return &st2;
 }
 

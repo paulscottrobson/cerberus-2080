@@ -10,6 +10,8 @@
 // *******************************************************************************************************************************
 // *******************************************************************************************************************************
 
+#include <stdio.h>
+#include <string.h>
 #include <ctype.h>
 #include "hardware.h"
 
@@ -113,6 +115,7 @@ static void catbios_sync() {
             switch(ascii) {
                 case PS2_ESC:
                     if (cpurunning) {
+                        cpurunning = 0;
                         resetCPUs();                    
                         ccls();
                         cprintFrames(); 

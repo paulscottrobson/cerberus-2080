@@ -4,6 +4,8 @@ else
 include ../documents/common.make
 endif
 
+VERSION = "1_00"
+
 APPNAME = cerberus$(APPSTEM)
 
 SOURCES = 	src$(S)sys_processor.o  framework$(S)main.o framework$(S)gfx.o framework$(S)debugger.o \
@@ -11,9 +13,13 @@ SOURCES = 	src$(S)sys_processor.o  framework$(S)main.o framework$(S)gfx.o framew
   
 CC = g++
 
-.PHONY: all clean emulator prebuild
+.PHONY: all clean emulator prebuild release
 
 all: emulator
+
+release: emulator
+	$(CDEL) ..$(S)release$(S)cerberus_$(VERSION)_$(OSNAME).zip $(CDELQ)
+	zip -r ..$(S)release$(S)cerberus_$(VERSION)_$(OSNAME).zip $(APPNAME) storage $(EXTRAFILES)
 
 run: emulator 
 	.$(S)$(APPNAME) storage$(S)cellz80.bin go

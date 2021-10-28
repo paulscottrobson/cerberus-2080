@@ -1,0 +1,355 @@
+001   0000             ;
+002   0000             ;		TODO:
+003   0000             ;			Restore
+004   0000             ;			Range Check
+005   0000             ;			Wrap
+006   0000             ;
+007   0000             
+008   0000             		org 	$202
+009   0202             ;
+010   0202             ; 		Copy a predicatable pattern using the block graphics to the screen.
+011   0202             ;
+012   0202 31 00 F0    		ld 		sp,$F000
+013   0205             
+014   0205 21 00 F8    		ld 		hl,$F800
+015   0208 06 08       		ld 		b,8
+016   020A 75          fill: 	ld 		(hl),l
+017   020B CB BE       		res 	7,(hl)
+018   020D 06 20       		ld 		b,' '
+019   020F 23          		inc 	hl
+020   0210 7C          		ld 		a,h	
+021   0211 FE FD       		cp 		$FD
+022   0213 20 F5       		jr 		nz,fill
+023   0215             
+024   0215 DD 21 00 07 		ld 		ix,graphictestdata
+025   0219             
+026   0219 01 88 13    		ld 		bc,5000
+027   021C             l1: 		
+028   021C C5          		push 	bc
+029   021D 0E 03       		ld 		c,3
+030   021F 11 0A 00    		ld 		de,10
+031   0222 21 02 00    		ld 		hl,2
+032   0225 CD 35 02    		call 	DrawSprite
+033   0228 C1          		pop 	bc
+034   0229 0B          		dec 	bc
+035   022A 78          		ld 		a,b
+036   022B B1          		or 		c
+037   022C 20 EE       		jr 		nz,l1
+038   022E             
+039   022E F3          h1: 		di
+040   022F C3 2E 02    		jp 		h1
+041   0232             
+042   0232             spriteLowUDG:  								; lowest sprite available.
+043   0232 80          		.db 	$80
+044   0233             
+045   0233             spriteNextUDG:  								; next sprite available.
+046   0233 80          		.db 	$80
+047   0234             
+048   0234             spriteInitialYOffset:  						; first time Y offset, used for fine vertical positioning.
+049   0234 00          			.db 	0
+050   0235             
+051   0235             ;
+052   0235             ; 		HL 	Vertical coordinates
+053   0235             ; 		DE 	Horizontal Coordinates
+054   0235             ; 		IX 	address of bitmap data.		
+055   0235             ;		C 	Bit 0, width 1/2
+056   0235             ;			Bit 1, height 1/2
+057   0235             ;			Bit 2..7 , zero
+058   0235             ;
+059   0235             
+060   0235             DrawSprite: 
+061   0235 F5          		push 	af
+062   0236 C5          		push 	bc
+063   0237 D5          		push 	de
+064   0238 E5          		push 	hl
+065   0239 DD E5       		push 	ix
+066   023B FD E5       		push 	iy
+067   023D             ;
+068   023D             ; 		Set fine initial Y offset
+069   023D             ;
+070   023D 7D          		ld 		a,l
+071   023E E6 07       		and 	7
+072   0240 32 34 02    		ld 		(spriteInitialYOffset),a
+073   0243             ;
+074   0243             ; 		Work the out the left shift for fine horizontal scrolling.
+075   0243             ;
+076   0243 7B          		ld 		a,e
+077   0244 E6 07       		and 	7 							; this is the number of shifts to skip.
+078   0246 87          		add 	a,a 						; because its ADD HL,HL ; ADC A,A
+079   0247 32 A1 02    		ld 		(spriteShiftJumpPatch+1),a 	; patch the jump.
+080   024A             ;
+081   024A             ; 		Calculate the screen position and put into IY
+082   024A             ;
+083   024A CB 3B       		srl 	e 							; divide DE by 8 and push on stack.
+084   024C CB 3B       		srl 	e
+085   024E CB 3B       		srl 	e
+086   0250 D5          		push 	de
+087   0251             
+088   0251 7D          		ld 		a,l 						; HL already x 8, so we clear bits 0..2 to make it a boundary
+089   0252 E6 F8       		and 	$F8
+090   0254 6F          		ld 		l,a
+091   0255             
+092   0255 54          		ld 		d,h 						; DE <= HL		
+093   0256 5D          		ld 		e,l
+094   0257 29          		add 	hl,hl 						; HL x 16
+095   0258 29          		add 	hl,hl 						; HL x 32
+096   0259 19          		add 	hl,de 						; HL x 40
+097   025A D1          		pop 	de 							; get X/8 back
+098   025B 19          		add 	hl,de  						
+099   025C 11 00 F8    		ld 		de,$F800 					; point to screen
+100   025F 19          		add 	hl,de
+101   0260             
+102   0260 E5          		push 	hl 							; and put in IY
+103   0261 FD E1       		pop 	iy
+104   0263             ;
+105   0263             ; 		Work out lines to draw in B, based on C bit 1
+106   0263             ;
+107   0263 06 08       		ld 		b,8
+108   0265 CB 49       		bit 	1,c
+109   0267 28 02       		jr 		z,spriteIsSingleHeight
+110   0269 06 10       		ld 		b,16
+111   026B             spriteIsSingleHeight: 		
+112   026B             ;
+113   026B             ; 		Do the next line of the graphics - this is one line on the character display
+114   026B             ; 		with up to 8 rows of pixels.
+115   026B             ;
+116   026B             ;				IX points to the graphics data.	
+117   026B             ;				IY points to the character data, left most.
+118   026B             ;
+119   026B             spriteNextLine: 
+120   026B             ;
+121   026B             ; 		First thing is to make the characters underneath UDGs in range if they aren't already
+122   026B             ; 		We overwrite the drawing addresses in the OR section below.
+123   026B             ;
+124   026B             ;		If it can't do the UDG conversion, then it will simply give up, as there's not enough
+125   026B             ;		graphics characters to draw what is wanted.
+126   026B             ;
+127   026B FD E5       		push 	iy
+128   026D CD F1 02    		call 	spriteMakeUDG 				; do left
+129   0270 38 74       		jr 		c,spriteFail
+130   0272 22 B4 02    		ld 		(spriteInstrL+1),hl
+131   0275 FD 23       		inc 	iy
+132   0277             
+133   0277 CD F1 02    		call 	spriteMakeUDG 				; do middle
+134   027A 38 6A       		jr 		c,spriteFail
+135   027C 22 B9 02    		ld 		(spriteInstrM+1),hl
+136   027F CB 41       		bit 	0,c  						; do right if double width.
+137   0281 28 0A       		jr 		z,spriteNotDouble 
+138   0283 FD 23       		inc 	iy
+139   0285 CD F1 02    		call 	spriteMakeUDG
+140   0288 38 5C       		jr 		c,spriteFail
+141   028A 22 C3 02    		ld 		(spriteInstrR+1),hl
+142   028D             spriteNotDouble: 
+143   028D FD E1       		pop 	iy 							; IY is back again.		
+144   028F             ;
+145   028F             ;		Get the graphic data into AHL
+146   028F             ;
+147   028F             spriteDoNextUDGLine: 
+148   028F AF          		xor 	a 							; zero the upper and lower bit
+149   0290 6F          		ld 		l,a
+150   0291 DD 66 00    		ld 		h,(ix+0)					; get first graphic byte
+151   0294 DD 23       		inc 	ix
+152   0296 CB 41       		bit 	0,c 						; if 1 char width ready for shifting.
+153   0298 28 06       		jr 		z,spriteShift
+154   029A 6C          		ld 		l,h 						; that is the LSB
+155   029B DD 66 00    		ld 		h,(ix+0) 					; get the second graphic byte
+156   029E DD 23       		inc 	ix
+157   02A0             spriteShift: 		
+158   02A0             ;
+159   02A0             ;		Shift the graphic data
+160   02A0             ;
+161   02A0             spriteShiftJumpPatch: 
+162   02A0 18 00       		jr 		$+2		
+163   02A2             
+164   02A2 29          		add 	hl,hl 						; 8 24 bit shifts of AHL
+165   02A3 8F          		adc 	a,a
+166   02A4 29          		add 	hl,hl
+167   02A5 8F          		adc 	a,a
+168   02A6 29          		add 	hl,hl
+169   02A7 8F          		adc 	a,a
+170   02A8 29          		add 	hl,hl
+171   02A9 8F          		adc 	a,a
+172   02AA 29          		add 	hl,hl
+173   02AB 8F          		adc 	a,a
+174   02AC 29          		add 	hl,hl
+175   02AD 8F          		adc 	a,a
+176   02AE 29          		add 	hl,hl
+177   02AF 8F          		adc 	a,a
+178   02B0 29          		add 	hl,hl
+179   02B1 8F          		adc 	a,a
+180   02B2             
+181   02B2             
+182   02B2             ;
+183   02B2             ; 		Now the sprite data is in A H L, or into the memory as set up.
+184   02B2             ;		
+185   02B2 EB          l		ex 		de,hl 						; graphic data in A D E
+186   02B3             spriteInstrL: 
+187   02B3 21 00 F4    		ld 		hl,$F400 					; the left most byte in A first.
+188   02B6 B6          		or 		(hl)
+189   02B7 77          		ld 		(hl),a
+190   02B8             		;
+191   02B8             spriteInstrM: 		
+192   02B8 21 08 F4    		ld 		hl,$F408 					; the middle byte in D
+193   02BB 7A          		ld 		a,d
+194   02BC B6          		or 		(hl)
+195   02BD 77          		ld 		(hl),a
+196   02BE             		;
+197   02BE CB 41       		bit 	0,c 						; are we only doing 8 wide sprites
+198   02C0 28 06       		jr 		z,spriteDown 				; if so, don't do the right most byte.
+199   02C2             		;
+200   02C2             spriteInstrR: 	 							; the right byte in E
+201   02C2 21 10 F4    		ld 		hl,$F410
+202   02C5 7B          		ld 		a,e
+203   02C6 B6          		or 		(hl)
+204   02C7 77          		ld 		(hl),a
+205   02C8             ;
+206   02C8             ; 		Advance all the write addresses by 1, e.g. 1 line down.
+207   02C8             ;
+208   02C8             spriteDown: 
+209   02C8 05          		dec 	b 							; have we done all the vertical lines
+210   02C9 28 1D       		jr 		z,spriteDrawn
+211   02CB             
+212   02CB 21 B4 02    		ld 		hl,spriteInstrL+1
+213   02CE 34          		inc 	(hl)
+214   02CF 21 B9 02    		ld 		hl,spriteInstrM+1
+215   02D2 34          		inc 	(hl)
+216   02D3 21 C3 02    		ld 		hl,spriteInstrR+1 			
+217   02D6 34          		inc 	(hl)
+218   02D7             		;
+219   02D7 7E          		ld 		a,(hl) 						; have we switched bytes, e.g. done 7.
+220   02D8 E6 07       		and 	7
+221   02DA 20 B3       		jr 		nz,spriteDoNextUDGLine 		; no, we can carry on copying.
+222   02DC             
+223   02DC 32 34 02    		ld 		(spriteInitialYOffset),a 	; reset the initial Y offset to zero from here on.
+224   02DF             
+225   02DF 11 28 00    		ld 		de,40 						; advance the on screen pointer by one line
+226   02E2 FD 19       		add 	iy,de
+227   02E4 18 85       		jr 		spriteNextLine 				; and keep drawing out.
+228   02E6             
+229   02E6             spriteFail: 
+230   02E6 FD E1       		pop 	iy
+231   02E8             
+232   02E8             spriteDrawn: 
+233   02E8 FD E1       		pop 	iy
+234   02EA DD E1       		pop 	ix
+235   02EC E1          		pop 	hl
+236   02ED D1          		pop 	de
+237   02EE C1          		pop 	bc
+238   02EF F1          		pop 	af
+239   02F0 C9          		ret
+240   02F1             
+241   02F1             ;
+242   02F1             ; 		Convert the character at IY to a UDG in the allocated space.
+243   02F1             ; 		Return HL = Data address, CC if okay, CS if failed.
+244   02F1             ;		Preserves BC.
+245   02F1             ;
+246   02F1             spriteMakeUDG: 
+247   02F1 FD 7E 00    		ld 		a,(iy+0) 					; get the character there
+248   02F4 21 32 02    		ld 		hl,spriteLowUDG 			; if >= spriteLowUDG it is *already* a UDG.
+249   02F7 BE          		cp 		(hl)
+250   02F8 30 2F       		jr 		nc,spriteCalcExit 			; calculate the position and exit.
+251   02FA             
+252   02FA 21 33 02    		ld 		hl,spriteNextUDG			; number of next free UDG into A.
+253   02FD 7E          		ld 		a,(hl) 
+254   02FE B7          		or 		a 					
+255   02FF 37          		scf 								; if zero, we are out, so return with carry set, we can't convert it.
+256   0300 C8          		ret 	z
+257   0301             
+258   0301 34          		inc 	(hl) 						; bump the next free UDG element
+259   0302 6F          		ld 		l,a 						; put the number into L
+260   0303 26 06       		ld 		h,spriteOldCharOriginal/256	; going to save the character we are replacing.
+261   0305 FD 7E 00    		ld 		a,(iy+0)   
+262   0308 77          		ld 		(hl),a
+263   0309 F5          		push 	af 							; save that character
+264   030A             		;
+265   030A FD E5       		push 	iy 							; put the address of that character into DE and write that out.
+266   030C D1          		pop 	de
+267   030D 26 04       		ld 		h,spriteOldCharLow/256
+268   030F 73          		ld 		(hl),e
+269   0310 26 05       		ld 		h,spriteOldCharHigh/256
+270   0312 72          		ld 		(hl),d
+271   0313             		;
+272   0313 FD 75 00    		ld 		(iy+0),l 					; replace the screen character with the UDG.
+273   0316             
+274   0316 7D          		ld 		a,l 						; DE = Graphic image of character we have just used
+275   0317 CD 33 03    		call 	spriteDefinitionToHL		
+276   031A EB          		ex 		de,hl
+277   031B F1          		pop 	af 							; HL = Graphic image of original character
+278   031C CD 33 03    		call 	spriteDefinitionToHL
+279   031F C5          		push 	bc 							; copy original image to newly acquired UDG, thus preserving the background.
+280   0320 01 08 00    		ld 		bc,8
+281   0323 ED B0       		ldir 
+282   0325 C1          		pop 	bc 
+283   0326             
+284   0326 FD 7E 00    		ld 		a,(iy+0) 					; get the graphic to use back
+285   0329             
+286   0329             spriteCalcExit: 
+287   0329 CD 33 03    		call 	spriteDefinitionToHL 		; get its address
+288   032C             
+289   032C 3A 34 02    		ld 		a,(spriteInitialYOffset)	; add the initial Y sprite offset to HL. It can't carry out of bit 7, address
+290   032F 85          		add 	a,l 						; is divisible by 8.	
+291   0330 6F          		ld 		l,a
+292   0331             
+293   0331 AF          		xor 	a 							; return with CC
+294   0332 C9          		ret
+295   0333             ;
+296   0333             ; 		Sprite # in A to address of UDG in HL.
+297   0333             ;
+298   0333             spriteDefinitionToHL: 
+299   0333 6F          		ld 		l,a 						; put UDG# in L
+300   0334 26 1E       		ld 		h,$F0/8 					; as we're going to x 8, this will go back to F0
+301   0336 29          		add 	hl,hl
+302   0337 29          		add 	hl,hl
+303   0338 29          		add 	hl,hl
+304   0339 C9          		ret
+305   033A             
+306   033A             
+307   033A 00          		.align 	256,0
+308   0400             spriteOldCharLow:  							; screen addresses that have been replaced (Low)
+309   0400 00          		.ds 	256
+310   0500             spriteOldCharHigh: 
+311   0500 00          		.ds 	256
+312   0600             spriteOldCharOriginal: 
+313   0600 00          		.ds 	256
+314   0700             
+315   0700             graphictestdata: 
+316   0700             
+317   0700 FF FF       		.dw 	$FFFF
+318   0702 55 55       		.dw 	$5555
+319   0704 AA AA       		.dw 	$AAAA
+320   0706 01 88       		.dw 	$8801
+321   0708             
+322   0708 01 88       		.dw 	$8801
+323   070A 01 88       		.dw 	$8801
+324   070C 01 88       		.dw 	$8801
+325   070E FF FF       		.dw 	$FFFF
+326   0710             
+327   0710 01 80       		.dw 	$8001
+328   0712 03 C0       		.dw 	$C003
+329   0714 07 E0       		.dw 	$E007
+330   0716 0F F0       		.dw 	$F00F
+331   0718             
+332   0718 1F F8       		.dw 	$F81F
+333   071A 3F FC       		.dw 	$FC3F
+334   071C 7F FE       		.dw 	$FE7F
+335   071E FF FF       		.dw 	$FFFF
+336   0720             
+337   0720             gtd2: 
+338   0720 18          		.db 	$18
+339   0721 3C          		.db 	$3C
+340   0722 7E          		.db 	$7E
+341   0723 FF          		.db 	$FF
+342   0724 FF          		.db 	$FF
+343   0725 7E          		.db 	$7E
+344   0726 3C          		.db 	$3C
+345   0727 18          		.db 	$18
+346   0728 18          		.db 	$18
+347   0729 3C          		.db 	$3C
+348   072A 7E          		.db 	$7E
+349   072B FF          		.db 	$FF
+350   072C FF          		.db 	$FF
+351   072D 7E          		.db 	$7E
+352   072E 3C          		.db 	$3C
+353   072F 18          		.db 	$18
+354   0730             
+355   0730             

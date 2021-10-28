@@ -62,11 +62,12 @@ WORD16 HWXLoadFile(char * fileName,BYTE8 *target) {
 	MKSTORAGE();
 	sprintf(fullName,"%sstorage%c%s",SDL_GetBasePath(),FILESEP,fileName);
 	FILE *f = fopen(fullName,"rb");
-	//printf("%s\n",fullName);
+	int c = 0;
 	if (f != NULL) {
 		while (!feof(f)) {
 			BYTE8 data = fgetc(f);
 			*target++ = data;
+			c++;
 		}
 		fclose(f);
 	}

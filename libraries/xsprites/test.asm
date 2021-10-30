@@ -151,6 +151,7 @@ _SPRStartNextCharacterRow:
 		;		Get the graphics for the next *pixel* line. into ADE
 		;
 _SPRNextRowUDG:		
+		di
 		ld 		e,0							; DE = $00:BC
 		ld 		a,(bc)
 		ld 		d,a

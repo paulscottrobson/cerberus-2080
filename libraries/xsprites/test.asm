@@ -20,32 +20,33 @@ start:
 		ld 		sp,$F000
 		ld 		hl,$F800+40*30
 _fill:	dec 	hl	
-		ld 		a,l
- 		and  	3
- 		or 		$2C
- 		ld 		(hl),a
-; 		ld 		(hl),$20
+ 		ld 		(hl),$20
+ 		ld 		a,l
+ 		add 	a,2
+ 		and 	3
+ 		jr 		nz,_fill3
+ 		ld 		(hl),1
+_fill3: 		
  		bit 	3,h
  		jr 		nz,_fill
-;
-;		Clear all the sprite UDGs (testing only requires this)
-;
- 		ld 		hl,$F000+SPRLowSprite*8
-_fill2:	ld 		(hl),0
+
+ 		ld 		hl,$F008
+_fill4:	ld 		(hl),1
 		inc 	hl
-		bit 	3,h
-		jr 		z,_fill2
+		bit 	3,l
+		jr 		nz,_fill4 		
 
  		call 	SPRInitialise
  		ld 		ix,SpriteDemo2
- 		ld 		hl,1
+ 		ld 		b,7
 _dloop: 		
  		call 	SpriteXDraw
- 		dec 	hl
- 		ld 		a,h
- 		or 		l
- 		jr 		nz,_dloop
-
+ 		res 	7,(ix+7)
+ 		ld	 	a,(ix+0)
+ 		add 	a,12
+ 		ld 		(ix+0),a
+ 		inc 	(ix+2)
+ 		djnz	_dloop
 _stop:	di
 		jr		_stop 		
 

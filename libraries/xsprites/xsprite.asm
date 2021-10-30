@@ -26,6 +26,8 @@
 ;		At 4Mhz it does about 330 draws/erases a second on a 16x16 sprites, twice as fast on
 ;		8 pixel high sprites.
 ;
+;		It eats UDGs - a single 16x16 sprite needs 9 UDGs if it doesn't overlap with another.
+;
 ; *********************************************************************************************
 
 
@@ -81,7 +83,14 @@ _SPRUsageReset:
 ;
 ; *********************************************************************************************
 
-SpriteXDraw:
+SpriteXDraw: 								; draw only
+		bit 	7,(ix+0)
+		ret 	nz
+		jr 		SpriteXToggle
+SpriteXErase:								; erase only
+		bit 	7,(ix+0)
+		ret 	z
+SpriteXToggle:								; flip state
 		push 	af 							; save registers 							
 		push 	bc
 		push 	de

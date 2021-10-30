@@ -19,6 +19,7 @@ _fill:	dec 	hl
  		and  	3
  		or 		$2C
  		ld 		(hl),a
+ 		ld 		(hl),$20
  		bit 	3,h
  		jr 		nz,_fill
 ;
@@ -151,7 +152,6 @@ _SPRStartNextCharacterRow:
 		;		Get the graphics for the next *pixel* line. into ADE
 		;
 _SPRNextRowUDG:		
-		di
 		ld 		e,0							; DE = $00:BC
 		ld 		a,(bc)
 		ld 		d,a
@@ -234,6 +234,7 @@ _SPRDrawEnd:
 
 		xor 	a 							; clear the initial offset
 		ld 		(_SPRInitialYOffset),a
+
 
 		ld 		de,40 						; advance down one row.
 		add 	iy,de 
@@ -460,8 +461,8 @@ SPRDataBlockEnd:
 
 		.org 	$7000
 SpriteDemo:		
-		.dw 	10 							; X
-		.dw 	4 							; Y
+		.dw 	0 							; X
+		.dw 	0 							; Y
 		.dw 	SpriteGraphic 				; Graphics
 		.dw 	$00 						; 2,1:Height 0:Width others 0.
 

@@ -33,11 +33,12 @@ _fill2:	ld 		(hl),0
 
  		call 	SPRInitialise
 
- 		ld 		ix,SpriteDemo
+ 		ld 		ix,SpriteDemo2
  		call 	SpriteXDraw
  		di
  		call 	SpriteXDraw
-_stop:	jr		_stop 		
+_stop:	di
+		jr		_stop 		
 
 
 SPRx 	= 0 								; horizontal position
@@ -376,9 +377,10 @@ _SPRAOFound:
 		;
 		; 		Copy the graphic definition of the original character into the UDG.
 		;
+
 		ld 		a,(iy+0) 					; get the original character , e.g. the non UDG
+		ld 		(iy+0),l 					; override it.
 		;
-		ld 		(iy+0),l 					; put the UDG on the screen.
 		call 	_SPRCalculateDefinitionAddr ; HL is the graphic of the original character
 		ex 		de,hl
 		ld 		a,(iy+0) 					; HL is the graphic of the UDG

@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "test.asm"
-              	; date: 2021-10-30 08:13:25
+              	; date: 2021-10-30 09:26:53
               	; --------------------------------------
 
 
@@ -9,46 +9,47 @@
               	
 0202:         			org 	$202
               	
+              	
               	;
               	;	 	Defining SPRLowSprite sets the lowest UDG used by sprites. This is a constant
               	; 		so if this is $A0, then $00-$9F are background, and $A0-$FF are used for sprites.
               	;
 00C0:         	SPRLowSprite = $C0 								
               	
+0202: C30008  			jp 		start
+              			.include "xsprite.asm"
+              	; *********************************************************************************************
+              	; *********************************************************************************************
               	;
-              	; 		Copy a lightweight pattern to the screen.
+              	;		Name:		xsprite.asm
+              	;		Purpose:	XOR Sprite Drawer
+              	;		Created:	29th October 2021
+              	;		Author:		Paul Robson (paul@robsons.org.uk)
               	;
-0202: 3100F0  			ld 		sp,$F000
-0205: 21B0FC  			ld 		hl,$F800+40*30
-0208: 2B      	_fill:	dec 	hl	
-0209: 7D      			ld 		a,l
-020A: E603    	 		and  	3
-020C: F62C    	 		or 		$2C
-020E: 77      	 		ld 		(hl),a
-020F: 3620    	 		ld 		(hl),$20
-0211: CB5C    	 		bit 	3,h
-0213: 20F3    	 		jr 		nz,_fill
-              	;
-              	;		Clear all the sprite UDGs (testing only requires this)
-              	;
-0215: 2100F6  	 		ld 		hl,$F000+SPRLowSprite*8
-0218: 3600    	_fill2:	ld 		(hl),0
-021A: 23      			inc 	hl
-021B: CB5C    			bit 	3,h
-021D: 28F9    			jr 		z,_fill2
+              	; *********************************************************************************************
+              	; *********************************************************************************************
               	
-021F: CD3002  	 		call 	SPRInitialise
-              	
-0222: DD211070	 		ld 		ix,SpriteDemo2
-0226: CD4802  	 		call 	SpriteXDraw
-0229: F3      	 		di
-022A: CD4802  	 		call 	SpriteXDraw
-022D: F3      	_stop:	di
-022E: 18FD    			jr		_stop 		
+              	; *********************************************************************************************
+              	;
+              	;		This is an XOR drawing sprite system. This is useful because the draw is self
+              	;		cancelling, and this means you don't have to repaint multiple sprites to restore
+              	; 		the display state. The downside is that it doesn't work well on collisions or 
+              	; 		especially backgrounds.
+              	;
+              	;		The original design, which was a simpler draw all/erase all design, was binned 
+              	;		because I thought on real hardware it would create too much flash on the display.
+              	;
+              	; *********************************************************************************************
               	
               	
-0000:         	SPRx 	= 0 								; horizontal position
-0002:         	SPRy 	= 2 								; vertical position
+              	; *********************************************************************************************
+              	;
+              	;								  Sprite Record entries
+              	;
+              	; *********************************************************************************************
+              	
+0000:         	SPRx 	= 0 								; horizontal position, pixels
+0002:         	SPRy 	= 2 								; vertical position, pixels
 0004:         	SPRgraphics = 4 							; bitmap data
 0006:         	SPRcontrol = 6 								; 0:width 1,2:height others zero
 0007:         	SPRstatus = 7 								; 7:currently drawn
@@ -57,206 +58,232 @@
               	;
               	; 								Initialise the sprite system.
               	;
+              	; 	At this point sprite records should all have their "currently drawn" bit clear, it will
+              	; 	get very confused otherwise.
+              	;
               	; *********************************************************************************************
               	
-0230:         	SPRInitialise:
-0230: F5      			push 	af
-0231: E5      			push 	hl
+0205:         	SPRInitialise:
+0205: F5      			push 	af
+0206: E5      			push 	hl
               			;
               			; 		Clear the main data area.
               			;
-0232: 210060  			ld 		hl,SPRDataBlock 			
-0235:         	_SPRZeroBlock:
-0235: 3600    			ld 		(hl),$00
-0237: 23      			inc 	hl
-0238: 7C      			ld 		a,h
-0239: FE64    			cp 		SPRDataBlockEnd >> 8
-023B: 20F8    			jr 		nz,_SPRZeroBlock
+0207: 210004  			ld 		hl,SPRDataBlock 			
+020A:         	_SPRZeroBlock:
+020A: 3600    			ld 		(hl),$00
+020C: 23      			inc 	hl
+020D: 7C      			ld 		a,h
+020E: FE08    			cp 		SPRDataBlockEnd >> 8
+0210: 20F8    			jr 		nz,_SPRZeroBlock
               			;
               			; 		Set all possible original characters to $FF, indicating they are available.
               			;		
-023D: 21C060  			ld 		hl,SPROriginalChar+SPRLowSprite
-0240:         	_SPRUsageReset:			 					
-0240: 36FF    			ld 		(hl),$FF
-0242: 2C      			inc 	l
-0243: 20FB    			jr 		nz,_SPRUsageReset
-0245: E1      			pop 	hl
-0246: F1      			pop 	af
-0247: C9      			ret
+0212: 21C004  			ld 		hl,SPROriginalChar+SPRLowSprite
+0215:         	_SPRUsageReset:			 					
+0215: 36FF    			ld 		(hl),$FF
+0217: 2C      			inc 	l
+0218: 20FB    			jr 		nz,_SPRUsageReset
+021A: E1      			pop 	hl
+021B: F1      			pop 	af
+021C: C9      			ret
               	
               	; *********************************************************************************************
               	;
-              	;
+              	;						Draw, or Erase, the sprite whose raw data is at IX
               	;
               	; *********************************************************************************************
               	
-0248:         	SpriteXDraw:
+021D:         	SpriteXDraw:
+021D: F5      			push 	af 							; save registers 							
+021E: C5      			push 	bc
+021F: D5      			push 	de
+0220: E5      			push 	hl
+0221: FDE5    			push 	iy
               			;
               			;		Calculate position in IY
               			;
-0248: 2600    			ld 		h,0							; Y position in HL, with lower 3 bits masked, so already x 8
-024A: DD7E02  			ld 		a,(ix+SPRy)
-024D: E6F8    			and 	$F8
-024F: 6F      			ld 		l,a
-0250: 54      			ld 		d,h 						; DE = Y x 8
-0251: 5D      			ld 		e,l
-0252: 29      			add 	hl,hl 						; HL = Y x 32
-0253: 29      			add 	hl,hl
-0254: 19      			add 	hl,de 						; HL = Y x 40
-0255: FD2100F8			ld 		iy,$F800 					; IY = $F800 + Y x 40
-0259: EB      			ex 		de,hl
-025A: FD19    			add 	iy,de
+0223: 2600    			ld 		h,0							; Y position in HL, with lower 3 bits masked, so already x 8
+0225: DD7E02  			ld 		a,(ix+SPRy)
+0228: E6F8    			and 	$F8
+022A: 6F      			ld 		l,a
+022B: 54      			ld 		d,h 						; DE = Y x 8
+022C: 5D      			ld 		e,l
+022D: 29      			add 	hl,hl 						; HL = Y x 32
+022E: 29      			add 	hl,hl
+022F: 19      			add 	hl,de 						; HL = Y x 40
+0230: FD2100F8			ld 		iy,$F800 					; IY = $F800 + Y x 40
+0234: EB      			ex 		de,hl
+0235: FD19    			add 	iy,de
               	
-025C: DD5E00  			ld 		e,(ix+SPRx)					; DE = X position
-025F: DD5601  			ld 		d,(ix+SPRx+1)
-0262: CB3A    			srl 	d 							; / 8 (after first in range 0-255 hence SRL E)
-0264: CB1B    			rr 		e
-0266: CB3B    			srl 	e
-0268: CB3B    			srl 	e
-026A: 1600    			ld 		d,0 						; add to screen position.
-026C: FD19    			add 	iy,de
+0237: DD5E00  			ld 		e,(ix+SPRx)					; DE = X position
+023A: DD5601  			ld 		d,(ix+SPRx+1)
+023D: CB3A    			srl 	d 							; / 8 (after first in range 0-255 hence SRL E)
+023F: CB1B    			rr 		e
+0241: CB3B    			srl 	e
+0243: CB3B    			srl 	e
+0245: 1600    			ld 		d,0 						; add to screen position.
+0247: FD19    			add 	iy,de
               			;
               			; 		Calculate and patch the fine horizontal shift jump which adjusts the 
               			; 		number of 24 bit left shifts we do to the graphics data.
               			;
-026E: DD7E00  			ld 		a,(ix+SPRx)
-0271: E607    			and 	7
-0273: 87      			add 	a,a
-0274: 32AD02  			ld 		(_SPRFineHorizontalShift+1),a 
+0249: DD7E00  			ld 		a,(ix+SPRx)
+024C: E607    			and 	7
+024E: 87      			add 	a,a
+024F: 32A002  			ld 		(_SPRFineHorizontalShift+1),a 
               			;
               			; 		Calculate the horizontal offset which makes it start drawing part way through a UDG
               			;
-0277: DD7E02  			ld 		a,(ix+SPRy)
-027A: E607    			and 	7
-027C: 32AB03  			ld 		(_SPRInitialYOffset),a
+0252: DD7E02  			ld 		a,(ix+SPRy)
+0255: E607    			and 	7
+0257: 32C903  			ld 		(_SPRInitialYOffset),a
               			;
               			; 		Calculate the row count from bits 1 and 2 of the control byte.
               			; 		(the number of vertical pixels down)
               			;
-027F: DD7E06  			ld 		a,(ix+SPRcontrol)
-0282: E606    			and 	$06
-0284: 47      			ld 		b,a 						; B is 0,2,4,6 for 8,16,24,32
-0285: AF      			xor 	a
-0286:         	_SPRCalcRows:
-0286: C608    			add 	a,8
-0288: 05      			dec 	b	
-0289: 05      			dec 	b
-028A: F28602  			jp 		p,_SPRCalcRows	
-028D: 32AA03  			ld 		(_SPRRowCount),a
+025A: DD7E06  			ld 		a,(ix+SPRcontrol)
+025D: E606    			and 	$06
+025F: 47      			ld 		b,a 						; B is 0,2,4,6 for 8,16,24,32
+0260: AF      			xor 	a
+0261:         	_SPRCalcRows:
+0261: C608    			add 	a,8
+0263: 05      			dec 	b	
+0264: 05      			dec 	b
+0265: F26102  			jp 		p,_SPRCalcRows	
+0268: 32C803  			ld 		(_SPRRowCount),a
               			;
               			; 		Load BC with the sprite graphic data, we preserve this throughout
               			; 		drawing.
               			;
-0290: DD4E04  			ld 		c,(ix+SPRgraphics)
-0293: DD4605  			ld 		b,(ix+SPRgraphics+1)
+026B: DD4E04  			ld 		c,(ix+SPRgraphics)
+026E: DD4605  			ld 		b,(ix+SPRgraphics+1)
               			;
               			; 		Try to allocate UDGs for the current row at IY, 2 or 3 UDGs.
               			;
-0296:         	_SPRStartNextCharacterRow:
-0296: CD0403  			call 	_SPRAllocateRow 			; try to allocate the whole row.
-0299: 3868    			jr 		c,_SPRExit					; it didn't work, so we abandon drawing here.
+0271:         	_SPRStartNextCharacterRow:
+0271: CD0603  			call 	_SPRAllocateRow 			; try to allocate the whole row.
+0274: DAF702  			jp 		c,_SPRExit					; it didn't work, so we abandon drawing here.
+              			;
+              			; 		Adjust the usage counters.
+              			;
+0277: FDE5    			push 	iy
+0279: CDAC03  			call 	SPRAdjustUsageCounter
+027C: FD23    			inc 	iy
+027E: CDAC03  			call 	SPRAdjustUsageCounter
+0281: DDCB0646			bit 	0,(ix+SPRcontrol)
+0285: 2805    			jr 		z,_SPRAuNotRight
+0287: FD23    			inc 	iy
+0289: CDAC03  			call 	SPRAdjustUsageCounter
+028C:         	_SPRAuNotRight:
+028C: FDE1    			pop 	iy		
               			;
               			;		Get the graphics for the next *pixel* line. into ADE
               			;
-029B:         	_SPRNextRowUDG:		
-029B: 1E00    			ld 		e,0							; DE = $00:BC
-029D: 0A      			ld 		a,(bc)
-029E: 57      			ld 		d,a
-029F: 03      			inc 	bc
-02A0: DDCB0646			bit 	0,(ix+SPRcontrol) 					; is the width 1 ?
-02A4: 2804    			jr 		z,_SPRHaveGraphicData
-02A6: 5A      			ld 		e,d  						; DE = (BC+1):(BC)		
-02A7: 0A      			ld 		a,(bc)
-02A8: 57      			ld 		d,a 
-02A9: 03      			inc 	bc
-02AA:         	_SPRHaveGraphicData:		
-02AA: AF      			xor 	a 							; ADE contains 24 bit graphic data.
-02AB: EB      			ex 		de,hl 						; we put it in AHL
-02AC:         	_SPRFineHorizontalShift:		
-02AC: 1800    			jr 		$+2 						; this is altered to do the fine horizontal shift
-02AE: 29      			add 	hl,hl
-02AF: 8F      			adc 	a,a
-02B0: 29      			add 	hl,hl
-02B1: 8F      			adc 	a,a
-02B2: 29      			add 	hl,hl
-02B3: 8F      			adc 	a,a
-02B4: 29      			add 	hl,hl
-02B5: 8F      			adc 	a,a
-02B6: 29      			add 	hl,hl
-02B7: 8F      			adc 	a,a
-02B8: 29      			add 	hl,hl
-02B9: 8F      			adc 	a,a
-02BA: 29      			add 	hl,hl
-02BB: 8F      			adc 	a,a
-02BC: 29      			add 	hl,hl
-02BD: 8F      			adc 	a,a
-02BE: EB      			ex 		de,hl 						; put it back in ADE
+028E:         	_SPRNextRowUDG:		
+028E: 1E00    			ld 		e,0							; DE = $00:BC
+0290: 0A      			ld 		a,(bc)
+0291: 57      			ld 		d,a
+0292: 03      			inc 	bc
+0293: DDCB0646			bit 	0,(ix+SPRcontrol) 					; is the width 1 ?
+0297: 2804    			jr 		z,_SPRHaveGraphicData
+0299: 5A      			ld 		e,d  						; DE = (BC+1):(BC)		
+029A: 0A      			ld 		a,(bc)
+029B: 57      			ld 		d,a 
+029C: 03      			inc 	bc
+029D:         	_SPRHaveGraphicData:		
+029D: AF      			xor 	a 							; ADE contains 24 bit graphic data.
+029E: EB      			ex 		de,hl 						; we put it in AHL
+029F:         	_SPRFineHorizontalShift:		
+029F: 1800    			jr 		$+2 						; this is altered to do the fine horizontal shift
+02A1: 29      			add 	hl,hl
+02A2: 8F      			adc 	a,a
+02A3: 29      			add 	hl,hl
+02A4: 8F      			adc 	a,a
+02A5: 29      			add 	hl,hl
+02A6: 8F      			adc 	a,a
+02A7: 29      			add 	hl,hl
+02A8: 8F      			adc 	a,a
+02A9: 29      			add 	hl,hl
+02AA: 8F      			adc 	a,a
+02AB: 29      			add 	hl,hl
+02AC: 8F      			adc 	a,a
+02AD: 29      			add 	hl,hl
+02AE: 8F      			adc 	a,a
+02AF: 29      			add 	hl,hl
+02B0: 8F      			adc 	a,a
+02B1: EB      			ex 		de,hl 						; put it back in ADE
               			;
               			;		Now XOR the data with the previously calculated addresses. 
               			;		If (ix+5)[0] is clear then don't do the third one, it's an 8x8 sprite
               			;
               			;		These addresses (the ld hl,xxxx ones) are modified in situ.
               			;
-02BF:         	_SPRLeftUDGPosition:		
-02BF: 2108F6  			ld 		hl,$F000+$C1*8
-02C2: AE      			xor 	(hl)
-02C3: 77      			ld 		(hl),a
-02C4:         	_SPRMiddleUDGPosition:		
-02C4: 2110F6  			ld 		hl,$F000+$C2*8
-02C7: 7A      			ld 		a,d
-02C8: AE      			xor 	(hl)
-02C9: 77      			ld 		(hl),a
-02CA: DDCB0646			bit 	0,(ix+SPRcontrol) 					; if width 1, skip the last draw
-02CE: 2806    			jr 		z,_SPRDrawEnd
-02D0:         	_SPRRightUDGPosition:		
-02D0: 2118F6  			ld 		hl,$F000+$C3*8
-02D3: 7B      			ld 		a,e
-02D4: AE      			xor 	(hl)
-02D5: 77      			ld 		(hl),a
-02D6:         	_SPRDrawEnd:
-              			;
-              			; 		Adjust the usage counters.
-              			;
-              			; TODO : Adjust usage counters.
+02B2:         	_SPRLeftUDGPosition:		
+02B2: 2108F6  			ld 		hl,$F000+$C1*8
+02B5: AE      			xor 	(hl)
+02B6: 77      			ld 		(hl),a
+02B7:         	_SPRMiddleUDGPosition:		
+02B7: 2110F6  			ld 		hl,$F000+$C2*8
+02BA: 7A      			ld 		a,d
+02BB: AE      			xor 	(hl)
+02BC: 77      			ld 		(hl),a
+02BD: DDCB0646			bit 	0,(ix+SPRcontrol) 					; if width 1, skip the last draw
+02C1: 2806    			jr 		z,_SPRDrawEnd
+02C3:         	_SPRRightUDGPosition:		
+02C3: 2118F6  			ld 		hl,$F000+$C3*8
+02C6: 7B      			ld 		a,e
+02C7: AE      			xor 	(hl)
+02C8: 77      			ld 		(hl),a
+02C9:         	_SPRDrawEnd:
               			;
               			; 		Check if we have done all the rows
               			;
-02D6: 21AA03  			ld 		hl,_SPRRowCount 
-02D9: 35      			dec 	(hl)
-02DA: 2827    			jr 		z,_SPRExit
+02C9: 21C803  			ld 		hl,_SPRRowCount 
+02CC: 35      			dec 	(hl)
+02CD: 2828    			jr 		z,_SPRExit
               			;
               			; 		Now go to the next line down. Initially this just advances the vertical offset
               			;		in the UDG pointers
               			;
-02DC: 21C502  			ld 		hl,_SPRMiddleUDGPosition+1
-02DF: 34      			inc 	(hl)
-02E0: 21D102  			ld 		hl,_SPRRightUDGPosition+1 	; not guaranteed initialised.
-02E3: 34      			inc 	(hl)
-02E4: 21C002  			ld 		hl,_SPRLeftUDGPosition+1
-02E7: 34      			inc 	(hl)
+02CF: 21B802  			ld 		hl,_SPRMiddleUDGPosition+1
+02D2: 34      			inc 	(hl)
+02D3: 21C402  			ld 		hl,_SPRRightUDGPosition+1 	; not guaranteed initialised.
+02D6: 34      			inc 	(hl)
+02D7: 21B302  			ld 		hl,_SPRLeftUDGPosition+1
+02DA: 34      			inc 	(hl)
               			;
-02E8: 7E      			ld 		a,(hl) 						; check crossed 8 byte boundary
-02E9: E607    			and 	7
-02EB: 20AE    			jr 		nz,_SPRNextRowUDG 			; if not complete it.
+02DB: 7E      			ld 		a,(hl) 						; check crossed 8 byte boundary
+02DC: E607    			and 	7
+02DE: 20AE    			jr 		nz,_SPRNextRowUDG 			; if not complete it.
               	
-02ED: AF      			xor 	a 							; clear the initial offset
-02EE: 32AB03  			ld 		(_SPRInitialYOffset),a
+02E0: AF      			xor 	a 							; clear the initial offset
+02E1: 32C903  			ld 		(_SPRInitialYOffset),a
               	
               	
-02F1: 112800  			ld 		de,40 						; advance down one row.
-02F4: FD19    			add 	iy,de 
+02E4: 112800  			ld 		de,40 						; advance down one row.
+02E7: FD19    			add 	iy,de 
               	
-02F6: 11B0FC  			ld 		de,$F800+40*30 				; the end of the physical display
-02F9: FDE5    			push 	iy
-02FB: E1      			pop 	hl
-02FC: 37      			scf
-02FD: ED52    			sbc 	hl,de
-02FF: 3002    			jr 		nc,_SPRExit 				; past the bottom,exit.
+02E9: 11B0FC  			ld 		de,$F800+40*30 				; the end of the physical display
+02EC: FDE5    			push 	iy
+02EE: E1      			pop 	hl
+02EF: 37      			scf
+02F0: ED52    			sbc 	hl,de
+02F2: 3003    			jr 		nc,_SPRExit 				; past the bottom,exit.
               	
-0301: 1893    			jr 		_SPRStartNextCharacterRow 	; do the next character row.
+02F4: C37102  			jp 		_SPRStartNextCharacterRow 	; do the next character row.
               	
-0303:         	_SPRExit:
-0303: C9      			ret
+02F7:         	_SPRExit:
+02F7: DD7E07  			ld 		a,(ix+SPRstatus) 			; toggle the drawn status bit
+02FA: EE80    			xor 	$80
+02FC: DD7707  			ld 		(ix+SPRstatus),a 		
+              	
+02FF: FDE1    			pop 	iy 							; restore registers
+0301: E1      			pop 	hl
+0302: D1      			pop 	de
+0303: C1      			pop 	bc
+0304: F1      			pop 	af
+0305: C9      			ret
               	
               	; *********************************************************************************************
               	;
@@ -269,77 +296,77 @@
               	;
               	; *********************************************************************************************
               	
-0304:         	_SPRAllocateRow:
-0304: C5      			push 	bc 							; save BC.
-0305: FDE5    			push 	iy 							; save IY
-0307: ED73AC03			ld 		(_SPRAllocSPTemp),sp		; save SP as we are using it for temp.
+0306:         	_SPRAllocateRow:
+0306: C5      			push 	bc 							; save BC.
+0307: FDE5    			push 	iy 							; save IY
+0309: ED73CA03			ld 		(_SPRAllocSPTemp),sp		; save SP as we are using it for temp.
               	
-030B: 210000  			ld 		hl,$0000 					; we save all the allocated so far on the stack
-030E: E5      			push 	hl 		 					; this is the end marker.					
+030D: 210000  			ld 		hl,$0000 					; we save all the allocated so far on the stack
+0310: E5      			push 	hl 		 					; this is the end marker.					
               			;
               			; 		Do 2 or 3. For each overwrite the XOR code addresses and save
               			;		it on the stack. If it fails, then unwind everything.
               			;
-030F: CD5F03  			call 	_SPRAllocateOne 			; do (IY)
-0312: 3821    			jr 		c,_SPRAllocateUndo 			; if done, then Undo.
-0314: 22C002  			ld 		(_SPRLeftUDGPosition+1),hl 	; overwrite the code.
-0317: E5      			push 	hl
+0311: CD6103  			call 	_SPRAllocateOne 			; do (IY)
+0314: 3821    			jr 		c,_SPRAllocateUndo 			; if done, then Undo.
+0316: 22B302  			ld 		(_SPRLeftUDGPosition+1),hl 	; overwrite the code.
+0319: E5      			push 	hl
               	
-0318: FD23    			inc 	iy		
-031A: CD5F03  			call 	_SPRAllocateOne 			; do (IY+1)
-031D: 3816    			jr 		c,_SPRAllocateUndo 			; if done, then Undo.
-031F: 22C502  			ld 		(_SPRMiddleUDGPosition+1),hl ; overwrite the code.
-0322: E5      			push 	hl
+031A: FD23    			inc 	iy		
+031C: CD6103  			call 	_SPRAllocateOne 			; do (IY+1)
+031F: 3816    			jr 		c,_SPRAllocateUndo 			; if done, then Undo.
+0321: 22B802  			ld 		(_SPRMiddleUDGPosition+1),hl ; overwrite the code.
+0324: E5      			push 	hl
               	
-0323: DDCB0646			bit 	0,(ix+SPRcontrol) 			; if 8 width then we are done.
-0327: 282D    			jr 		z,_SPRAllocateOkay 
+0325: DDCB0646			bit 	0,(ix+SPRcontrol) 			; if 8 width then we are done.
+0329: 282D    			jr 		z,_SPRAllocateOkay 
               	
-0329: FD23    			inc 	iy		
-032B: CD5F03  			call 	_SPRAllocateOne 			; do (IY+2)
-032E: 3805    			jr 		c,_SPRAllocateUndo 			; if done, then Undo.
-0330: 22D102  			ld 		(_SPRRightUDGPosition+1),hl ; overwrite the code.
-0333: 1821    			jr 		_SPRAllocateOkay 
+032B: FD23    			inc 	iy		
+032D: CD6103  			call 	_SPRAllocateOne 			; do (IY+2)
+0330: 3805    			jr 		c,_SPRAllocateUndo 			; if done, then Undo.
+0332: 22C402  			ld 		(_SPRRightUDGPosition+1),hl ; overwrite the code.
+0335: 1821    			jr 		_SPRAllocateOkay 
               			;
               			; 		Failed, so pop the saved UDG addresses on the stack and reset
               			;	 	as if we hadn't allocated it. We haven't bumped the usage count yet.
               			;
-0335:         	_SPRAllocateUndo:
-0335: D1      			pop 	de 							; address of UDG into DE
-0336: 7A      			ld 		a,d 						; have we done the whole lot ?
-0337: B3      			or 		e
-0338: 37      			scf
-0339: 281C    			jr 		z,_SPRAllocateExit 			; if so, e.g. popped $0000 with carry set.
+0337:         	_SPRAllocateUndo:
+0337: D1      			pop 	de 							; address of UDG into DE
+0338: 7A      			ld 		a,d 						; have we done the whole lot ?
+0339: B3      			or 		e
+033A: 37      			scf
+033B: 281C    			jr 		z,_SPRAllocateExit 			; if so, e.g. popped $0000 with carry set.
               	
-033B: CB3A    			srl 	d 							; divide by 8 - will put the UDG number into E
-033D: CB1B    			rr 		e
-033F: CB3A    			srl 	d
-0341: CB1B    			rr 		e
-0343: CB3A    			srl 	d
-0345: CB1B    			rr 		e
+033D: CB3A    			srl 	d 							; divide by 8 - will put the UDG number into E
+033F: CB1B    			rr 		e
+0341: CB3A    			srl 	d
+0343: CB1B    			rr 		e
+0345: CB3A    			srl 	d
+0347: CB1B    			rr 		e
               			;
-0347: 6F      			ld 		l,a 						; HL is the address of the original character for this UDG.
-0348: 2660    			ld 		h,SPROriginalChar >> 8 		
-034A: 7E      			ld 		a,(hl) 						; character the UDG replaced
-034B: 36FF    			ld 		(hl),$FF 					; mark that UDG as now available
+0349: 6F      			ld 		l,a 						; HL is the address of the original character for this UDG.
+034A: 2604    			ld 		h,SPROriginalChar >> 8 		
+034C: 7E      			ld 		a,(hl) 						; character the UDG replaced
+034D: 36FF    			ld 		(hl),$FF 					; mark that UDG as now available
               	
-034D: 2662    			ld 		h,SPRLowAddress >> 8 		; get screen address into DE
-034F: 5E      			ld 		e,(hl)
-0350: 2663    			ld 		h,SPRHighAddress >> 8 
-0352: 56      			ld 		d,(hl)
+034F: 2606    			ld 		h,SPRLowAddress >> 8 		; get screen address into DE
+0351: 5E      			ld 		e,(hl)
+0352: 2607    			ld 		h,SPRHighAddress >> 8 
+0354: 56      			ld 		d,(hl)
               	
-0353: 12      			ld 		(de),a 						; fix up screen
+0355: 12      			ld 		(de),a 						; fix up screen
               	
-0354: 18DF    			jr 		_SPRAllocateUndo 			; and see if there are any more to undo
+0356: 18DF    			jr 		_SPRAllocateUndo 			; and see if there are any more to undo
               			;
               			; 		Worked, exit with carry clear.
               			;
-0356:         	_SPRAllocateOkay: 							; clear carry flag and exit.
-0356: AF      			xor 	a		
-0357:         	_SPRAllocateExit:
-0357: ED7BAC03			ld 		sp,(_SPRAllocSPTemp)		; get SP back
-035B: FDE1    			pop 	iy 							; restore BC IY
-035D: C1      			pop 	bc				
-035E: C9      			ret
+0358:         	_SPRAllocateOkay: 							; clear carry flag and exit.
+0358: AF      			xor 	a		
+0359:         	_SPRAllocateExit:
+0359: ED7BCA03			ld 		sp,(_SPRAllocSPTemp)		; get SP back
+035D: FDE1    			pop 	iy 							; restore BC IY
+035F: C1      			pop 	bc				
+0360: C9      			ret
               	
               	; *********************************************************************************************
               	;
@@ -348,72 +375,102 @@
               	;
               	; *********************************************************************************************
               	
-035F:         	_SPRAllocateOne:
-035F: FD7E00  			ld 		a,(iy+0) 					; is it a UDG already
-0362: FEC0    			cp 		SPRLowSprite 				; if so, we don't need to do anything.
-0364: 3033    			jr 		nc,_SPRAllocateOneExit
+0361:         	_SPRAllocateOne:
+0361: FD7E00  			ld 		a,(iy+0) 					; is it a UDG already
+0364: FEC0    			cp 		SPRLowSprite 				; if so, we don't need to do anything.
+0366: 3033    			jr 		nc,_SPRAllocateOneExit
               			;
               			; 		Look for a free UDG, e.g. one where the stored character is $FF.
               			;
-0366: 21C060  			ld 		hl,SPROriginalChar+SPRLowSprite
-0369:         	_SPRAOFind: 								; look for an available UDG.
-0369: 7E      			ld 		a,(hl)
-036A: FEFF    			cp 		$FF
-036C: 2805    			jr 		z,_SPRAOFound
-036E: 2C      			inc 	l
-036F: 20F8    			jr 		nz,_SPRAOFind		
-0371: 37      			scf 								; nope, we just can't do this one.
-0372: C9      			ret
+0368: 21C004  			ld 		hl,SPROriginalChar+SPRLowSprite
+036B:         	_SPRAOFind: 								; look for an available UDG.
+036B: 7E      			ld 		a,(hl)
+036C: FEFF    			cp 		$FF
+036E: 2805    			jr 		z,_SPRAOFound
+0370: 2C      			inc 	l
+0371: 20F8    			jr 		nz,_SPRAOFind		
+0373: 37      			scf 								; nope, we just can't do this one.
+0374: C9      			ret
               	;
               	;  		Found a sprite we can allocate
               	;
-0373:         	_SPRAOFound:
+0375:         	_SPRAOFound:
               			;
               			; 		Store the character overwritten by the UDG
               			;
-0373: FD7E00  			ld 		a,(iy+0) 					; this is the original character e.g. what is underneath
-0376: 77      			ld 		(hl),a 						; put in storage slot for original character
+0375: FD7E00  			ld 		a,(iy+0) 					; this is the original character e.g. what is underneath
+0378: 77      			ld 		(hl),a 						; put in storage slot for original character
               			;
-0377: FDE5    			push 	iy 							; save the address of that character so we can restore it.
-0379: C1      			pop 	bc 							; when it drops to zero.
-037A: 2662    			ld 		h,SPRLowAddress >> 8
-037C: 71      			ld 		(hl),c
-037D: 2663    			ld 		h,SPRHighAddress >> 8
-037F: 70      			ld 		(hl),b
+0379: FDE5    			push 	iy 							; save the address of that character so we can restore it.
+037B: C1      			pop 	bc 							; when it drops to zero.
+037C: 2606    			ld 		h,SPRLowAddress >> 8
+037E: 71      			ld 		(hl),c
+037F: 2607    			ld 		h,SPRHighAddress >> 8
+0381: 70      			ld 		(hl),b
               			;
               			; 		Copy the graphic definition of the original character into the UDG.
               			;
               	
-0380: FD7E00  			ld 		a,(iy+0) 					; get the original character , e.g. the non UDG
-0383: FD7500  			ld 		(iy+0),l 					; override it.
+0382: FD7E00  			ld 		a,(iy+0) 					; get the original character , e.g. the non UDG
+0385: FD7500  			ld 		(iy+0),l 					; override it.
               			;
-0386: CDA303  			call 	_SPRCalculateDefinitionAddr ; HL is the graphic of the original character
-0389: EB      			ex 		de,hl
-038A: FD7E00  			ld 		a,(iy+0) 					; HL is the graphic of the UDG
-038D: CDA303  			call 	_SPRCalculateDefinitionAddr
-0390: EB      			ex 		de,hl 						; we want it copied there
-0391: 010800  			ld 		bc,8 						; copy 8 bytes
-0394: EDB0    			ldir
+0388: CDA503  			call 	_SPRCalculateDefinitionAddr ; HL is the graphic of the original character
+038B: EB      			ex 		de,hl
+038C: FD7E00  			ld 		a,(iy+0) 					; HL is the graphic of the UDG
+038F: CDA503  			call 	_SPRCalculateDefinitionAddr
+0392: EB      			ex 		de,hl 						; we want it copied there
+0393: 010800  			ld 		bc,8 						; copy 8 bytes
+0396: EDB0    			ldir
               	
-0396: FD7E00  			ld 		a,(iy+0) 					; get the address of the UDG and exit with CC
-0399:         	_SPRAllocateOneExit;
-0399: CDA303  			call 	_SPRCalculateDefinitionAddr ; get the definition address in HL
-039C: 3AAB03  			ld 		a,(_SPRInitialYOffset) 		; adjust for initial Y offset
-039F: B5      			or 		l
-03A0: 6F      			ld 		l,a
-03A1: AF      			xor 	a 							; clear carry.
-03A2: C9      			ret 			
+0398: FD7E00  			ld 		a,(iy+0) 					; get the address of the UDG and exit with CC
+039B:         	_SPRAllocateOneExit;
+039B: CDA503  			call 	_SPRCalculateDefinitionAddr ; get the definition address in HL
+039E: 3AC903  			ld 		a,(_SPRInitialYOffset) 		; adjust for initial Y offset
+03A1: B5      			or 		l
+03A2: 6F      			ld 		l,a
+03A3: AF      			xor 	a 							; clear carry.
+03A4: C9      			ret 			
               	;
               	; 		A is a character #, point HL to CRAM Address
               	;
-03A3:         	_SPRCalculateDefinitionAddr:
-03A3: 6F      			ld 		l,a
-03A4: 261E    			ld 		h,$F0/8
-03A6: 29      			add 	hl,hl
-03A7: 29      			add 	hl,hl
+03A5:         	_SPRCalculateDefinitionAddr:
+03A5: 6F      			ld 		l,a
+03A6: 261E    			ld 		h,$F0/8
 03A8: 29      			add 	hl,hl
-03A9: C9      			ret
+03A9: 29      			add 	hl,hl
+03AA: 29      			add 	hl,hl
+03AB: C9      			ret
               	
+              	; *********************************************************************************************
+              	;
+              	;							Adjust usage counter for (IY)
+              	;
+              	; *********************************************************************************************
+              	
+03AC:         	SPRAdjustUsageCounter:
+03AC: FD6E00  			ld 		l,(iy+0) 					; point HL to the usage counter
+03AF: 2605    			ld 		h,SPRUsageCount >> 8
+03B1: DDCB077E			bit 	7,(ix+SPRstatus)			; if drawn status is non-zero we are erasing
+03B5: 2002    			jr 		nz,_SPRDecrementUsage
+03B7: 34      			inc 	(hl)						; increment usage counter and exit
+03B8: C9      			ret
+              	;
+03B9:         	_SPRDecrementUsage:
+03B9: 35      			dec 	(hl) 						; one fewer usage
+03BA: C0      			ret 	nz 							; still in use.
+              			;
+              			; 		Count zero, free up. Could consider delaying this until actually needed?
+              			;
+03BB: 2606    			ld 		h,SPRLowAddress >> 8 		; display address in DE
+03BD: 5E      			ld 		e,(hl)
+03BE: 2607    			ld 		h,SPRHighAddress >> 8
+03C0: 56      			ld 		d,(hl)
+03C1: 2604    			ld 		h,SPROriginalChar >> 8 		; original character written to DE
+03C3: 7E      			ld 		a,(hl)
+03C4: 12      			ld 		(de),a 					
+              	
+03C5: 36FF    			ld 		(hl),$FF 					; mark the UDG as free again.
+03C7: C9      			ret
               	
               	; *********************************************************************************************
               	;
@@ -421,16 +478,14 @@
               	;
               	; *********************************************************************************************
               	
-03AA:         	_SPRRowCount: 								; down counter for completed rows.
-03AA: 00      			.db 	0
+03C8:         	_SPRRowCount: 								; down counter for completed rows.
+03C8: 00      			.db 	0
               	
-03AB:         	_SPRInitialYOffset: 						; the initial vertical offset.
-03AB: 00      			.db 	0
+03C9:         	_SPRInitialYOffset: 						; the initial vertical offset.
+03C9: 00      			.db 	0
               	
-03AC:         	_SPRAllocSPTemp: 							; save SP when storing interim results on stack
-03AC: 0000    			.dw 	0
-03AE: FFFFFFFF			.org 	$6000
-03B2: FF...   	
+03CA:         	_SPRAllocSPTemp: 							; save SP when storing interim results on stack
+03CA: 0000    			.dw 	0
               	
               	; *********************************************************************************************
               	;
@@ -439,68 +494,105 @@
               	;
               	; *********************************************************************************************
               	
-6000:         	SPRDataBlock:
+03CC: 00000000			.align 	256,0
+03D0: 00...   	
               	
-              			.align 	256,0
+0400:         	SPRDataBlock:
+              	
               	;
               	;		This is the original value stored the UDG replaced. When $FF it means
               	; 		this UDG is not in use.
               	;
-6000:         	SPROriginalChar:
-6000: FFFFFFFF			.ds 	256
-6004: FF...   	
+0400:         	SPROriginalChar:
+0400: FFFFFFFF			.ds 	256
+0404: FF...   	
               	;
               	;
               	; 		This is the number of sprites using the given UDG, indexed on zero.
               	;
-6100:         	SPRUsageCount:
-6100: FFFFFFFF			.ds 	256
-6104: FF...   	
+0500:         	SPRUsageCount:
+0500: FFFFFFFF			.ds 	256
+0504: FF...   	
               	;
               	; 		The address of that replaced UDG. 
               	;
-6200:         	SPRLowAddress:
-6200: FFFFFFFF			.ds 	256
-6204: FF...   	
-6300:         	SPRHighAddress:
-6300: FFFFFFFF			.ds 	256
-6304: FF...   	
+0600:         	SPRLowAddress:
+0600: FFFFFFFF			.ds 	256
+0604: FF...   	
+0700:         	SPRHighAddress:
+0700: FFFFFFFF			.ds 	256
+0704: FF...   	
               	
-6400:         	SPRDataBlockEnd:
+0800:         	SPRDataBlockEnd:
+              	
+              	;
+              	; 		Copy a lightweight pattern to the screen.
+              	;
+0800:         	start:
+0800: 3100F0  			ld 		sp,$F000
+0803: 21B0FC  			ld 		hl,$F800+40*30
+0806: 2B      	_fill:	dec 	hl	
+0807: 7D      			ld 		a,l
+0808: E603    	 		and  	3
+080A: F62C    	 		or 		$2C
+080C: 77      	 		ld 		(hl),a
+              	; 		ld 		(hl),$20
+080D: CB5C    	 		bit 	3,h
+080F: 20F5    	 		jr 		nz,_fill
+              	;
+              	;		Clear all the sprite UDGs (testing only requires this)
+              	;
+0811: 2100F6  	 		ld 		hl,$F000+SPRLowSprite*8
+0814: 3600    	_fill2:	ld 		(hl),0
+0816: 23      			inc 	hl
+0817: CB5C    			bit 	3,h
+0819: 28F9    			jr 		z,_fill2
+              	
+081B: CD0502  	 		call 	SPRInitialise
+081E: DD214308	 		ld 		ix,SpriteDemo2
+0822: 211027  	 		ld 		hl,10000
+0825:         	_dloop: 		
+0825: CD1D02  	 		call 	SpriteXDraw
+0828: CD1D02  	 		call 	SpriteXDraw
+082B: 2B      	 		dec 	hl
+082C: 7C      	 		ld 		a,h
+082D: B5      	 		or 		l
+082E: 20F5    	 		jr 		nz,_dloop
+              	
+0830: F3      	_stop:	di
+0831: 18FD    			jr		_stop 		
               	
               	; *********************************************************************************************
               	;										Test data
               	; *********************************************************************************************
               	
-6400: FFFFFFFF			.org 	$7000
-6404: FF...   	
-7000:         	SpriteDemo:		
-7000: 0400    			.dw 	4 							; X
-7002: 0A00    			.dw 	10 							; Y
-7004: 0870    			.dw 	SpriteGraphic 				; Graphics
-7006: 0000    			.dw 	$00 						; 2,1:Height 0:Width others 0.
+0833:         	SpriteDemo:		
+0833: 0400    			.dw 	4 							; X
+0835: 0A00    			.dw 	10 							; Y
+0837: 3B08    			.dw 	SpriteGraphic 				; Graphics
+0839: 0000    			.dw 	$00 						; 2,1:Height 0:Width others 0.
               	
-7008:         	SpriteGraphic:
-7008: FF818181			.db 	$FF,$81,$81,$81,$81,$81,$81,$FF
-700C: 818181FF	
+083B:         	SpriteGraphic:
+083B: FF818181			.db 	$FF,$81,$81,$81,$81,$81,$81,$FF
+083F: 818181FF	
               	
-7010:         	SpriteDemo2:		
-7010: 1300    			.dw 	19 							; X
-7012: 1C00    			.dw 	28 							; Y
-7014: 1870    			.dw 	SpriteGraphic2 				; Graphics
-7016: 0300    			.dw 	$03							; 2,1:Height 0:Width others 0.
+0843:         	SpriteDemo2:		
+0843: 1300    			.dw 	19 							; X
+0845: 1C00    			.dw 	28 							; Y
+0847: 4B08    			.dw 	SpriteGraphic2 				; Graphics
+0849: 0300    			.dw 	$03							; 2,1:Height 0:Width others 0.
               	
-7018:         	SpriteGraphic2:
-7018: FFFF0180			.dw 	$FFFF,$8001,$F001,$8001,$8001,$8001,$8001,$AAAA
-701C: 01F00180	
-7020: 01800180	
-7024: 0180AAAA	
-7028: 555503C0			.dw 	$5555,$C003,$C003,$E007,$F00F,$F81F,$FC3F,$03C0
-702C: 03C007E0	
-7030: 0FF01FF8	
-7034: 3FFCC003	
+084B:         	SpriteGraphic2:
+084B: FFFF0180			.dw 	$FFFF,$8001,$F001,$8001,$8001,$8001,$8001,$AAAA
+084F: 01F00180	
+0853: 01800180	
+0857: 0180AAAA	
+085B: 555503C0			.dw 	$5555,$C003,$C003,$E007,$F00F,$F81F,$FC3F,$03C0
+085F: 03C007E0	
+0863: 0FF01FF8	
+0867: 3FFCC003	
               	
 
 
-total time: 0.0022 sec.
+total time: 0.0027 sec.
 no errors

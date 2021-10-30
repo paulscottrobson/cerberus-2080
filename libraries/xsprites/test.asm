@@ -221,11 +221,11 @@ _SPRDrawEnd:
 		; 		Now go to the next line down. Initially this just advances the vertical offset
 		;		in the UDG pointers
 		;
-		ld 		hl,_SPRLeftUDGPosition+1
-		inc 	(hl)
 		ld 		hl,_SPRMiddleUDGPosition+1
 		inc 	(hl)
-		ld 		hl,_SPRRightUDGPosition+1
+		ld 		hl,_SPRRightUDGPosition+1 	; not guaranteed initialised.
+		inc 	(hl)
+		ld 		hl,_SPRLeftUDGPosition+1
 		inc 	(hl)
 		;
 		ld 		a,(hl) 						; check crossed 8 byte boundary
@@ -461,8 +461,8 @@ SPRDataBlockEnd:
 
 		.org 	$7000
 SpriteDemo:		
-		.dw 	0 							; X
-		.dw 	0 							; Y
+		.dw 	4 							; X
+		.dw 	10 							; Y
 		.dw 	SpriteGraphic 				; Graphics
 		.dw 	$00 						; 2,1:Height 0:Width others 0.
 

@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "test.asm"
-              	; date: 2021-10-30 07:58:10
+              	; date: 2021-10-30 08:05:14
               	; --------------------------------------
 
 
@@ -114,7 +114,6 @@
 0267: CB3B    			srl 	e
 0269: 1600    			ld 		d,0 						; add to screen position.
 026B: FD19    			add 	iy,de
-              	
               			;
               			; 		Calculate and patch the fine horizontal shift jump which adjusts the 
               			; 		number of 24 bit left shifts we do to the graphics data.
@@ -228,11 +227,11 @@
               			; 		Now go to the next line down. Initially this just advances the vertical offset
               			;		in the UDG pointers
               			;
-02DB: 21BF02  			ld 		hl,_SPRLeftUDGPosition+1
+02DB: 21C402  			ld 		hl,_SPRMiddleUDGPosition+1
 02DE: 34      			inc 	(hl)
-02DF: 21C402  			ld 		hl,_SPRMiddleUDGPosition+1
+02DF: 21D002  			ld 		hl,_SPRRightUDGPosition+1 	; not guaranteed initialised.
 02E2: 34      			inc 	(hl)
-02E3: 21D002  			ld 		hl,_SPRRightUDGPosition+1
+02E3: 21BF02  			ld 		hl,_SPRLeftUDGPosition+1
 02E6: 34      			inc 	(hl)
               			;
 02E7: 7E      			ld 		a,(hl) 						; check crossed 8 byte boundary
@@ -474,8 +473,8 @@
 6400: FFFFFFFF			.org 	$7000
 6404: FF...   	
 7000:         	SpriteDemo:		
-7000: 0000    			.dw 	0 							; X
-7002: 0000    			.dw 	0 							; Y
+7000: 0400    			.dw 	4 							; X
+7002: 0A00    			.dw 	10 							; Y
 7004: 0870    			.dw 	SpriteGraphic 				; Graphics
 7006: 0000    			.dw 	$00 						; 2,1:Height 0:Width others 0.
               	

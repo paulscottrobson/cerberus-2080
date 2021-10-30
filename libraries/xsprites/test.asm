@@ -1,4 +1,6 @@
 
+
+
 		org 	$202
 
 ;
@@ -30,11 +32,18 @@ _fill2:	ld 		(hl),0
 
  		call 	SPRInitialise
 
- 		ld 		ix,SpriteDemo2
- 		call 	SpriteDraw
-
+ 		ld 		ix,SpriteDemo
+ 		call 	SpriteXDraw
+ 		di
+ 		call 	SpriteXDraw
 _stop:	jr		_stop 		
 
+
+SPRx 	= 0 								; horizontal position
+SPRy 	= 2 								; vertical position
+SPRgraphics = 4 							; bitmap data
+SPRcontrol = 6 								; 0:width 1,2:height others zero
+SPRstatus = 7 								; 7:currently drawn
 
 ; *********************************************************************************************
 ;
@@ -73,17 +82,50 @@ _SPRUsageReset:
 ;
 ; *********************************************************************************************
 
-SpriteDraw:
+SpriteXDraw:
 		;
 		;		Calculate position in IY
 		;
-		; TODO: Calculate this sensibly.
-		ld 		iy,$F800+40+3
+		ld 		h,0							; Y position in HL, with lower 3 bits masked, so already x 8
+		ld 		a,(ix+SPRy)
+		and 	$F8
+		ld 		l,a
+		ld 		d,h 						; DE = Y x 8
+		ld 		e,l
+		add 	hl,hl 						; HL = Y x 32
+		add 	hl,hl
+		add 	hl,de 						; HL = Y x 40
+		ld 		iy,$F800 					; IY = $F800 + Y x 40
+		ex 		de,hl
+		add 	iy,de
+
+		ld 		e,(ix+SPRx)					; DE = X position
+		ld 		d,(ix+SPRx+1)
+		srl 	d 							; / 8 (after first in range 0-255 hence SRL E)
+		rr 		e
+		srl 	e
+		srl 	e
+		ld 		d,0 						; add to screen position.
+		add 	iy,de
+		;
+		; 		Calculate and patch the fine horizontal shift jump which adjusts the 
+		; 		number of 24 bit left shifts we do to the graphics data.
+		;
+		ld 		a,(ix+SPRx)
+		and 	7
+		add 	a,a
+		ld 		(_SPRFineHorizontalShift+1),a 
+		;
+		; 		Calculate the horizontal offset which makes it start drawing part way through a UDG
+		;
+		ld 		a,(ix+SPRy)
+		and 	7
+		ld 		(_SPRInitialYOffset),a
 		;
 		; 		Calculate the row count from bits 1 and 2 of the control byte.
 		; 		(the number of vertical pixels down)
 		;
-		ld 		a,(ix+6)
+		ld 		a,(ix+SPRcontrol)
 		and 	$06
 		ld 		b,a 						; B is 0,2,4,6 for 8,16,24,32
 		xor 	a
@@ -92,23 +134,19 @@ _SPRCalcRows:
 		dec 	b	
 		dec 	b
 		jp 		p,_SPRCalcRows	
-		ld 		(SPRRowCount),a
+		ld 		(_SPRRowCount),a
 		;
 		; 		Load BC with the sprite graphic data, we preserve this throughout
 		; 		drawing.
 		;
-		ld 		c,(ix+4)
-		ld 		b,(ix+5)
+		ld 		c,(ix+SPRgraphics)
+		ld 		b,(ix+SPRgraphics+1)
 		;
 		; 		Try to allocate UDGs for the current row at IY, 2 or 3 UDGs.
 		;
 _SPRStartNextCharacterRow:
 		call 	_SPRAllocateRow 			; try to allocate the whole row.
 		jr 		c,_SPRExit					; it didn't work, so we abandon drawing here.
-		;
-		; 		Adjust the usage counters.
-		;
-		; TODO : Adjust usage counters.
 		;
 		;		Get the graphics for the next *pixel* line. into ADE
 		;
@@ -117,7 +155,7 @@ _SPRNextRowUDG:
 		ld 		a,(bc)
 		ld 		d,a
 		inc 	bc
-		bit 	0,(ix+6) 					; is the width 1 ?
+		bit 	0,(ix+SPRcontrol) 					; is the width 1 ?
 		jr 		z,_SPRHaveGraphicData
 		ld 		e,d  						; DE = (BC+1):(BC)		
 		ld 		a,(bc)
@@ -125,6 +163,26 @@ _SPRNextRowUDG:
 		inc 	bc
 _SPRHaveGraphicData:		
 		xor 	a 							; ADE contains 24 bit graphic data.
+		ex 		de,hl 						; we put it in AHL
+_SPRFineHorizontalShift:		
+		jr 		$+2 						; this is altered to do the fine horizontal shift
+		add 	hl,hl
+		adc 	a,a
+		add 	hl,hl
+		adc 	a,a
+		add 	hl,hl
+		adc 	a,a
+		add 	hl,hl
+		adc 	a,a
+		add 	hl,hl
+		adc 	a,a
+		add 	hl,hl
+		adc 	a,a
+		add 	hl,hl
+		adc 	a,a
+		add 	hl,hl
+		adc 	a,a
+		ex 		de,hl 						; put it back in ADE
 		;
 		;		Now XOR the data with the previously calculated addresses. 
 		;		If (ix+5)[0] is clear then don't do the third one, it's an 8x8 sprite
@@ -140,7 +198,7 @@ _SPRMiddleUDGPosition:
 		ld 		a,d
 		xor 	(hl)
 		ld 		(hl),a
-		bit 	0,(ix+6) 					; if width 1, skip the last draw
+		bit 	0,(ix+SPRcontrol) 					; if width 1, skip the last draw
 		jr 		z,_SPRDrawEnd
 _SPRRightUDGPosition:		
 		ld 		hl,$F000+$C3*8
@@ -149,9 +207,13 @@ _SPRRightUDGPosition:
 		ld 		(hl),a
 _SPRDrawEnd:
 		;
+		; 		Adjust the usage counters.
+		;
+		; TODO : Adjust usage counters.
+		;
 		; 		Check if we have done all the rows
 		;
-		ld 		hl,SPRRowCount 
+		ld 		hl,_SPRRowCount 
 		dec 	(hl)
 		jr 		z,_SPRExit
 		;
@@ -169,17 +231,22 @@ _SPRDrawEnd:
 		and 	7
 		jr 		nz,_SPRNextRowUDG 			; if not complete it.
 
-		di
+		xor 	a 							; clear the initial offset
+		ld 		(_SPRInitialYOffset),a
 
 		ld 		de,40 						; advance down one row.
 		add 	iy,de 
-		;
-		; TODO: Gone too far ?
-		;
+
+		ld 		de,$F800+40*30 				; the end of the physical display
+		push 	iy
+		pop 	hl
+		scf
+		sbc 	hl,de
+		jr 		nc,_SPRExit 				; past the bottom,exit.
+
 		jr 		_SPRStartNextCharacterRow 	; do the next character row.
 
 _SPRExit:
-		di
 		ret
 
 ; *********************************************************************************************
@@ -215,7 +282,7 @@ _SPRAllocateRow:
 		ld 		(_SPRMiddleUDGPosition+1),hl ; overwrite the code.
 		push 	hl
 
-		bit 	0,(ix+6) 					; if 8 width then we are done.
+		bit 	0,(ix+SPRcontrol) 			; if 8 width then we are done.
 		jr 		z,_SPRAllocateOkay 
 
 		inc 	iy		
@@ -228,7 +295,6 @@ _SPRAllocateRow:
 		;	 	as if we hadn't allocated it. We haven't bumped the usage count yet.
 		;
 _SPRAllocateUndo:
-		di
 		pop 	de 							; address of UDG into DE
 		ld 		a,d 						; have we done the whole lot ?
 		or 		e
@@ -245,8 +311,15 @@ _SPRAllocateUndo:
 		ld 		l,a 						; HL is the address of the original character for this UDG.
 		ld 		h,SPROriginalChar >> 8 		
 		ld 		a,(hl) 						; character the UDG replaced
-		ld 		(de),a 						; update the screen with it, undoing the UDG change.
-		ld 		(hl),$FF 					; mark the UDG available.
+		ld 		(hl),$FF 					; mark that UDG as now available
+
+		ld 		h,SPRLowAddress >> 8 		; get screen address into DE
+		ld 		e,(hl)
+		ld 		h,SPRHighAddress >> 8 
+		ld 		d,(hl)
+
+		ld 		(de),a 						; fix up screen
+
 		jr 		_SPRAllocateUndo 			; and see if there are any more to undo
 		;
 		; 		Worked, exit with carry clear.
@@ -269,7 +342,7 @@ _SPRAllocateExit:
 _SPRAllocateOne:
 		ld 		a,(iy+0) 					; is it a UDG already
 		cp 		SPRLowSprite 				; if so, we don't need to do anything.
-		jr 		nc,_SPRCalculateDefinitionAddr
+		jr 		nc,_SPRAllocateOneExit
 		;
 		; 		Look for a free UDG, e.g. one where the stored character is $FF.
 		;
@@ -313,8 +386,15 @@ _SPRAOFound:
 		ldir
 
 		ld 		a,(iy+0) 					; get the address of the UDG and exit with CC
+_SPRAllocateOneExit;
+		call 	_SPRCalculateDefinitionAddr ; get the definition address in HL
+		ld 		a,(_SPRInitialYOffset) 		; adjust for initial Y offset
+		or 		l
+		ld 		l,a
+		xor 	a 							; clear carry.
+		ret 			
 ;
-; 		A is a character #, point HL to CRAM Address, clears carry.
+; 		A is a character #, point HL to CRAM Address
 ;
 _SPRCalculateDefinitionAddr:
 		ld 		l,a
@@ -322,7 +402,6 @@ _SPRCalculateDefinitionAddr:
 		add 	hl,hl
 		add 	hl,hl
 		add 	hl,hl
-		xor 	a
 		ret
 
 
@@ -332,7 +411,10 @@ _SPRCalculateDefinitionAddr:
 ;
 ; *********************************************************************************************
 
-SPRRowCount: 								; down counter for completed rows.
+_SPRRowCount: 								; down counter for completed rows.
+		.db 	0
+
+_SPRInitialYOffset: 						; the initial vertical offset.
 		.db 	0
 
 _SPRAllocSPTemp: 							; save SP when storing interim results on stack
@@ -380,17 +462,18 @@ SpriteDemo:
 		.dw 	10 							; X
 		.dw 	4 							; Y
 		.dw 	SpriteGraphic 				; Graphics
-		.db 	$00 						; 7:Drawn 2,1:Height 0:Width others 0.
+		.dw 	$00 						; 2,1:Height 0:Width others 0.
 
 SpriteGraphic:
-		.db 	$18,$3C,$7E,$FF,$FF,$7E,$3C,$1E
+		.db 	$FF,$81,$81,$81,$81,$81,$81,$FF
 
 SpriteDemo2:		
-		.dw 	10 							; X
-		.dw 	4 							; Y
+		.dw 	19 							; X
+		.dw 	28 							; Y
 		.dw 	SpriteGraphic2 				; Graphics
-		.db 	$03							; 7:Drawn 2,1:Height 0:Width others 0.
+		.dw 	$03							; 2,1:Height 0:Width others 0.
 
 SpriteGraphic2:
 		.dw 	$FFFF,$8001,$F001,$8001,$8001,$8001,$8001,$AAAA
 		.dw 	$5555,$C003,$C003,$E007,$F00F,$F81F,$FC3F,$03C0
+

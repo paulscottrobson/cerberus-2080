@@ -84,11 +84,11 @@ _SPRUsageReset:
 ; *********************************************************************************************
 
 SpriteXDraw: 								; draw only
-		bit 	7,(ix+0)
+		bit 	7,(ix+SPRstatus)
 		ret 	nz
 		jr 		SpriteXToggle
 SpriteXErase:								; erase only
-		bit 	7,(ix+0)
+		bit 	7,(ix+SPRstatus)
 		ret 	z
 SpriteXToggle:								; flip state
 		push 	af 							; save registers 							

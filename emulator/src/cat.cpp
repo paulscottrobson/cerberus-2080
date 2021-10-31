@@ -31,7 +31,7 @@ void CatSetup(int argc,char **argv) {
 
 	mode = true;
 	cpurunning = (argc == 3);
-	fast = false;
+	fast = true;
 	
 	catbios_setup();
 	if (argc >= 2) {

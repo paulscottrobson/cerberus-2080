@@ -50,7 +50,6 @@ static BYTE8 temp8,oldCarry;
 static int frameCount = 0;
 
 static int cycles;																	// Cycle Count.
-static int cyclesPerFrame = CYCLES_PER_FRAME;										// Cycles per frame
 
 #define CYCLES(n) cycles -= (n)
 
@@ -191,7 +190,7 @@ BYTE8 CPUExecuteInstruction(void) {
 		cycles = -1;
 	}
 	if (cycles >= 0 ) return 0;														// Not completed a frame.
-	cycles = cyclesPerFrame;														// Adjust this frame rate, up to x16 on HS
+	cycles = CYCLES_PER_FRAME;														// Adjust this frame rate, up to x16 on HS
 	HWSync();																		// Update any hardware
 	CatSync();
 	frameCount++;

@@ -73,9 +73,13 @@ char previousEditLine[40];
 #define F(s)        ((char *)(s))
 
 int pos = 1;                           /** Position in edit line currently occupied by cursor **/
+
 bool mode = false;                     /** false = 6502 mode, true = Z80 mode **/
 bool cpurunning = false;               /** true = CPU is running, CAT should not use the buses **/
 bool fast = false;                     /** true = 8 MHz CPU clock, false = 4 MHz CPU clock **/
+//
+//      These are initialised in cat.c
+//
 
 static void catbios_setup() {    
     resetCPUs();

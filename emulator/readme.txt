@@ -1,5 +1,10 @@
 Notes
 =====
+
+1.01 
+Fixed timing on slow/fast which was wrong.
+
+1.00
 Prebuild executables are in directory "release"
 
 Build Requirements

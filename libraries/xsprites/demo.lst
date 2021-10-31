@@ -1,9 +1,11 @@
               	; --------------------------------------
-              	; zasm: assemble "_test.asm"
-              	; date: 2021-10-31 05:43:54
+              	; zasm: assemble "_demo.asm"
+              	; date: 2021-10-31 05:46:15
               	; --------------------------------------
 
 
+              	
+              	
               	
 0202:         			org 	$202
               	
@@ -11,7 +13,9 @@
               	;	 	Defining SPRLowSprite sets the lowest UDG used by sprites. This is a constant
               	; 		so if this is $A0, then $00-$9F are background, and $A0-$FF are used for sprites.
               	;
-00C0:         	SPRLowSprite = $C0 								
+0080:         	SPRLowSprite = $80 								
+              	
+000A:         	SpriteCount = 10
               	
 0202: C30008  			jp 		start
               			.include "xsprite.asm"
@@ -85,7 +89,7 @@
               			;
               			; 		Set all possible original characters to $FF, indicating they are available.
               			;		
-0212: 21C004  			ld 		hl,SPROriginalChar+SPRLowSprite
+0212: 218004  			ld 		hl,SPROriginalChar+SPRLowSprite
 0215:         	_SPRUsageReset:			 					
 0215: 36FF    			ld 		(hl),$FF
 0217: 2C      			inc 	l
@@ -390,12 +394,12 @@
               	
 036D:         	_SPRAllocateOne:
 036D: FD7E00  			ld 		a,(iy+0) 					; is it a UDG already
-0370: FEC0    			cp 		SPRLowSprite 				; if so, we don't need to do anything.
+0370: FE80    			cp 		SPRLowSprite 				; if so, we don't need to do anything.
 0372: 3033    			jr 		nc,_SPRAllocateOneExit
               			;
               			; 		Look for a free UDG, e.g. one where the stored character is $FF.
               			;
-0374: 21C004  			ld 		hl,SPROriginalChar+SPRLowSprite
+0374: 218004  			ld 		hl,SPROriginalChar+SPRLowSprite
 0377:         	_SPRAOFind: 								; look for an available UDG.
 0377: 7E      			ld 		a,(hl)
 0378: FEFF    			cp 		$FF
@@ -563,50 +567,106 @@
 081E: 20F9    			jr 		nz,_fill4 		
               	
 0820: CD0502  	 		call 	SPRInitialise
-0823: DD215008	 		ld 		ix,SpriteDemo2
-0827: 0607    	 		ld 		b,7
-0829:         	_dloop: 		
-0829: CD1D02  	 		call 	SpriteXDraw
-082C: DDCB07BE	 		res 	7,(ix+7)
-0830: DD7E00  	 		ld	 	a,(ix+0)
-0833: C60C    	 		add 	a,12
-0835: DD7700  	 		ld 		(ix+0),a
-0838: DD3402  	 		inc 	(ix+2)
-083B: 10EC    	 		djnz	_dloop
-083D: F3      	_stop:	di
-083E: 18FD    			jr		_stop 		
+              	
+0823: DD21C108	 		ld 		ix,SpriteBuffer
+0827: 060A    	 		ld 		b,SpriteCount
+0829:         	_create:
+0829: 78      			ld 		a,b
+082A: 87      			add 	a,a
+082B: 87      			add 	a,a		
+082C: 87      			add 	a,a
+082D: 87      			add 	a,a
+082E: C618    			add 	a,24
+0830: DD7700  			ld 		(ix+0),a
+0833: DD360100			ld 		(ix+1),0
+0837: 87      			add 	a,a
+0838: DD7702  			ld 		(ix+2),a
+083B: DD360300			ld 		(ix+3),0
+083F: DD360489			ld 		(ix+4),SpriteGraphic & 0xFF
+0843: DD360509			ld 		(ix+5),SpriteGraphic >> 8
+0847: DD360603			ld 		(ix+6),$03
+084B: DD360700			ld 		(ix+7),0
+084F: DD360801			ld 		(ix+8),1
+0853: CB40    			bit 	0,b
+0855: 2804    			jr 		z,_create1
+0857: DD3608FF			ld 		(ix+8),255
+085B:         	_create1:		
+085B: DD360901			ld 		(ix+9),1
+085F: 110A00  	 		ld 		de,10
+0862: DD19    	 		add 	ix,de
+0864: 10C3    	 		djnz 	_create
+              	
+0866: 210000  	 		ld 		hl,0
+0869: 220001  	 		ld 		($0100),hl
+              	
+086C: DD21C108	_loop1:	ld 		ix,SpriteBuffer
+0870: 060A    			ld 		b,SpriteCount
+0872: CD2402  	_loop2:	call 	SpriteXErase
+0875: CD8F08  			call 	moveOne
+0878: CD1D02  			call 	SpriteXDraw
+              	
+087B: 2A0001  			ld 		hl,($0100)
+087E: 23      			inc 	hl
+087F: 23      			inc 	hl
+0880: 220001  	 		ld 		($0100),hl
+              	
+0883: 110A00  	 		ld 		de,10
+0886: DD19    	 		add 	ix,de
+0888: 10E8    			djnz 	_loop2
+088A: 18E0    			jr 		_loop1
+              	
+088C: F3      	_stop:	di
+088D: 18FD    			jr		_stop 		
+              	
+088F:         	moveOne:
+088F: DD7E08  			ld 		a,(ix+8)
+0892: CDAA08  			call 	advance
+0895: DD7708  			ld 		(ix+8),a
+0898: DD7E09  			ld 		a,(ix+9)
+089B: DDE5    			push 	ix
+089D: DD23    			inc 	ix
+089F: DD23    			inc 	ix
+08A1: CDAA08  			call 	advance
+08A4: DDE1    			pop 	ix		
+08A6: DD7709  			ld 		(ix+9),a
+08A9: C9      			ret
+              	
+08AA: 4F      	advance:ld 		c,a
+08AB: 87      			add 	a,a
+08AC: 87      			add 	a,a
+08AD: DD8600  			add 	a,(ix+0)
+08B0: DD7700  			ld 		(ix+0),a
+08B3: FE10    			cp 		16
+08B5: 3806    			jr 		c,_adv2
+08B7: FEF0    			cp 		240
+08B9: 3002    			jr 		nc,_adv2
+08BB: 79      			ld 		a,c
+08BC: C9      			ret
+08BD:         	_adv2:
+08BD: 79      			ld 		a,c
+08BE: ED44    			neg
+08C0: C9      			ret
               	
               	; *********************************************************************************************
               	;										Test data
               	; *********************************************************************************************
               	
-0840:         	SpriteDemo:		
-0840: 0400    			.dw 	4 							; X
-0842: 0A00    			.dw 	10 							; Y
-0844: 4808    			.dw 	SpriteGraphic 				; Graphics
-0846: 0000    			.dw 	$00 						; 2,1:Height 0:Width others 0.
+08C1:         	SpriteBuffer:		
+08C1: FFFFFFFF			.ds 	SpriteCount * 20
+08C5: FF...   	
               	
-0848:         	SpriteGraphic:
-0848: FF818181			.db 	$FF,$81,$81,$81,$81,$81,$81,$FF
-084C: 818181FF	
               	
-0850:         	SpriteDemo2:		
-0850: 1300    			.dw 	19 							; X
-0852: 1C00    			.dw 	28 							; Y
-0854: 5808    			.dw 	SpriteGraphic2 				; Graphics
-0856: 0300    			.dw 	$03							; 2,1:Height 0:Width others 0.
-              	
-0858:         	SpriteGraphic2:
-0858: FFFF0180			.dw 	$FFFF,$8001,$F001,$8001,$8001,$8001,$8001,$AAAA
-085C: 01F00180	
-0860: 01800180	
-0864: 0180AAAA	
-0868: 555503C0			.dw 	$5555,$C003,$C003,$E007,$F00F,$F81F,$FC3F,$03C0
-086C: 03C007E0	
-0870: 0FF01FF8	
-0874: 3FFCC003	
+0989:         	SpriteGraphic:
+0989: F00F0810			.dw 	$0FF0,$1008,$2004,$4002,$8001,$FFFF,$AAAB,$D555
+098D: 04200240	
+0991: 0180FFFF	
+0995: ABAA55D5	
+0999: 03C003C0			.dw 	$C003,$C003,$FFFF,$8001,$4002,$2004,$1008,$0FF0
+099D: FFFF0180	
+09A1: 02400420	
+09A5: 0810F00F	
               	
 
 
-total time: 0.0039 sec.
+total time: 0.0030 sec.
 no errors

@@ -1,8 +1,5 @@
 
-
-
 		org 	$202
-
 
 ;
 ;	 	Defining SPRLowSprite sets the lowest UDG used by sprites. This is a constant

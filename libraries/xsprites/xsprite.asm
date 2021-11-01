@@ -29,8 +29,44 @@
 ;		It eats UDGs - a single 16x16 sprite needs 9 UDGs if it doesn't overlap with another.
 ;
 ; *********************************************************************************************
-
-
+;
+;		How it works. 
+;
+;			When drawing a sprite, it will try to allocate UDGs from its pool for the space
+; 			to draw the sprite. When drawing or erasing it then XORs the bit patterns into this
+; 			as far as it can. When erased, UDGs are returned to the pool if no longer required.
+;
+; *********************************************************************************************
+;
+;		Offsets from IX.
+;
+;			+0,+1 		Horizontal position (0..319)
+;			+2,+3 		Vertical position (0..239)
+;			+4,+5 		Pointer to graphic image data.
+;							Width : 8  	one byte per row
+;							Width : 16 	two bytes per row left-right order
+;			+6 			Control
+;							Bit 7: 		Set if sprite disabled
+;							Bit 6: 		Vertical flip
+;							Bit 5:		Horizontal flip
+;							Bit 4..2:	0
+;							Bit 1:		Double width
+;							Bit 0: 		Double height
+;			+7 			Status
+;							Bit 7:		Set when drawn on screen
+;							Bit 6..0:	0
+;
+;			Changes should only be made when the sprite is not drawn, otherwise chaos
+;			will ensue.
+;
+;			Draws will not fail, however, they may not visually work either. If there are more
+;			UDGs required than available graphics will not be drawn, or possibly drawn
+;			erratically. It is advised to minimise the number of sprites both for CPU time
+;			and UDG usage. 
+;
+;			Use specific UDGs for static/slow objects. For (say) Pacman the only sprites should
+;			be the player character and chasing ghosts.
+;
 ; *********************************************************************************************
 ;
 ;								  Sprite Record entries

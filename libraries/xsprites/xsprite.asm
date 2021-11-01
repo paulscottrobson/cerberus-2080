@@ -405,7 +405,7 @@ _SPRAllocateUndo:
 		srl 	d
 		rr 		e
 		;
-		ld 		l,a 						; HL is the address of the original character for this UDG.
+		ld 		l,e 						; HL is the address of the original character for this UDG.
 		ld 		h,SPROriginalChar >> 8 		
 		ld 		a,(hl) 						; character the UDG replaced
 		ld 		(hl),$FF 					; mark that UDG as now available

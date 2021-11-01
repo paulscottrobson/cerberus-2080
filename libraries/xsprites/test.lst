@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "_test.asm"
-              	; date: 2021-11-01 09:20:02
+              	; date: 2021-11-01 09:41:14
               	; --------------------------------------
 
 
@@ -422,7 +422,7 @@
 03B2: CB3A    			srl 	d
 03B4: CB1B    			rr 		e
               			;
-03B6: 6F      			ld 		l,a 						; HL is the address of the original character for this UDG.
+03B6: 6B      			ld 		l,e 						; HL is the address of the original character for this UDG.
 03B7: 2605    			ld 		h,SPROriginalChar >> 8 		
 03B9: 7E      			ld 		a,(hl) 						; character the UDG replaced
 03BA: 36FF    			ld 		(hl),$FF 					; mark that UDG as now available

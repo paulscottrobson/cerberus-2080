@@ -1,4 +1,3 @@
 TODO
-	BUG: Characters are being allocated on erasure - should just fail.
-	Wrapper & erase all & invalidate
+	Wrapper & erase all & invalidate helper functions ?
 	

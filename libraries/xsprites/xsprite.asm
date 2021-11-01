@@ -246,14 +246,14 @@ _SPRAdjustGraphicPtr:
 		ld 		bc,$0000 					; this is changed to account for size and
 		add 	hl,bc 						; direction.
 		ld 		(_SPRFetchGraphicPtr+1),hl		
-		xor 	a 							; ADE contains 24 bit graphic data.
 		;
 		; 		Check for Horizontal Flip
 		;
 		bit 	5,(ix+SPRcontrol)			; if HFlip bit set
 		jr 		z,_SPRNoHFlip
-		call 	SPRFlipADE 					; Flip ADE
+		call 	SPRFlipDE 					; Flip DE
 _SPRNoHFlip:		
+		xor 	a 							; ADE contains 24 bit graphic data.
 		ex 		de,hl 						; we put it in AHL
 _SPRFineHorizontalShift:		
 		jr 		$+2 						; this is altered to do the fine horizontal shift
@@ -362,6 +362,14 @@ _SPRAllocateRow:
 		push 	iy 							; save IY
 		ld 		(_SPRAllocSPTemp),sp		; save SP as we are using it for temp.
 
+		bit 	7,(ix+SPRstatus) 			; are we erasing ?
+		jr 		z,_SPRARNotErasing
+
+		ld 		a,(iy+0) 					; if erasing, check if row is drawn on UDGs
+		cp 		SPRLowSprite
+		jr 		c,_SPRAllocateExit 			; and if so don't allocate the row, exit.
+
+_SPRARNotErasing:		
 		ld 		hl,$0000 					; we save all the allocated so far on the stack
 		push 	hl 		 					; this is the end marker.					
 		;
@@ -536,20 +544,22 @@ _SPRDecrementUsage:
 
 ; *********************************************************************************************
 ;
-;						Flip ADE - byteflip each and swap A and E
+;						Flip ADE - byteflip D or DE and swap.
 ;
 ; *********************************************************************************************
 
-SPRFlipADE:
-		call 	_SPRFlipA 					; flip A
-		push 	af
+SPRFlipDE:
 		ld 	 	a,d 						; flip D
 		call 	_SPRFlipA
 		ld 		d,a
-		ld 		a,e 						; flip E -> A
+		bit 	0,(IX+SPRcontrol)  			; if width 1 exit.
+		ret 	z
+
+		ld 		l,e 						; save E
+		ld 		e,a 						; put flipped D into E
+		ld 		a,l 						; get old E, flip into D
 		call 	_SPRFlipA
-		pop 	hl 							; restore old A into E
-		ld 		e,h
+		ld 		d,a
 		ret
 ;
 ; 		Flip A

@@ -5,9 +5,9 @@
 ;	 	Defining SPRLowSprite sets the lowest UDG used by sprites. This is a constant
 ; 		so if this is $A0, then $00-$9F are background, and $A0-$FF are used for sprites.
 ;
-SPRLowSprite = $80 								
+SPRLowSprite = $40 								
 
-SpriteCount = 14
+SpriteCount = 16	
 
 		jp 		start
 
@@ -36,6 +36,8 @@ _fill4:	ld 		(hl),1
 		bit 	3,l
 		jr 		nz,_fill4 		
 
+		ld 		a,1
+		ld 		($F000+32*8+4),a
  		call 	SPRInitialise
 
  		ld 		ix,SpriteBuffer
@@ -103,6 +105,26 @@ moveOne:
 		call 	advance
 		pop 	ix		
 		ld 		(ix+9),a
+
+		ld 		a,(ix+6)
+		and 	#$9F
+		bit 	7,(ix+8)
+		jr 		z,_notright
+		set 	5,a
+_notright:		
+		bit 	7,(ix+9)
+		jr 		z,_notleft
+		set 	6,a
+_notleft:		
+		ld 		(ix+6),a
+
+		ld 	 	hl,SpriteGraphic
+		bit 	4,(ix+0)
+		jr 		z,_anim1
+		ld 		hl,SpriteGraphic2
+_anim1:		
+		ld 		(ix+4),l
+		ld 		(ix+5),h
 		ret
 
 advance:ld 		c,a
@@ -131,5 +153,9 @@ SpriteBuffer:
 
 SpriteGraphic:
 		.dw 	$0FF0,$1008,$2004,$4002,$8001,$8001,$8001,$8001
-		.dw 	$80FF,$80FF,$80FF,$80FF,$40FE,$20FC,$10F8,$0FF0
+		.dw 	$80FF,$8080,$8080,$8080,$4080,$2080,$1080,$0F80
+
+SpriteGraphic2:
+		.dw 	$0FF0,$1008,$2004,$4002,$8001,$8001,$8001,$8001
+		.dw 	$8001,$8001,$8001,$8001,$4002,$2004,$1008,$0FF0
 

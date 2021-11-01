@@ -173,11 +173,39 @@ _SPRCalcPosition:
 _SPRSingleHeight:		
 		ld 		(_SPRRowCount),a
 		;
-		; 		Load BC with the sprite graphic data, we preserve this throughout
-		; 		drawing.
+		;		Set the sprite graphic address and incrementer.
 		;
-		ld 		c,(ix+SPRgraphics)
-		ld 		b,(ix+SPRgraphics+1)
+		ld 		l,(ix+SPRgraphics) 			; data address
+		ld 		h,(ix+SPRgraphics+1) 		
+		ld 		de,1 						; increment/decrement
+		bit 	0,(ix+SPRcontrol)
+		jr 		z,_SPRSGANotDoubleWidth
+		inc 	de 							; 2 if double width
+_SPRSGANotDoubleWidth:
+		bit 	6,(ix+SPRcontrol) 			; check for vertical flip.
+		jr 		z,_SPRSGANotVFlip
+		;
+		ex 		de,hl 						; DE = address, HL = increment x 8
+		push 	hl
+		add 	hl,hl
+		add 	hl,hl
+		add 	hl,hl
+		bit 	1,(ix+SPRcontrol) 			; x 16 if double height
+		jr 		z,_SPRSGANotDoubleHeight
+		add 	hl,hl		
+_SPRSGANotDoubleHeight:
+		add 	hl,de 						; add 8/16 x increment to start
+		pop 	bc 							; original increment -> BC
+		push 	hl 							; save new start on stack.
+		ld 		hl,0 						; HL = - increment
+		xor 	a
+		sbc 	hl,bc
+		pop 	de 							; DE = new start off stack
+		ex 		de,hl 						; swap them back so HL = address, DE = -increment
+		add 	hl,de 						; points HL to the last sprite entry.
+_SPRSGANotVFlip:
+		ld 		(_SPRFetchGraphicPtr+1),hl 	; write out start address in HL and incrementer in DE.		
+		ld 		(_SPRAdjustGraphicPtr+1),de
 		;
 		; 		Try to allocate UDGs for the current row at IY, 2 or 3 UDGs.
 		;
@@ -201,17 +229,23 @@ _SPRAuNotRight:
 		;		Get the graphics for the next *pixel* line. into ADE
 		;
 _SPRNextRowUDG:		
-		ld 		e,0							; DE = $00:BC
-		ld 		a,(bc)
-		ld 		d,a
-		inc 	bc
+		;
+_SPRFetchGraphicPtr:
+		ld 		hl,$0000
+		ld 		e,0							; DE = $00:(HL)
+		ld 		d,(hl)
 		bit 	0,(ix+SPRcontrol) 			; is the width 1 ?
 		jr 		z,_SPRHaveGraphicData
-		ld 		e,d  						; DE = (BC+1):(BC)		
-		ld 		a,(bc)
-		ld 		d,a 
-		inc 	bc
+		inc 	hl
+		ld 		e,d  						; DE = (HL+1):(HL)		
+		ld 		d,(hl)
+		dec 	hl		
 _SPRHaveGraphicData:		
+		;
+_SPRAdjustGraphicPtr:
+		ld 		bc,$0000 					; this is changed to account for size and
+		add 	hl,bc 						; direction.
+		ld 		(_SPRFetchGraphicPtr+1),hl		
 		xor 	a 							; ADE contains 24 bit graphic data.
 		;
 		; 		Check for Horizontal Flip

@@ -5,7 +5,7 @@
 ;	 	Defining SPRLowSprite sets the lowest UDG used by sprites. This is a constant
 ; 		so if this is $A0, then $00-$9F are background, and $A0-$FF are used for sprites.
 ;
-SPRLowSprite = $C0 								
+SPRLowSprite = $80 								
 
 		jp 		start
 		.include "xsprite.asm"
@@ -22,7 +22,7 @@ _fill:	dec 	hl
  		add 	a,2
  		and 	3
  		jr 		nz,_fill3
- 		ld 		(hl),1
+; 		ld 		(hl),1
 _fill3: 		
  		bit 	3,h
  		jr 		nz,_fill
@@ -35,7 +35,14 @@ _fill4:	ld 		(hl),1
 
  		call 	SPRInitialise
  		ld 		ix,SpriteDemo
- 		ld 		b,7
+ 		call 	DoRow
+ 		ld 		ix,SpriteDemo2
+ 		call 	DoRow
+_stop:	di
+		jr		_stop 		
+
+DoRow:
+ 		ld 		b,8
 _dloop: 		
  		call 	SpriteXDraw
  		ld 		a,(ix+6)
@@ -45,12 +52,10 @@ _dloop:
  		res 	7,(ix+7)
 
  		ld	 	a,(ix+0)
- 		add 	a,20
+ 		add 	a,28
  		ld 		(ix+0),a
- 		inc 	(ix+2)
  		djnz	_dloop
-_stop:	di
-		jr		_stop 		
+		ret		
 
 ; *********************************************************************************************
 ;										Test data

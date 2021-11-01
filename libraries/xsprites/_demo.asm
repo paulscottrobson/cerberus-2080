@@ -1,17 +1,16 @@
 
-
-
 		org 	$202
 
 ;
 ;	 	Defining SPRLowSprite sets the lowest UDG used by sprites. This is a constant
 ; 		so if this is $A0, then $00-$9F are background, and $A0-$FF are used for sprites.
 ;
-SPRLowSprite = $80 								
+SPRLowSprite = $F8
 
-SpriteCount = 10
+SpriteCount = 1
 
 		jp 		start
+
 		.include "xsprite.asm"
 
 ;
@@ -57,12 +56,16 @@ _create:
 		ld 		(ix+5),SpriteGraphic >> 8
 		ld 		(ix+6),$3
 		ld 		(ix+7),0
-		ld 		(ix+8),1
+		ld 		(ix+8),1 				; xi
 		bit 	0,b
 		jr 		z,_create1
-		ld 		(ix+8),255
+		ld 		(ix+8),255 
 _create1:		
-		ld 		(ix+9),1
+		ld 		(ix+9),1 				; yi
+		bit 	1,b
+		jr 		z,_create2
+		ld 		(ix+9),255
+_create2:		
  		ld 		de,10
  		add 	ix,de
  		djnz 	_create
@@ -72,9 +75,12 @@ _create1:
 
 _loop1:	ld 		ix,SpriteBuffer
 		ld 		b,SpriteCount
-_loop2:	call 	SpriteXErase
+_loop2:	;call 	SpriteXErase
 		call 	moveOne
+		di
 		call 	SpriteXDraw
+		di
+		call 	SpriteXErase
 
 		ld 		hl,($0100)
 		inc 	hl
@@ -127,6 +133,6 @@ SpriteBuffer:
 
 
 SpriteGraphic:
-		.dw 	$0FF0,$1008,$2004,$4002,$8001,$FFFF,$AAAB,$D555
-		.dw 	$C003,$C003,$FFFF,$8001,$4002,$2004,$1008,$0FF0
+		.dw 	$0FF0,$1008,$2004,$4002,$8001,$8001,$8001,$8001
+		.dw 	$80FF,$80FF,$80FF,$80FF,$40FE,$20FC,$10F8,$0FF0
 

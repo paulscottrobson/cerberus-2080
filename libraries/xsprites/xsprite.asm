@@ -40,7 +40,8 @@
 SPRx 	= 0 								; horizontal position, pixels
 SPRy 	= 2 								; vertical position, pixels
 SPRgraphics = 4 							; bitmap data
-SPRcontrol = 6 								; 0:width 1,2:height others zero
+SPRcontrol = 6 								; 0:width 1:height 5:HFlip 6:VFlip 7:hidden
+											; (others are zero)
 SPRstatus = 7 								; 7:currently drawn
 
 ; *********************************************************************************************
@@ -97,8 +98,35 @@ SpriteXToggle:								; flip state
 		push 	hl
 		push 	iy
 		;
+		; 		Check actually visible
+		;
+		bit 	7,(ix+SPRcontrol)
+		jp 		nz,_SPRExit
+		;
+		; 		Check range.
+		;
+		ld 		a,(ix+SPRx+1) 				; MSB of X must be 0 or 1
+		ld 		b,a 						; save in B
+		and 	$FE
+		or 		a,(ix+SPRy+1) 				; MSB of Y must be zero.
+		jr 		nz,_SPRRangeFail
+		;
+		ld 		a,(ix+SPRy) 				; check Y < 240
+		cp 		8*30
+		jr 		nc,_SPRRangeFail
+		;
+		dec 	b 							; if MSB X was 1, now zero
+		jr 		nz,_SPRCalcPosition 
+		;
+		ld 		a,(ix+SPRx) 				; X.MSB was 1, so must be X.LSB < 64
+		cp 		64
+		jr 		c,_SPRCalcPosition
+_SPRRangeFail:
+		jp 		_SPRExit 	
+		;
 		;		Calculate position in IY
 		;
+_SPRCalcPosition:		
 		ld 		h,0							; Y position in HL, with lower 3 bits masked, so already x 8
 		ld 		a,(ix+SPRy)
 		and 	$F8
@@ -135,18 +163,14 @@ SpriteXToggle:								; flip state
 		and 	7
 		ld 		(_SPRInitialYOffset),a
 		;
-		; 		Calculate the row count from bits 1 and 2 of the control byte.
+		; 		Calculate the row count from bit 1 of the control byte
 		; 		(the number of vertical pixels down)
 		;
-		ld 		a,(ix+SPRcontrol)
-		and 	$06
-		ld 		b,a 						; B is 0,2,4,6 for 8,16,24,32
-		xor 	a
-_SPRCalcRows:
-		add 	a,8
-		dec 	b	
-		dec 	b
-		jp 		p,_SPRCalcRows	
+		ld 		a,8
+		bit 	1,(ix+SPRcontrol)
+		jr 		z,_SPRSingleHeight
+		add 	a,a
+_SPRSingleHeight:		
 		ld 		(_SPRRowCount),a
 		;
 		; 		Load BC with the sprite graphic data, we preserve this throughout
@@ -181,7 +205,7 @@ _SPRNextRowUDG:
 		ld 		a,(bc)
 		ld 		d,a
 		inc 	bc
-		bit 	0,(ix+SPRcontrol) 					; is the width 1 ?
+		bit 	0,(ix+SPRcontrol) 			; is the width 1 ?
 		jr 		z,_SPRHaveGraphicData
 		ld 		e,d  						; DE = (BC+1):(BC)		
 		ld 		a,(bc)
@@ -189,6 +213,13 @@ _SPRNextRowUDG:
 		inc 	bc
 _SPRHaveGraphicData:		
 		xor 	a 							; ADE contains 24 bit graphic data.
+		;
+		; 		Check for Horizontal Flip
+		;
+		bit 	5,(ix+SPRcontrol)			; if HFlip bit set
+		jr 		z,_SPRNoHFlip
+		call 	SPRFlipADE 					; Flip ADE
+_SPRNoHFlip:		
 		ex 		de,hl 						; we put it in AHL
 _SPRFineHorizontalShift:		
 		jr 		$+2 						; this is altered to do the fine horizontal shift
@@ -468,6 +499,54 @@ _SPRDecrementUsage:
 		ld 		(hl),$FF 					; mark the UDG as free again.
 		ret
 
+
+; *********************************************************************************************
+;
+;						Flip ADE - byteflip each and swap A and E
+;
+; *********************************************************************************************
+
+SPRFlipADE:
+		call 	_SPRFlipA 					; flip A
+		push 	af
+		ld 	 	a,d 						; flip D
+		call 	_SPRFlipA
+		ld 		d,a
+		ld 		a,e 						; flip E -> A
+		call 	_SPRFlipA
+		pop 	hl 							; restore old A into E
+		ld 		e,h
+		ret
+;
+; 		Flip A
+;		
+_SPRFlipA:
+		or 		a 							; shortcut, reverse zero.
+		ret 	z
+		call 	_SPRFlipLow 				; flip the low nibble
+		rrca 								; swap halves
+		rrca
+		rrca
+		rrca 								; then fall through to flip high nibble.
+_SPRFlipLow:			
+		push 	af 							; save original
+		and 	$0F 						; access the flip value.
+		add 	_SPRFlipTable & $FF
+		ld 		l,a
+		ld 		h,_SPRFlipTable >> 8 
+		pop 	af 							; restore original
+		and 	$F0 						; replace lower nibble
+		or 		(hl)
+		ret
+;
+;		One Nibble Reversed.
+;
+		.align 	16,0 						; all in one page.
+
+_SPRFlipTable:
+		.db 	0,8,4,12,2,10,6,14
+		.db 	1,9,5,13,3,11,7,15
+
 ; *********************************************************************************************
 ;
 ; 									General Data
@@ -515,4 +594,3 @@ SPRHighAddress:
 		.ds 	256
 
 SPRDataBlockEnd:
-

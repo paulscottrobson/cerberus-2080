@@ -1,6 +1,6 @@
                         ; --------------------------------------
                         ; zasm: assemble "_runtime.asm"
-                        ; date: 2021-10-31 12:09:12
+                        ; date: 2021-10-31 16:07:30
                         ; --------------------------------------
 
 
@@ -886,5 +886,5 @@ _randomSeed2       = $03A9 =   937          _runtime.asm:726
 _size              = $01A9 =   425          :1 (unused)
 
 
-total time: 0.0047 sec.
+total time: 0.0038 sec.
 no errors

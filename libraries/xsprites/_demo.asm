@@ -55,7 +55,7 @@ _create:
 		ld 		(ix+3),0
 		ld 		(ix+4),SpriteGraphic & 0xFF
 		ld 		(ix+5),SpriteGraphic >> 8
-		ld 		(ix+6),$03
+		ld 		(ix+6),$3
 		ld 		(ix+7),0
 		ld 		(ix+8),1
 		bit 	0,b

@@ -34,13 +34,18 @@ _fill4:	ld 		(hl),1
 		jr 		nz,_fill4 		
 
  		call 	SPRInitialise
- 		ld 		ix,SpriteDemo2
+ 		ld 		ix,SpriteDemo
  		ld 		b,7
 _dloop: 		
  		call 	SpriteXDraw
+ 		ld 		a,(ix+6)
+ 		add 	a,32
+ 		and 	$7F
+ 		ld 		(ix+6),a
  		res 	7,(ix+7)
+
  		ld	 	a,(ix+0)
- 		add 	a,12
+ 		add 	a,20
  		ld 		(ix+0),a
  		inc 	(ix+2)
  		djnz	_dloop
@@ -54,8 +59,8 @@ _stop:	di
 SpriteDemo:		
 		.dw 	4 							; X
 		.dw 	10 							; Y
-		.dw 	SpriteGraphic 				; Graphics
-		.dw 	$00 						; 2,1:Height 0:Width others 0.
+		.dw 	SpriteGraphic4 				; Graphics
+		.dw 	$00 						; Control
 
 SpriteGraphic:
 		.db 	$FF,$81,$81,$81,$81,$81,$81,$FF
@@ -63,10 +68,16 @@ SpriteGraphic:
 SpriteDemo2:		
 		.dw 	19 							; X
 		.dw 	28 							; Y
-		.dw 	SpriteGraphic2 				; Graphics
-		.dw 	$03							; 2,1:Height 0:Width others 0.
+		.dw 	SpriteGraphic3	 			; Graphics
+		.dw 	$03							; Control
 
 SpriteGraphic2:
 		.dw 	$FFFF,$8001,$F001,$8001,$8001,$8001,$8001,$AAAA
 		.dw 	$5555,$C003,$C003,$E007,$F00F,$F81F,$FC3F,$03C0
 
+SpriteGraphic3:
+		.dw 	$8000,$4000,$2000,$1000,$0800,$0400,$0200,$0100
+		.dw 	$0080,$0040,$0020,$0010,$0008,$000C,$000E,$000F
+
+SpriteGraphic4:
+		.db 	$80,$40,$20,$10,8,12,14,15

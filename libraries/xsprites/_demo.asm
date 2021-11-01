@@ -5,9 +5,9 @@
 ;	 	Defining SPRLowSprite sets the lowest UDG used by sprites. This is a constant
 ; 		so if this is $A0, then $00-$9F are background, and $A0-$FF are used for sprites.
 ;
-SPRLowSprite = $F8 								
+SPRLowSprite = $80 								
 
-SpriteCount = 1
+SpriteCount = 14
 
 		jp 		start
 
@@ -45,8 +45,7 @@ _create:
 		add 	a,a
 		add 	a,a		
 		add 	a,a
-		add 	a,a
-		add 	a,24
+		add 	a,8
 		ld 		(ix+0),a
 		ld 		(ix+1),0
 		add 	a,a
@@ -75,7 +74,7 @@ _create2:
 
 _loop1:	ld 		ix,SpriteBuffer
 		ld 		b,SpriteCount
-_loop2:	di
+_loop2:	
 		call 	SpriteXErase
 		call 	moveOne
 		call 	SpriteXDraw

@@ -1,5 +1,4 @@
 TODO
+	BUG: Characters are being allocated on erasure - should just fail.
 	Wrapper & erase all & invalidate
 	
-
-When deleting a row which has been previously failed to be allocated, it is allocated to be set up when not required.

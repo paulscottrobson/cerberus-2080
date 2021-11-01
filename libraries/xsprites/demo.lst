@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "_demo.asm"
-              	; date: 2021-11-01 09:43:26
+              	; date: 2021-11-01 09:54:28
               	; --------------------------------------
 
 
@@ -11,9 +11,9 @@
               	;	 	Defining SPRLowSprite sets the lowest UDG used by sprites. This is a constant
               	; 		so if this is $A0, then $00-$9F are background, and $A0-$FF are used for sprites.
               	;
-00F8:         	SPRLowSprite = $F8 								
+0080:         	SPRLowSprite = $80 								
               	
-0001:         	SpriteCount = 1
+000E:         	SpriteCount = 14
               	
 0202: C30009  			jp 		start
               	
@@ -89,7 +89,7 @@
               			;
               			; 		Set all possible original characters to $FF, indicating they are available.
               			;		
-0212: 21F805  			ld 		hl,SPROriginalChar+SPRLowSprite
+0212: 218005  			ld 		hl,SPROriginalChar+SPRLowSprite
 0215:         	_SPRUsageReset:			 					
 0215: 36FF    			ld 		(hl),$FF
 0217: 2C      			inc 	l
@@ -458,12 +458,12 @@
               	
 03CE:         	_SPRAllocateOne:
 03CE: FD7E00  			ld 		a,(iy+0) 					; is it a UDG already
-03D1: FEF8    			cp 		SPRLowSprite 				; if so, we don't need to do anything.
+03D1: FE80    			cp 		SPRLowSprite 				; if so, we don't need to do anything.
 03D3: 3033    			jr 		nc,_SPRAllocateOneExit
               			;
               			; 		Look for a free UDG, e.g. one where the stored character is $FF.
               			;
-03D5: 21F805  			ld 		hl,SPROriginalChar+SPRLowSprite
+03D5: 218005  			ld 		hl,SPROriginalChar+SPRLowSprite
 03D8:         	_SPRAOFind: 								; look for an available UDG.
 03D8: 7E      			ld 		a,(hl)
 03D9: FEFF    			cp 		$FF
@@ -682,110 +682,109 @@
               	
 0920: CD0502  	 		call 	SPRInitialise
               	
-0923: DD21CA09	 		ld 		ix,SpriteBuffer
-0927: 0601    	 		ld 		b,SpriteCount
+0923: DD21C809	 		ld 		ix,SpriteBuffer
+0927: 060E    	 		ld 		b,SpriteCount
 0929:         	_create:
 0929: 78      			ld 		a,b
 092A: 87      			add 	a,a
 092B: 87      			add 	a,a		
 092C: 87      			add 	a,a
-092D: 87      			add 	a,a
-092E: C618    			add 	a,24
-0930: DD7700  			ld 		(ix+0),a
-0933: DD360100			ld 		(ix+1),0
-0937: 87      			add 	a,a
-0938: DD7702  			ld 		(ix+2),a
-093B: DD360300			ld 		(ix+3),0
-093F: DD3604DE			ld 		(ix+4),SpriteGraphic & 0xFF
-0943: DD360509			ld 		(ix+5),SpriteGraphic >> 8
-0947: DD360603			ld 		(ix+6),$3
-094B: DD360700			ld 		(ix+7),0
-094F: DD360801			ld 		(ix+8),1 				; xi
-0953: CB40    			bit 	0,b
-0955: 2804    			jr 		z,_create1
-0957: DD3608FF			ld 		(ix+8),255 
-095B:         	_create1:		
-095B: DD360901			ld 		(ix+9),1 				; yi
-095F: CB48    			bit 	1,b
-0961: 2804    			jr 		z,_create2
-0963: DD3609FF			ld 		(ix+9),255
-0967:         	_create2:		
-0967: 110A00  	 		ld 		de,10
-096A: DD19    	 		add 	ix,de
-096C: 10BB    	 		djnz 	_create
+092D: C608    			add 	a,8
+092F: DD7700  			ld 		(ix+0),a
+0932: DD360100			ld 		(ix+1),0
+0936: 87      			add 	a,a
+0937: DD7702  			ld 		(ix+2),a
+093A: DD360300			ld 		(ix+3),0
+093E: DD3604E0			ld 		(ix+4),SpriteGraphic & 0xFF
+0942: DD36050A			ld 		(ix+5),SpriteGraphic >> 8
+0946: DD360603			ld 		(ix+6),$3
+094A: DD360700			ld 		(ix+7),0
+094E: DD360801			ld 		(ix+8),1 				; xi
+0952: CB40    			bit 	0,b
+0954: 2804    			jr 		z,_create1
+0956: DD3608FF			ld 		(ix+8),255 
+095A:         	_create1:		
+095A: DD360901			ld 		(ix+9),1 				; yi
+095E: CB48    			bit 	1,b
+0960: 2804    			jr 		z,_create2
+0962: DD3609FF			ld 		(ix+9),255
+0966:         	_create2:		
+0966: 110A00  	 		ld 		de,10
+0969: DD19    	 		add 	ix,de
+096B: 10BC    	 		djnz 	_create
               	
-096E: 210000  	 		ld 		hl,0
-0971: 220001  	 		ld 		($0100),hl
+096D: 210000  	 		ld 		hl,0
+0970: 220001  	 		ld 		($0100),hl
               	
-0974: DD21CA09	_loop1:	ld 		ix,SpriteBuffer
-0978: 0601    			ld 		b,SpriteCount
-097A: F3      	_loop2:	di
-097B: CD2402  			call 	SpriteXErase
-097E: CD9809  			call 	moveOne
-0981: CD1D02  			call 	SpriteXDraw
+0973: DD21C809	_loop1:	ld 		ix,SpriteBuffer
+0977: 060E    			ld 		b,SpriteCount
+0979:         	_loop2:	
+0979: CD2402  			call 	SpriteXErase
+097C: CD9609  			call 	moveOne
+097F: CD1D02  			call 	SpriteXDraw
               	
-0984: 2A0001  			ld 		hl,($0100)
-0987: 23      			inc 	hl
-0988: 23      			inc 	hl
-0989: 220001  	 		ld 		($0100),hl
+0982: 2A0001  			ld 		hl,($0100)
+0985: 23      			inc 	hl
+0986: 23      			inc 	hl
+0987: 220001  	 		ld 		($0100),hl
               	
-098C: 110A00  	 		ld 		de,10
-098F: DD19    	 		add 	ix,de
-0991: 10E7    			djnz 	_loop2
-0993: 18DF    			jr 		_loop1
+098A: 110A00  	 		ld 		de,10
+098D: DD19    	 		add 	ix,de
+098F: 10E8    			djnz 	_loop2
+0991: 18E0    			jr 		_loop1
               	
-0995: F3      	_stop:	di
-0996: 18FD    			jr		_stop 		
+0993: F3      	_stop:	di
+0994: 18FD    			jr		_stop 		
               	
-0998:         	moveOne:
-0998: DD7E08  			ld 		a,(ix+8)
-099B: CDB309  			call 	advance
-099E: DD7708  			ld 		(ix+8),a
-09A1: DD7E09  			ld 		a,(ix+9)
-09A4: DDE5    			push 	ix
+0996:         	moveOne:
+0996: DD7E08  			ld 		a,(ix+8)
+0999: CDB109  			call 	advance
+099C: DD7708  			ld 		(ix+8),a
+099F: DD7E09  			ld 		a,(ix+9)
+09A2: DDE5    			push 	ix
+09A4: DD23    			inc 	ix
 09A6: DD23    			inc 	ix
-09A8: DD23    			inc 	ix
-09AA: CDB309  			call 	advance
-09AD: DDE1    			pop 	ix		
-09AF: DD7709  			ld 		(ix+9),a
-09B2: C9      			ret
+09A8: CDB109  			call 	advance
+09AB: DDE1    			pop 	ix		
+09AD: DD7709  			ld 		(ix+9),a
+09B0: C9      			ret
               	
-09B3: 4F      	advance:ld 		c,a
-09B4: 87      			add 	a,a
-09B5: 87      			add 	a,a
-09B6: DD8600  			add 	a,(ix+0)
-09B9: DD7700  			ld 		(ix+0),a
-09BC: FE10    			cp 		16
-09BE: 3806    			jr 		c,_adv2
-09C0: FEF0    			cp 		240
-09C2: 3002    			jr 		nc,_adv2
+09B1: 4F      	advance:ld 		c,a
+09B2: 87      			add 	a,a
+09B3: 87      			add 	a,a
+09B4: DD8600  			add 	a,(ix+0)
+09B7: DD7700  			ld 		(ix+0),a
+09BA: FE10    			cp 		16
+09BC: 3806    			jr 		c,_adv2
+09BE: FEF0    			cp 		240
+09C0: 3002    			jr 		nc,_adv2
+09C2: 79      			ld 		a,c
+09C3: C9      			ret
+09C4:         	_adv2:
 09C4: 79      			ld 		a,c
-09C5: C9      			ret
-09C6:         	_adv2:
-09C6: 79      			ld 		a,c
-09C7: ED44    			neg
-09C9: C9      			ret
+09C5: ED44    			neg
+09C7: C9      			ret
               	
               	; *********************************************************************************************
               	;										Test data
               	; *********************************************************************************************
               	
-09CA:         	SpriteBuffer:		
-09CA: FFFFFFFF			.ds 	SpriteCount * 20
-09CE: FF...   	
+09C8:         	SpriteBuffer:		
+09C8: FFFFFFFF			.ds 	SpriteCount * 20
+09CC: FF...   	
               	
               	
-09DE:         	SpriteGraphic:
-09DE: F00F0810			.dw 	$0FF0,$1008,$2004,$4002,$8001,$8001,$8001,$8001
-09E2: 04200240	
-09E6: 01800180	
-09EA: 01800180	
-09EE: FF80FF80			.dw 	$80FF,$80FF,$80FF,$80FF,$40FE,$20FC,$10F8,$0FF0
-09F2: FF80FF80	
-09F6: FE40FC20	
-09FA: F810F00F	
+0AE0:         	SpriteGraphic:
+0AE0: F00F0810			.dw 	$0FF0,$1008,$2004,$4002,$8001,$8001,$8001,$8001
+0AE4: 04200240	
+0AE8: 01800180	
+0AEC: 01800180	
+0AF0: FF80FF80			.dw 	$80FF,$80FF,$80FF,$80FF,$40FE,$20FC,$10F8,$0FF0
+0AF4: FF80FF80	
+0AF8: FE40FC20	
+0AFC: F810F00F	
               	
 
 
-total time: 0.0035 sec.
+total time: 0.0037 sec.
 no errors

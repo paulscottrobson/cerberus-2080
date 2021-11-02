@@ -10,7 +10,7 @@ CMAKE = make
 S = /
 endif
 
-LIBRARIES = kernel
+LIBRARIES = kernel xsprites
 
 .PHONY: all 
 

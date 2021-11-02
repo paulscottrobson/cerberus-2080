@@ -15,3 +15,7 @@ build: _test.asm xsprite.asm
 demo: _demo.asm xsprite.asm
 	zasm -u _demo.asm  -l demo.lst -o sprz80.bin
 	$(EMULATOR) sprz80.bin go
+
+mgr: _mgr.asm xsprite.asm
+	zasm -u _mgr.asm  -l mgr.lst -o sprz80.bin
+	$(EMULATOR) sprz80.bin go

@@ -49,3 +49,25 @@
 		ld 		e,c
 ;; [END]
 
+
+; ***************************************************************************************
+
+;; [MACRO]	a>x
+		push 	hl
+		pop 	ix
+;; [END]
+
+;; [MACRO]	x>a
+		push 	ix
+		pop 	hl
+;; [END]
+
+;; [MACRO]	a>y
+		push 	hl
+		pop 	iy
+;; [END]
+
+;; [MACRO]	y>a
+		push 	iy
+		pop 	hl
+;; [END]

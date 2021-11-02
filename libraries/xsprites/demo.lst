@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "_demo.asm"
-              	; date: 2021-11-01 11:01:28
+              	; date: 2021-11-02 12:09:30
               	; --------------------------------------
 
 
@@ -11,9 +11,9 @@
               	;	 	Defining SPRLowSprite sets the lowest UDG used by sprites. This is a constant
               	; 		so if this is $A0, then $00-$9F are background, and $A0-$FF are used for sprites.
               	;
-0040:         	SPRLowSprite = $40 								
+0080:         	SPRLowSprite = $80 								
               	
-0010:         	SpriteCount = 16	
+0008:         	SpriteCount = 8	
               	
 0202: C30009  			jp 		start
               	
@@ -49,8 +49,44 @@
               	;		It eats UDGs - a single 16x16 sprite needs 9 UDGs if it doesn't overlap with another.
               	;
               	; *********************************************************************************************
-              	
-              	
+              	;
+              	;		How it works. 
+              	;
+              	;			When drawing a sprite, it will try to allocate UDGs from its pool for the space
+              	; 			to draw the sprite. When drawing or erasing it then XORs the bit patterns into this
+              	; 			as far as it can. When erased, UDGs are returned to the pool if no longer required.
+              	;
+              	; *********************************************************************************************
+              	;
+              	;		Offsets from IX.
+              	;
+              	;			+0,+1 		Horizontal position (0..319)
+              	;			+2,+3 		Vertical position (0..239)
+              	;			+4,+5 		Pointer to graphic image data.
+              	;							Width : 8  	one byte per row
+              	;							Width : 16 	two bytes per row left-right order
+              	;			+6 			Control
+              	;							Bit 7: 		Set if sprite disabled
+              	;							Bit 6: 		Vertical flip
+              	;							Bit 5:		Horizontal flip
+              	;							Bit 4..2:	0
+              	;							Bit 1:		Double width
+              	;							Bit 0: 		Double height
+              	;			+7 			Status
+              	;							Bit 7:		Set when drawn on screen
+              	;							Bit 6..0:	0
+              	;
+              	;			Changes should only be made when the sprite is not drawn, otherwise chaos
+              	;			will ensue.
+              	;
+              	;			Draws will not fail, however, they may not visually work either. If there are more
+              	;			UDGs required than available graphics will not be drawn, or possibly drawn
+              	;			erratically. It is advised to minimise the number of sprites both for CPU time
+              	;			and UDG usage. 
+              	;
+              	;			Use specific UDGs for static/slow objects. For (say) Pacman the only sprites should
+              	;			be the player character and chasing ghosts.
+              	;
               	; *********************************************************************************************
               	;
               	;								  Sprite Record entries
@@ -89,7 +125,7 @@
               			;
               			; 		Set all possible original characters to $FF, indicating they are available.
               			;		
-0212: 214005  			ld 		hl,SPROriginalChar+SPRLowSprite
+0212: 218005  			ld 		hl,SPROriginalChar+SPRLowSprite
 0215:         	_SPRUsageReset:			 					
 0215: 36FF    			ld 		(hl),$FF
 0217: 2C      			inc 	l
@@ -386,7 +422,7 @@
 037E: 2807    			jr 		z,_SPRARNotErasing
               	
 0380: FD7E00  			ld 		a,(iy+0) 					; if erasing, check if row is drawn on UDGs
-0383: FE40    			cp 		SPRLowSprite
+0383: FE80    			cp 		SPRLowSprite
 0385: 384C    			jr 		c,_SPRAllocateExit 			; and if so don't allocate the row, exit.
               	
 0387:         	_SPRARNotErasing:		
@@ -466,12 +502,12 @@
               	
 03DB:         	_SPRAllocateOne:
 03DB: FD7E00  			ld 		a,(iy+0) 					; is it a UDG already
-03DE: FE40    			cp 		SPRLowSprite 				; if so, we don't need to do anything.
+03DE: FE80    			cp 		SPRLowSprite 				; if so, we don't need to do anything.
 03E0: 3033    			jr 		nc,_SPRAllocateOneExit
               			;
               			; 		Look for a free UDG, e.g. one where the stored character is $FF.
               			;
-03E2: 214005  			ld 		hl,SPROriginalChar+SPRLowSprite
+03E2: 218005  			ld 		hl,SPROriginalChar+SPRLowSprite
 03E5:         	_SPRAOFind: 								; look for an available UDG.
 03E5: 7E      			ld 		a,(hl)
 03E6: FEFF    			cp 		$FF
@@ -695,7 +731,7 @@
 0925: CD0502  	 		call 	SPRInitialise
               	
 0928: DD21F709	 		ld 		ix,SpriteBuffer
-092C: 0610    	 		ld 		b,SpriteCount
+092C: 0608    	 		ld 		b,SpriteCount
 092E:         	_create:
 092E: 78      			ld 		a,b
 092F: 87      			add 	a,a
@@ -707,8 +743,8 @@
 093B: 87      			add 	a,a
 093C: DD7702  			ld 		(ix+2),a
 093F: DD360300			ld 		(ix+3),0
-0943: DD360437			ld 		(ix+4),SpriteGraphic & 0xFF
-0947: DD36050B			ld 		(ix+5),SpriteGraphic >> 8
+0943: DD360497			ld 		(ix+4),SpriteGraphic & 0xFF
+0947: DD36050A			ld 		(ix+5),SpriteGraphic >> 8
 094B: DD360603			ld 		(ix+6),$3
 094F: DD360700			ld 		(ix+7),0
 0953: DD360801			ld 		(ix+8),1 				; xi
@@ -729,7 +765,7 @@
 0975: 220001  	 		ld 		($0100),hl
               	
 0978: DD21F709	_loop1:	ld 		ix,SpriteBuffer
-097C: 0610    			ld 		b,SpriteCount
+097C: 0608    			ld 		b,SpriteCount
 097E:         	_loop2:	
 097E: CD2402  			call 	SpriteXErase
 0981: CD9B09  			call 	moveOne
@@ -772,10 +808,10 @@
 09CA:         	_notleft:		
 09CA: DD7706  			ld 		(ix+6),a
               	
-09CD: 21370B  			ld 	 	hl,SpriteGraphic
+09CD: 21970A  			ld 	 	hl,SpriteGraphic
 09D0: DDCB0066			bit 	4,(ix+0)
 09D4: 2803    			jr 		z,_anim1
-09D6: 21570B  			ld 		hl,SpriteGraphic2
+09D6: 21B70A  			ld 		hl,SpriteGraphic2
 09D9:         	_anim1:		
 09D9: DD7504  			ld 		(ix+4),l
 09DC: DD7405  			ld 		(ix+5),h
@@ -806,27 +842,27 @@
 09FB: FF...   	
               	
               	
-0B37:         	SpriteGraphic:
-0B37: F00F0810			.dw 	$0FF0,$1008,$2004,$4002,$8001,$8001,$8001,$8001
-0B3B: 04200240	
-0B3F: 01800180	
-0B43: 01800180	
-0B47: FF808080			.dw 	$80FF,$8080,$8080,$8080,$4080,$2080,$1080,$0F80
-0B4B: 80808080	
-0B4F: 80408020	
-0B53: 8010800F	
+0A97:         	SpriteGraphic:
+0A97: F00F0810			.dw 	$0FF0,$1008,$2004,$4002,$8001,$8001,$8001,$8001
+0A9B: 04200240	
+0A9F: 01800180	
+0AA3: 01800180	
+0AA7: FF808080			.dw 	$80FF,$8080,$8080,$8080,$4080,$2080,$1080,$0F80
+0AAB: 80808080	
+0AAF: 80408020	
+0AB3: 8010800F	
               	
-0B57:         	SpriteGraphic2:
-0B57: F00F0810			.dw 	$0FF0,$1008,$2004,$4002,$8001,$8001,$8001,$8001
-0B5B: 04200240	
-0B5F: 01800180	
-0B63: 01800180	
-0B67: 01800180			.dw 	$8001,$8001,$8001,$8001,$4002,$2004,$1008,$0FF0
-0B6B: 01800180	
-0B6F: 02400420	
-0B73: 0810F00F	
+0AB7:         	SpriteGraphic2:
+0AB7: F00F0810			.dw 	$0FF0,$1008,$2004,$4002,$8001,$8001,$8001,$8001
+0ABB: 04200240	
+0ABF: 01800180	
+0AC3: 01800180	
+0AC7: 01800180			.dw 	$8001,$8001,$8001,$8001,$4002,$2004,$1008,$0FF0
+0ACB: 01800180	
+0ACF: 02400420	
+0AD3: 0810F00F	
               	
 
 
-total time: 0.0033 sec.
+total time: 0.0038 sec.
 no errors

@@ -11,15 +11,15 @@
 ;
 ;		Sprite Record:
 ;
-;			Copy data:
-;				0..6 	X:2 	Y:2 	Graphics:2 	Control:1
-;				7 		Change flag
 ; 			Current Data: (as per xsprite.asm)
+;				0..6 	X:2 	Y:2 	Graphics:2 	Control:1
+;				7 		Status byte
+;			To Copy data:
 ;				8..14 	X:2 	Y:2 	Graphics:2 	Control:1
-;				15 		Status byte
+;				15 		Change flag
 ;
 ;		When being updated, if the change flag is set, then the sprite is removed, then data 
-;		(0-6) is copied to (8-14), then the sprite redrawn
+;		(8-14) is copied to (0-6), then the sprite redrawn
 ;
 ;		The option also exists to erase all sprites ; the point of such being that one can update
 ;		the background. This sets all the change flags so the sprites are redrawn on the next sync.
@@ -56,7 +56,7 @@ _SPMClear2:
 		ld 		(hl),c
 		inc 	hl
 		djnz 	_SPMClear
-		ld 		hl,0 						; no current selection
+		ld 		hl,SPMUnused 				; no current selection
 		ld 		(SPMCurrent),hl
 		call 	SPRInitialise 				; erase the sprite control records.
 		pop 	hl
@@ -94,11 +94,96 @@ SPMSelect:
 		jr 		_SPMSExit 					; write and exit
 
 _SPMSFail:
-		ld 		hl,$0000
+		ld 		hl,SPMUnused
 _SPMSExit:
 		ld 		(SPMCurrent),hl
 		pop 	hl
 		pop 	de
+		pop 	af
+		ret
+;; [END]
+
+; *********************************************************************************************
+;
+;										X Y SPR.MOVE
+;
+; *********************************************************************************************
+
+;; [CALL] SPR.MOVE
+SPMMove:
+		push 	ix
+		ld 		ix,(SPMCurrent)
+		ld 		(ix+8),e 					; write X
+		ld 		(ix+9),d
+		ld 		(ix+10),l 					; write Y
+		ld 		(ix+11),h
+_SPMGeneralExit:
+		set 	7,(ix+15)
+		pop 	ix
+		ret
+;;[END]
+
+; *********************************************************************************************
+;
+;									   GDATA SPR.IMAGE
+;
+; *********************************************************************************************
+
+;; [CALL] SPR.IMAGE
+SPRImage:
+		push 	ix
+		ld 		ix,(SPMCurrent)
+		ld 		(ix+12),l
+		ld 		(ix+13),h
+		jr 		_SPMGeneralExit
+;; [END]
+
+; *********************************************************************************************
+;
+;									   CBYTE SPR.CONTROL
+;
+; *********************************************************************************************
+
+;; [CALL] SPR.CONTROL
+SPMControl:
+		push 	ix
+		ld 		ix,(SPMCurrent)
+		ld 		(ix+14),l
+		jr 		_SPMGeneralExit
+;; [END]
+
+; *********************************************************************************************
+;
+;							   <bool> SPR.VFLIP / HFLIP
+;
+; *********************************************************************************************
+
+;; [CALL] SPR.HFLIP
+SPMHFlip:
+		push 	af
+		push 	ix
+		ld 		ix,(SPMCurrent)
+		res 	5,(ix+14)
+		ld 		a,l
+		or 		h
+		jr 		z,_SPCTExit
+		set 	5,(ix+14)
+		jr 		_SPCTExit
+;; [END]
+
+;; [CALL] SPR.VFLIP
+SPMVFlip:
+		push 	af
+		push 	ix
+		ld 		ix,(SPMCurrent)
+		res 	6,(ix+14)
+		ld 		a,l
+		or 		h
+		jr 		z,_SPCTExit
+		set 	7,(ix+14)
+_SPCTExit:
+		set 	7,(ix+15)
+		pop 	ix
 		pop 	af
 		ret
 ;; [END]
@@ -112,13 +197,81 @@ _SPMSExit:
 ;; [CALL] 	SPR.UPDATE
 
 SPMUpdate:
+		push 	af
+		push 	bc
+		push 	de
+		push 	hl
+		push 	ix
 
+		ld 		a,(SPMCount)
+		ld 		b,a
+		ld 		ix,(SPMData)
+_SPMUpdateLoop:
+		ld 		a,(ix+15) 					; check redraw flag
+		or 		a
+		call 	nz,_SPMUpdateOne 			; if non zero update this one
+		ld 		de,16
+		add 	ix,de
+		djnz 	_SPMUpdateLoop
 
+		pop 	ix
+		pop 	hl
+		pop 	bc
+		pop 	de
+		pop 	af
+		ret		
+;
+;		Updates one sprite from new data if redraw flag found set.
+;
+_SPMUpdateOne:
+		push 	bc
+		ld 		(ix+15),0 					; clear the redraw flag.
+		call 	SpriteXErase 				; erase sprite
+		push 	ix 							; copy target address in DE
+		pop 	de
+		ld 		hl,8
+		add 	hl,de 						; target DE, source HL
+		ld 		bc,7 						; copy 7 bytes over
+		ldir 
+		call 	SpriteXDraw 				; redraw sprite
+		pop 	bc
+		ret
+;; [END]
+
+; *********************************************************************************************
+;
+;							Hide all sprites (to change background)
+;
+; *********************************************************************************************
+
+;; [CALL] 	SPR.HIDE.ALL
+
+SPMHideAll:
+		push 	af
+		push 	bc
+		push 	de
+		push 	ix
+		ld 	 	a,(SPMCount)
+		ld 		b,a
+		ld 		ix,(SPMData)
+		ld 		de,16
+_SPMHideLoop:
+		call 	SpriteXErase 				; remove sprite
+		set 	7,(ix+15) 					; force redraw next update
+		add 	ix,de
+		djnz 	_SPMHideLoop
+		pop 	hl
+		pop 	bc
+		pop 	de
+		pop 	af
+		ret		
 ;; [END]
 
 SPMData: 									; address of sprite
 		.dw 	0
 SPMCount: 									; number of sprites
 		.dw 	0
-SPMCurrent: 								; currently selected sprite (0 = None.)
+SPMCurrent: 								; currently selected sprite (may point to unused junk space)
 		.dw 	0		
+SPMUnused: 									; space for junk writes.
+		.ds 	16,0

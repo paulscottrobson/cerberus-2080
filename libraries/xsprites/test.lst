@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "_test.asm"
-              	; date: 2021-11-02 12:14:37
+              	; date: 2021-11-02 15:59:40
               	; --------------------------------------
 
 
@@ -686,24 +686,24 @@
               	; 		this UDG is not in use.
               	;
 0500:         	SPROriginalChar:
-0500: FFFFFFFF			.ds 	256
-0504: FF...   	
+0500: 00000000			.ds 	256,0
+0504: 00...   	
               	;
               	;
               	; 		This is the number of sprites using the given UDG, indexed on zero.
               	;
 0600:         	SPRUsageCount:
-0600: FFFFFFFF			.ds 	256
-0604: FF...   	
+0600: 00000000			.ds 	256,0
+0604: 00...   	
               	;
               	; 		The address of that replaced UDG. 
               	;
 0700:         	SPRLowAddress:
-0700: FFFFFFFF			.ds 	256
-0704: FF...   	
+0700: 00000000			.ds 	256,0
+0704: 00...   	
 0800:         	SPRHighAddress:
-0800: FFFFFFFF			.ds 	256
-0804: FF...   	
+0800: 00000000			.ds 	256,0
+0804: 00...   	
               	
 0900:         	SPRDataBlockEnd:
               	
@@ -799,5 +799,5 @@
 09AC: 080C0E0F	
 
 
-total time: 0.0039 sec.
+total time: 0.0034 sec.
 no errors

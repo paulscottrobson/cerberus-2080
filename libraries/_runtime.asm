@@ -839,7 +839,7 @@ _SPMClear2:
 		ld 		(hl),c
 		inc 	hl
 		djnz 	_SPMClear
-		ld 		hl,0 						; no current selection
+		ld 		hl,SPMUnused 				; no current selection
 		ld 		(SPMCurrent),hl
 		call 	SPRInitialise 				; erase the sprite control records.
 		pop 	hl
@@ -877,7 +877,7 @@ SPMSelect:
 		jr 		_SPMSExit 					; write and exit
 
 _SPMSFail:
-		ld 		hl,$0000
+		ld 		hl,SPMUnused
 _SPMSExit:
 		ld 		(SPMCurrent),hl
 		pop 	hl
@@ -888,6 +888,87 @@ M8_C_spr_c46_select_end:
 
 ; *********************************************************************************************
 ;
+;										X Y SPR.MOVE
+;
+; *********************************************************************************************
+
+M8_C_spr_c46_move:
+SPMMove:
+		push 	ix
+		ld 		ix,(SPMCurrent)
+		ld 		(ix+0),e 					; write X
+		ld 		(ix+1),d
+		ld 		(ix+2),l 					; write Y
+		ld 		(ix+3),h
+_SPMGeneralExit:
+		set 	7,(ix+7)
+		pop 	ix
+		ret
+M8_C_spr_c46_move_end:
+
+; *********************************************************************************************
+;
+;									   GDATA SPR.IMAGE
+;
+; *********************************************************************************************
+
+M8_C_spr_c46_image:
+		push 	ix
+		ld 		ix,(SPMCurrent)
+		ld 		(ix+4),l
+		ld 		(ix+5),h
+		jr 		_SPMGeneralExit
+M8_C_spr_c46_image_end:
+
+; *********************************************************************************************
+;
+;									   CBYTE SPR.CONTROL
+;
+; *********************************************************************************************
+
+M8_C_spr_c46_ctrl:
+		push 	ix
+		ld 		ix,(SPMCurrent)
+		ld 		(ix+6),l
+		jr 		_SPMGeneralExit
+M8_C_spr_c46_ctrl_end:
+
+; *********************************************************************************************
+;
+;							   <bool> SPR.VFLIP / HFLIP
+;
+; *********************************************************************************************
+
+M8_C_spr_c46_hflip:
+		push 	af
+		push 	ix
+		ld 		ix,(SPMCurrent)
+		res 	5,(ix+6)
+		ld 		a,l
+		or 		h
+		jr 		z,_SPCTExit
+		set 	5,(ix+6)
+		jr 		_SPCTExit
+M8_C_spr_c46_hflip_end:
+
+M8_C_spr_c46_vflip:
+		push 	af
+		push 	ix
+		ld 		ix,(SPMCurrent)
+		res 	6,(ix+6)
+		ld 		a,l
+		or 		h
+		jr 		z,_SPCTExit
+		set 	7,(ix+6)
+_SPCTExit:
+		set 	7,(ix+7)
+		pop 	ix
+		pop 	af
+		ret
+M8_C_spr_c46_vflip_end:
+
+; *********************************************************************************************
+;
 ;										Update all sprites
 ;
 ; *********************************************************************************************
@@ -895,16 +976,85 @@ M8_C_spr_c46_select_end:
 M8_C_spr_c46_update:
 
 SPMUpdate:
+		push 	af
+		push 	bc
+		push 	de
+		push 	hl
+		push 	ix
 
+		ld 		a,(SPMCount)
+		ld 		b,a
+		ld 		ix,(SPMData)
+_SPMUpdateLoop:
+		ld 		a,(ix+7) 					; check redraw flag
+		or 		a
+		call 	nz,_SPMUpdateOne 			; if non zero update this one
+		ld 		de,16
+		add 	ix,de
+		djnz 	_SPMUpdateLoop
 
+		pop 	ix
+		pop 	hl
+		pop 	bc
+		pop 	de
+		pop 	af
+		ret
+;
+;		Updates one sprite from new data if redraw flag found set.
+;
+_SPMUpdateOne:
+		push 	bc
+		ld 		(ix+7),0 					; clear the redraw flag.
+		call 	SpriteXErase 				; remove sprite
+		push 	ix 							; from address in DE
+		pop 	de
+		ld 		hl,8
+		add 	hl,de 						; from in DE, to in HL
+		ex 		de,hl 						; to in DE , from in HL
+		ld 		bc,7 						; copy 7 bytes over
+		ldir
+		call 	SpriteXDraw 				; redraw sprite
+		pop 	bc
+		ret
 M8_C_spr_c46_update_end:
+
+; *********************************************************************************************
+;
+;							Hide all sprites (to change background)
+;
+; *********************************************************************************************
+
+M8_C_spr_c46_hide_c46_all:
+
+SPMHideAll:
+		push 	af
+		push 	bc
+		push 	de
+		push 	ix
+		ld 	 	a,(SPMCount)
+		ld 		b,a
+		ld 		ix,(SPMData)
+		ld 		de,16
+_SPMHideLoop:
+		call 	SpriteXErase 				; remove sprite
+		set 	7,(ix+7) 					; force redraw next update
+		add 	ix,de
+		djnz 	_SPMHideLoop
+		pop 	hl
+		pop 	bc
+		pop 	de
+		pop 	af
+		ret
+M8_C_spr_c46_hide_c46_all_end:
 
 SPMData: 									; address of sprite
 		.dw 	0
 SPMCount: 									; number of sprites
 		.dw 	0
-SPMCurrent: 								; currently selected sprite (0 = None.)
+SPMCurrent: 								; currently selected sprite (may point to unused junk space)
 		.dw 	0
+SPMUnused: 									; space for junk writes.
+		.ds 	16,0
 ; *********************************************************************************************
 ; *********************************************************************************************
 ;

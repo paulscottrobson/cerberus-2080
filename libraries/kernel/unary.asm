@@ -104,7 +104,7 @@ __negate:
 		rr 		l
 ;; [END]
 
-;; [MACRO]	4/
+;; [CALL]	4/
 		sra 	h
 		rr 		l
 		sra 	h

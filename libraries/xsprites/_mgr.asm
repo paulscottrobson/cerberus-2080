@@ -13,11 +13,39 @@ SpriteCount = 8
 		.include 	"xsprite.asm"
 
 start:
-		di
 		ld 		hl,SpriteData
 		ld 		de,SpriteCount
 		call 	SPMReset
 
+		ld 		b,3
+setup:	ld 		l,b
+		ld 		h,0
+		call 	SPMSelect
+		add 	hl,hl
+		add		hl,hl
+		add 	hl,hl
+		add		hl,hl
+		add		hl,hl
+		ex 		de,hl
+		ld 		hl,14
+		call 	SPMMove
+		ld 		hl,SpriteGraphic2
+		call 	SPRImage
+		ld 		hl,3
+		call 	SPMControl
+		djnz 	setup
+
+		ld 		hl,3
+		call 	SPMSelect
+draw1:	inc 	de
+		ld 		d,0
+		ld 		h,d
+		ld 		l,e
+		call 	SPMMove
+		call 	SPMUpdate
+		jr 		draw1
+
+w1:		jp 		w1
 
 ; *********************************************************************************************
 ;										Test data

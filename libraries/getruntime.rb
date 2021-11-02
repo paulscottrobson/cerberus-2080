@@ -30,7 +30,7 @@ open("_runtime.lst").select {|a| a[0..2] == "M8_" }.each do |s|
 	words[word_name][section] = address
 end
 words = words.collect { |k,v| "#{k},#{v["type"]},$#{v["S"].to_s(16)},$#{v["E"].to_s(16)}" }.join("::")
-code = open("_runtime.bin","rb").each_byte	.collect { |a| a.ord.to_s(16) }.join(",")
+code = open("_runtime.bin","rb").each_byte.collect { |a| a.ord.to_s(16) }.join(",")
 
 h = open("runtime.rb","w")
 h.write("#\n#\tAutomatically generated.\n#\n")
@@ -38,3 +38,5 @@ h.write("class RuntimeLibrary\n")
 h.write("\tdef getIndex\n\t\treturn \"#{words}\"\n\tend\n\n")
 h.write("\tdef getCode\n\t\treturn \"#{code}\"\n\tend\n\n")
 h.write("end\n")
+
+puts("")

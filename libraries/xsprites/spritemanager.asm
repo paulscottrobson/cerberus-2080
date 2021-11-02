@@ -32,6 +32,8 @@
 ;
 ; *********************************************************************************************
 
+;; [CALL] 	SPR.RESET
+
 SPMReset:
 		push 	af
 		push 	bc
@@ -63,12 +65,16 @@ _SPMClear2:
 		pop 	af
 		ret
 
+;; [END]
+
 ; *********************************************************************************************
 ;
 ;		Sprite functions/words. A sprite is selected via SPMSelect and then moved, graphics 
 ; 		set etc. by other functions. SPMUpdate updates all sprites. Parameters at L/HL then DE.
 ;
 ; *********************************************************************************************
+
+;; [CALL] 	SPR.SELECT
 
 SPMSelect:
 		push 	af
@@ -95,6 +101,7 @@ _SPMSExit:
 		pop 	de
 		pop 	af
 		ret
+;; [END]
 
 ; *********************************************************************************************
 ;
@@ -102,8 +109,12 @@ _SPMSExit:
 ;
 ; *********************************************************************************************
 
+;; [CALL] 	SPR.UPDATE
+
 SPMUpdate:
 
+
+;; [END]
 
 SPMData: 									; address of sprite
 		.dw 	0

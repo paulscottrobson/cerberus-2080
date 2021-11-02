@@ -105,7 +105,9 @@ _SPRZeroBlock:
 		;
 		; 		Set all possible original characters to $FF, indicating they are available.
 		;		
-		ld 		hl,SPROriginalChar+SPRLowSprite
+		ld 		a,(_SPRFirstUDGSprite)
+		ld 		l,a
+		ld 		h,SPROriginalChar >> 8
 _SPRUsageReset:			 					
 		ld 		(hl),$FF
 		inc 	l
@@ -401,8 +403,10 @@ _SPRAllocateRow:
 		bit 	7,(ix+SPRstatus) 			; are we erasing ?
 		jr 		z,_SPRARNotErasing
 
+		ld 		a,(_SPRFirstUDGSprite)		; B = first sprite useable
+		ld 		b,a
 		ld 		a,(iy+0) 					; if erasing, check if row is drawn on UDGs
-		cp 		SPRLowSprite
+		cp 		b
 		jr 		c,_SPRAllocateExit 			; and if so don't allocate the row, exit.
 
 _SPRARNotErasing:		
@@ -481,13 +485,15 @@ _SPRAllocateExit:
 ; *********************************************************************************************
 
 _SPRAllocateOne:
+		ld 		a,(_SPRFirstUDGSprite)		; L = first sprite UDG
+		ld 		l,a
 		ld 		a,(iy+0) 					; is it a UDG already
-		cp 		SPRLowSprite 				; if so, we don't need to do anything.
+		cp 		l 							; if so, we don't need to do anything.
 		jr 		nc,_SPRAllocateOneExit
 		;
 		; 		Look for a free UDG, e.g. one where the stored character is $FF.
 		;
-		ld 		hl,SPROriginalChar+SPRLowSprite
+		ld 		h,SPROriginalChar >> 8
 _SPRAOFind: 								; look for an available UDG.
 		ld 		a,(hl)
 		cp 		$FF
@@ -642,6 +648,9 @@ _SPRInitialYOffset: 						; the initial vertical offset.
 _SPRAllocSPTemp: 							; save SP when storing interim results on stack
 		.dw 	0
 
+_SPRFirstUDGSprite: 						; first sprite available as UDG.
+		.db 	$80
+
 ; *********************************************************************************************
 ;
 ;		Sprite/UDG Specific Data. Each of these is a 256 byte array aligned
@@ -658,19 +667,19 @@ SPRDataBlock:
 ; 		this UDG is not in use.
 ;
 SPROriginalChar:
-		.ds 	256
+		.ds 	256,0
 ;
 ;
 ; 		This is the number of sprites using the given UDG, indexed on zero.
 ;
 SPRUsageCount:
-		.ds 	256
+		.ds 	256,0
 ;
 ; 		The address of that replaced UDG. 
 ;
 SPRLowAddress:
-		.ds 	256
+		.ds 	256,0
 SPRHighAddress:
-		.ds 	256
+		.ds 	256,0
 
 SPRDataBlockEnd:

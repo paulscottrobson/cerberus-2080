@@ -5,8 +5,6 @@
 ;	 	Defining SPRLowSprite sets the lowest UDG used by sprites. This is a constant
 ; 		so if this is $A0, then $00-$9F are background, and $A0-$FF are used for sprites.
 ;
-SPRLowSprite = $80 								
-
 		jp 		start
 		.include "xsprite.asm"
 

@@ -35,5 +35,4 @@ current = nil
 		end
 	end
 end
-
 open("_runtime.asm","w").write(assembler.join "\n")

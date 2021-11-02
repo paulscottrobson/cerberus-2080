@@ -10,9 +10,14 @@ CMAKE = make
 S = /
 endif
 
-LIBRARIES = kernel
+LIBRARIES = kernel xsprites
 
 .PHONY: all 
 
 all: 
+	make -C ..$(S)libraries
+	$(CCOPY) ..$(S)libraries$(S)runtime.rb .
+
+	
+
 

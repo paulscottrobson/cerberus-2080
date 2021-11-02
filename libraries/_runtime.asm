@@ -674,12 +674,12 @@ M8_M_2_c47_:
 		rr 		l
 M8_M_2_c47__end:
 
-M8_M_4_c47_:
+M8_C_4_c47_:
 		sra 	h
 		rr 		l
 		sra 	h
 		rr 		l
-M8_M_4_c47__end:
+M8_C_4_c47__end:
 
 M8_C_8_c47_:
 		sra 	h
@@ -794,15 +794,15 @@ _randomSeed2:
 ;
 ;		Sprite Record:
 ;
-;			Copy data:
-;				0..6 	X:2 	Y:2 	Graphics:2 	Control:1
-;				7 		Change flag
 ; 			Current Data: (as per xsprite.asm)
+;				0..6 	X:2 	Y:2 	Graphics:2 	Control:1
+;				7 		Status byte
+;			To Copy data:
 ;				8..14 	X:2 	Y:2 	Graphics:2 	Control:1
-;				15 		Status byte
+;				15 		Change flag
 ;
 ;		When being updated, if the change flag is set, then the sprite is removed, then data
-;		(0-6) is copied to (8-14), then the sprite redrawn
+;		(8-14) is copied to (0-6), then the sprite redrawn
 ;
 ;		The option also exists to erase all sprites ; the point of such being that one can update
 ;		the background. This sets all the change flags so the sprites are redrawn on the next sync.
@@ -896,12 +896,12 @@ M8_C_spr_c46_move:
 SPMMove:
 		push 	ix
 		ld 		ix,(SPMCurrent)
-		ld 		(ix+0),e 					; write X
-		ld 		(ix+1),d
-		ld 		(ix+2),l 					; write Y
-		ld 		(ix+3),h
+		ld 		(ix+8),e 					; write X
+		ld 		(ix+9),d
+		ld 		(ix+10),l 					; write Y
+		ld 		(ix+11),h
 _SPMGeneralExit:
-		set 	7,(ix+7)
+		set 	7,(ix+15)
 		pop 	ix
 		ret
 M8_C_spr_c46_move_end:
@@ -913,10 +913,11 @@ M8_C_spr_c46_move_end:
 ; *********************************************************************************************
 
 M8_C_spr_c46_image:
+SPRImage:
 		push 	ix
 		ld 		ix,(SPMCurrent)
-		ld 		(ix+4),l
-		ld 		(ix+5),h
+		ld 		(ix+12),l
+		ld 		(ix+13),h
 		jr 		_SPMGeneralExit
 M8_C_spr_c46_image_end:
 
@@ -926,12 +927,13 @@ M8_C_spr_c46_image_end:
 ;
 ; *********************************************************************************************
 
-M8_C_spr_c46_ctrl:
+M8_C_spr_c46_control:
+SPMControl:
 		push 	ix
 		ld 		ix,(SPMCurrent)
-		ld 		(ix+6),l
+		ld 		(ix+14),l
 		jr 		_SPMGeneralExit
-M8_C_spr_c46_ctrl_end:
+M8_C_spr_c46_control_end:
 
 ; *********************************************************************************************
 ;
@@ -940,28 +942,30 @@ M8_C_spr_c46_ctrl_end:
 ; *********************************************************************************************
 
 M8_C_spr_c46_hflip:
+SPMHFlip:
 		push 	af
 		push 	ix
 		ld 		ix,(SPMCurrent)
-		res 	5,(ix+6)
+		res 	5,(ix+14)
 		ld 		a,l
 		or 		h
 		jr 		z,_SPCTExit
-		set 	5,(ix+6)
+		set 	5,(ix+14)
 		jr 		_SPCTExit
 M8_C_spr_c46_hflip_end:
 
 M8_C_spr_c46_vflip:
+SPMVFlip:
 		push 	af
 		push 	ix
 		ld 		ix,(SPMCurrent)
-		res 	6,(ix+6)
+		res 	6,(ix+14)
 		ld 		a,l
 		or 		h
 		jr 		z,_SPCTExit
-		set 	7,(ix+6)
+		set 	7,(ix+14)
 _SPCTExit:
-		set 	7,(ix+7)
+		set 	7,(ix+15)
 		pop 	ix
 		pop 	af
 		ret
@@ -986,7 +990,7 @@ SPMUpdate:
 		ld 		b,a
 		ld 		ix,(SPMData)
 _SPMUpdateLoop:
-		ld 		a,(ix+7) 					; check redraw flag
+		ld 		a,(ix+15) 					; check redraw flag
 		or 		a
 		call 	nz,_SPMUpdateOne 			; if non zero update this one
 		ld 		de,16
@@ -1004,13 +1008,12 @@ _SPMUpdateLoop:
 ;
 _SPMUpdateOne:
 		push 	bc
-		ld 		(ix+7),0 					; clear the redraw flag.
-		call 	SpriteXErase 				; remove sprite
-		push 	ix 							; from address in DE
+		ld 		(ix+15),0 					; clear the redraw flag.
+		call 	SpriteXErase 				; erase sprite
+		push 	ix 							; copy target address in DE
 		pop 	de
 		ld 		hl,8
-		add 	hl,de 						; from in DE, to in HL
-		ex 		de,hl 						; to in DE , from in HL
+		add 	hl,de 						; target DE, source HL
 		ld 		bc,7 						; copy 7 bytes over
 		ldir
 		call 	SpriteXDraw 				; redraw sprite
@@ -1037,7 +1040,7 @@ SPMHideAll:
 		ld 		de,16
 _SPMHideLoop:
 		call 	SpriteXErase 				; remove sprite
-		set 	7,(ix+7) 					; force redraw next update
+		set 	7,(ix+15) 					; force redraw next update
 		add 	ix,de
 		djnz 	_SPMHideLoop
 		pop 	hl
@@ -1172,6 +1175,21 @@ _SPRUsageReset:
 		pop 	hl
 		pop 	af
 		ret
+
+; *********************************************************************************************
+;
+; 									Allocate lowest UDG
+;
+; *********************************************************************************************
+
+M8_C_sprite_c46_udg_c46_base_c33_:
+SpriteSetLowestUDG:
+		push 	af
+		ld 		a,l
+		ld 		(_SPRFirstUDGSprite),a
+		pop 	af
+		ret
+M8_C_sprite_c46_udg_c46_base_c33__end:
 
 ; *********************************************************************************************
 ;

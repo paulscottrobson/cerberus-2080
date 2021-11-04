@@ -173,9 +173,52 @@ class Dictionary
 	end
 end		
 
-bc = BinaryCode.new
-di = Dictionary.new.load_runtime 
+# *******************************************************************************************************************************
+#
+#  														Compiler class
+#
+# *******************************************************************************************************************************
 
-di.get("*").compile(bc)
-di.get("@").compile(bc)
-di.get("+").compile(bc)
+class Compiler
+	def initialize
+		@binary = BinaryCode.new
+		@dictionary = Dictionary.new.load_runtime 
+	end
+	#
+	# 		Compile a single word.
+	#
+	def compile_word(word)
+		#
+		# 		Integer Constants
+		#
+		return compile_constant word.to_i if word.match(/^[0-9]+$/)
+		return compile_constant word[1..].to_i(16) if word.match(/^\$[0-9A-Fa-f]+$/)
+		return compile_constant word[1].ord if word.match(/^\'.?\'$/)
+		#
+		#  		Word in dictionary
+		#
+		dict_entry = @dictionary.get word
+		raise "Unknown word #{word.downcase}" unless dict_entry
+		dict_entry.compile @binary
+	end 
+	#
+	def compile_constant(n)
+		@binary.add_byte(0xEB)  						# EX DE,HL
+		@binary.add_byte(0x21) 							# LD HL,xxxx
+		@binary.add_word(n & 0xFFFF) 					# xxxx constant
+	end
+end
+
+
+cp = Compiler.new
+cp.compile_word "*"
+cp.compile_word "break"
+cp.compile_word "@"
+cp.compile_word "+"
+cp.compile_word "42"
+cp.compile_word "$abcd"
+cp.compile_word "'*'"
+cp.compile_word "break"
+
+# string constants
+# definitions

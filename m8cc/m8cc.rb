@@ -21,11 +21,41 @@ class BinaryCode
 	def initialize 
 		@code = RuntimeLibrary.new.getCode.split(",").collect { |a| a.to_i(16) }
 		@base_address = @code[4]+(@code[5] << 8)
-		puts(@base_address.to_s(16))
+		@echo = true
 	end 
+	#
+	def read(addr)
+		raise "Bad read address $#{addr.to_s(16)}" if addr < @base_address or addr >= @base_address + @code.length
+		@code[addr-@base_address]
+	end
+	#
+	def write(addr,data)
+		raise "Bad write address $#{addr.to_s(16)}" if addr < @base_address or addr >= @base_address + @code.length
+		raise "Bad write data $#{data.to_s(16)}" if data < 0 or data > 255
+		@code[addr-@base_address] = data
+	end
+	#
+	def get_base()
+		@base_address
+	end
+	#	
+	def get_pc()
+		@base_address + @code.length 
+	end 
+	#
+	def add_byte(data)
+		raise "Bad add byte data $#{data.to_s(16)}" if data < 0 or data > 255
+		puts "#{get_pc.to_s(16)} : #{data.to_s(16)}" if @echo
+		@code.append(data)
+	end 
+	#
+	def add_word(data)
+		raise "Bad add word data $#{data.to_s(16)}" if data < 0 or data > 65535
+		puts "#{get_pc.to_s(16)} : #{data.to_s(16)}" if @echo
+		@code.append(data & 0xFF)
+		@code.append(data >> 8)
+	end
 end
-
-bc = BinaryCode.new
 
 # *******************************************************************************************************************************
 #
@@ -38,21 +68,39 @@ class DictionaryElement
 		@name = name.strip.downcase
 		@value = value
 	end
+	#
 	def get_name
-		return @name end
+		return @name 
+	end
 	def get_value 
-		return @value end 
+		return @value 
+	end 
+	#
 	def to_s
-		return "DICT: #{@name} [#{@value} $#{@value.to_s(16)}]" end
+		return "DICT: #{@name} [#{@value} $#{@value.to_s(16)}]" 
+	end
+	#
+	def compile(bc)
+		raise "Compile failed #{self}"
+	end
 end
+
+class Constant < DictionaryElement
+	def compile(bc)
+		bc.add_byte(0xEB)  							# EX DE,HL
+		bc.add_byte(0x21) 							# LD HL,xxxx
+		bc.add_word(@value) 						# xxxx constant
+	end
+end 
 
 class MemoryReference < DictionaryElement 
 end 
 
-class Constant < DictionaryElement
-end 
-
 class CalledWord < DictionaryElement
+	def compile(bc)
+		bc.add_byte(0xCD) 							# CALL xxxx
+		bc.add_word(@value) 						# xxxx constant
+	end
 end
 
 class MacroWord < DictionaryElement
@@ -61,11 +109,24 @@ class MacroWord < DictionaryElement
 		raise "Macro size #{name}" if size < 1 or size > 4
 		@size = size
 	end 
+	#
 	def get_size 
 		return @size end 
+	#
 	def to_s 
-		super + " (#{@size})" end
+		super + " (#{@size})" 
+	end
+	#
+	def compile(bc)
+		(0..@size-1).each { |i| bc.add_byte(bc.read(@value+i))}
+	end
 end 
+
+class ImmediateWord < DictionaryElement
+	def compile(bc)
+		raise "Abstract class"
+	end
+end
 
 # *******************************************************************************************************************************
 #
@@ -76,10 +137,16 @@ end
 class Dictionary 
 	def initialize 
 		@items = {} 
+		@last_word = nil
 	end 
 	#
 	def add(element) 
+		@last_word = element
 		@items[element.get_name] = element
+	end
+	#
+	def get_last
+		@last_word
 	end
 	#
 	def get(word_name)
@@ -106,9 +173,9 @@ class Dictionary
 	end
 end		
 
+bc = BinaryCode.new
 di = Dictionary.new.load_runtime 
-de = MacroWord.new("HELLO",1000,4)
-di.add de
-puts(di.get "hello")		
-puts(di.get "hellox")		
-puts(di.to_s)
+
+di.get("*").compile(bc)
+di.get("@").compile(bc)
+di.get("+").compile(bc)

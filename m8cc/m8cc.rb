@@ -102,7 +102,7 @@ class Dictionary
 		end_addr = s[3][1..].to_i(16)
 		return CalledWord.new(s[0],start_addr) if s[1] == "C"
 		return MacroWord.new(s[0],start_addr,end_addr-start_addr) if s[1] == "M"
-		raise "Bad runtime #{s1}"
+		raise "Bad runtime info #{s1}"
 	end
 end		
 

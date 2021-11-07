@@ -13,6 +13,30 @@ require "./runtime.rb"
 
 # *******************************************************************************************************************************
 #
+# 														Error class
+#
+# *******************************************************************************************************************************
+
+class M8Exception < StandardError
+	@@file = ""
+	@@line = 0
+
+	def self.restart(file_name)
+		@@file = file_name
+		@@line = 1
+	end
+
+	def self.bump
+		@@line += 1
+	end
+
+	def message 
+		super + " #{@@file}:#{@@line}"
+	end
+end 
+
+# *******************************************************************************************************************************
+#
 # 													Binary Code Class
 #
 # *******************************************************************************************************************************
@@ -21,7 +45,7 @@ class BinaryCode
 	def initialize 
 		@code = RuntimeLibrary.new.getCode.split(",").collect { |a| a.to_i(16) }
 		@base_address = @code[4]+(@code[5] << 8)
-		@echo = true
+		@echo = false
 	end 
 	#
 	def read(addr)
@@ -54,6 +78,17 @@ class BinaryCode
 		puts "#{get_pc.to_s(16)} : #{data.to_s(16)}" if @echo
 		@code.append(data & 0xFF)
 		@code.append(data >> 8)
+	end
+	#
+	def set_start(addr)
+		@code[4] = addr & 0xFF
+		@code[5] = addr >> 8
+	end
+	#
+	def write_binary(file_name = "a80.bin")
+		h = open(file_name,"wb")
+		@code.each { |b| h.write(b.chr) }
+		h.close
 	end
 end
 
@@ -185,9 +220,39 @@ class Compiler
 		@dictionary = Dictionary.new.load_runtime 
 	end
 	#
+	# 		Compile an array of lines/line
+	#
+	def compile_block(block,file_name = "(Body)")
+		M8Exception.restart file_name
+		begin
+			block.each do|b| 
+				compile_line b
+				M8Exception.bump
+			end
+		rescue M8Exception => e 
+			puts(e.message)
+			exit(false)
+		end
+		self
+	end
+	#
+	def compile_line(line)
+		line = line[..line.index("//")-1] if line.include?("//") 
+		line.split { |w| compile_word w if w != "" }
+		self
+	end
+	#
 	# 		Compile a single word.
 	#
 	def compile_word(word)
+		#
+		# 		Colon Definition
+		#
+		return compile_definition word[1..] if word[0] == ":"
+		#
+		#  		String constant
+		#
+		return compile_string word[1..-2] if word[0] == '"' and word[-1] == '"'
 		#
 		# 		Integer Constants
 		#
@@ -198,27 +263,48 @@ class Compiler
 		#  		Word in dictionary
 		#
 		dict_entry = @dictionary.get word
-		raise "Unknown word #{word.downcase}" unless dict_entry
+		raise M8Exception.new("Unknown word #{word.downcase}") unless dict_entry
 		dict_entry.compile @binary
 	end 
+	#
+	# 		Compile code to load constant
 	#
 	def compile_constant(n)
 		@binary.add_byte(0xEB)  						# EX DE,HL
 		@binary.add_byte(0x21) 							# LD HL,xxxx
 		@binary.add_word(n & 0xFFFF) 					# xxxx constant
 	end
+	#
+	# 		Compile a new definition
+	#
+	def compile_definition(word)
+		@binary.set_start(@binary.get_pc)
+		@dictionary.add(CalledWord.new(word,@binary.get_pc))
+	end
+	#
+	# 		Compile a string
+	#
+	def compile_string(text)
+		@dictionary.get("string.inline").compile(@binary)
+		text.gsub("_"," ").each_char { |c| @binary.add_byte(c.ord) }
+		@binary.add_byte(0)
+	end
+	#
+	# 		Write Binary file out
+	#
+	def write_binary(file_name = "a80.bin")
+		@binary.write_binary(file_name)
+	end
 end
 
+code = '''
+:test ab>r $2A swap c! r>ab ++ ; // Hello world
+:test2 $F800 test test test "test" break ;
+'''.split("\n")
 
 cp = Compiler.new
-cp.compile_word "*"
-cp.compile_word "break"
-cp.compile_word "@"
-cp.compile_word "+"
-cp.compile_word "42"
-cp.compile_word "$abcd"
-cp.compile_word "'*'"
-cp.compile_word "break"
+cp.compile_block code
+cp.write_binary
 
-# string constants
-# definitions
+# control loops
+# @@ and !! modifiers

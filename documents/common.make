@@ -40,7 +40,7 @@ ROOTDIR = ..$(S)
 #
 #		Script to run emulator, expecting parameter to follow
 #
-EMULATOR = 
+EMULATOR = ..$(S)emulator$(S)cerberus$(APPSTEM)
 #
 #		Current assembler
 # 

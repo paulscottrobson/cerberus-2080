@@ -9,6 +9,28 @@
 ; ***************************************************************************************
 ; ***************************************************************************************
 
+;; [MACRO] 	;
+		ret
+;; [END]
+
+; ***************************************************************************************
+
+;; [CALL] 	string.inline
+		ex 		de,hl 								; swap of DE & HL required by spec
+		ex 		(sp),hl 							; start of string -> HL & IX
+		push 	hl 									
+		pop 	ix
+_SILAdvance:
+		ld 		a,(ix+0) 							; advance over string
+		inc 	ix
+		or 		a
+		jr 		nz,_SILAdvance
+		ex 		(sp),ix 							; correct return address
+		ret		
+; [END]
+
+; ***************************************************************************************
+
 ;; [CALL] 	copy
 		ld 		a,b 								; exit if C = 0
 		or 		c
@@ -68,7 +90,6 @@ __fill_loop:
 
 ;; [CALL] 	halt
 __halt_loop:
-		di
 		halt 	
 		jr 		__halt_loop
 ;; [END]
@@ -76,6 +97,6 @@ __halt_loop:
 ; ***************************************************************************************
 
 ;; [MACRO] 	break
-		db 		$76
+		di
 ;; [END]
 

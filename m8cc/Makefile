@@ -1,23 +1,21 @@
 ifeq ($(OS),Windows_NT)
-CCOPY = copy
-CMAKE = make
-CDEL = del /Q
-S = \\
+include ..\documents\common.make
 else
-CCOPY = cp
-CDEL = rm -f
-CMAKE = make
-S = /
+include ../documents/common.make
 endif
 
 LIBRARIES = kernel xsprites
 
 .PHONY: all 
 
-all: 
+all: runtime test
+
+runtime:
 	make -C ..$(S)libraries
 	$(CCOPY) ..$(S)libraries$(S)runtime.rb .
 
-	
+test:
+	ruby m8cc.rb
+	$(EMULATOR) a80.bin go
 
 

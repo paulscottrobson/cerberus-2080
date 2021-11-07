@@ -80,6 +80,10 @@ class BinaryCode
 		@code.append(data >> 8)
 	end
 	#
+	def remove_bytes(c)
+		(0..c-1).each { |n| @code.pop }
+	end
+	#
 	def set_start(addr)
 		@code[4] = addr & 0xFF
 		@code[5] = addr >> 8
@@ -115,13 +119,13 @@ class DictionaryElement
 		return "DICT: #{@name} [#{@value} $#{@value.to_s(16)}]" 
 	end
 	#
-	def compile(bc)
+	def compile(bc,dict)
 		raise "Compile failed #{self}"
 	end
 end
 
 class Constant < DictionaryElement
-	def compile(bc)
+	def compile(bc,dict)
 		bc.add_byte(0xEB)  							# EX DE,HL
 		bc.add_byte(0x21) 							# LD HL,xxxx
 		bc.add_word(@value) 						# xxxx constant
@@ -132,7 +136,7 @@ class MemoryReference < DictionaryElement
 end 
 
 class CalledWord < DictionaryElement
-	def compile(bc)
+	def compile(bc,dict)
 		bc.add_byte(0xCD) 							# CALL xxxx
 		bc.add_word(@value) 						# xxxx constant
 	end
@@ -152,16 +156,108 @@ class MacroWord < DictionaryElement
 		super + " (#{@size})" 
 	end
 	#
-	def compile(bc)
+	def compile(bc,dict)
 		(0..@size-1).each { |i| bc.add_byte(bc.read(@value+i))}
 	end
 end 
 
+# *******************************************************************************************************************************
+#
+#  														  Action words
+#
+# *******************************************************************************************************************************
+
 class ImmediateWord < DictionaryElement
-	def compile(bc)
+	def compile(bc,dict)
 		raise "Abstract class"
 	end
 end
+
+# *******************************************************************************************************************************
+#
+# 													Load and save adjusters
+#
+# *******************************************************************************************************************************
+
+class LoadModifier < ImmediateWord  
+	def compile(bc,dict)
+		raise M8Exception.new("Bad load modifier") unless bc.read(bc.get_pc-3) == 0x21  			# Check LD hl,xxxxx
+		bc.write(bc.get_pc-3,0x2A) 																	# Replace with LD hl,(xxxx)
+	end
+end
+
+class SaveModifier < ImmediateWord  
+	def compile(bc,dict)
+		raise M8Exception.new("Bad load modifier") unless bc.read(bc.get_pc-3) == 0x21  			# Check LD hl,xxxxx
+		bc.write(bc.get_pc-4,0x22) 																	# Replace with LD hl,(xxxx), no EX DE,HL
+		bc.write(bc.get_pc-3,bc.read(bc.get_pc-2))
+		bc.write(bc.get_pc-2,bc.read(bc.get_pc-1))
+		bc.remove_bytes(1) 																			# drop the last 
+	end
+end
+
+# *******************************************************************************************************************************
+#
+# 													Variable/Constant/Arrays
+# :const 42 constant
+# :var variable
+# :array 420 array
+#
+# *******************************************************************************************************************************
+
+class ConstantHandler < ImmediateWord
+	def compile(bc,dict)
+		raise M8Exception.new("Missing constant value") unless bc.read(bc.get_pc-3) == 0x21 		# check constant compiled
+		value = bc.read(bc.get_pc-2) + bc.read(bc.get_pc-1) * 256  									# get value
+		bc.remove_bytes(4) 																			# undo it
+		dict.add Constant.new(dict.get_last.get_name,value) 										# overwrite definition.
+	end 
+end 
+
+class VariableHandler < ImmediateWord
+	def compile(bc,dict)
+		size = get_data_size(bc,dict) 																# get bytes to reserve
+		address = bc.get_pc 																		# variable address
+		(0..size-1).each { |b| bc.add_byte 0 }  													# reserve them.
+		dict.add Constant.new(dict.get_last.get_name,address) 										# define variable 
+	end 
+	#
+	def get_data_size(bc,dict)
+		2
+	end
+end
+
+class ArrayHandler < VariableHandler
+	def get_data_size(bc,dict) 
+		raise M8Exception.new("Missing array size") unless bc.read(bc.get_pc-3) == 0x21 			# check constant compiled as array size
+		value = bc.read(bc.get_pc-2) + bc.read(bc.get_pc-1) * 256  									# get value
+		bc.remove_bytes(4) 																			# undo it
+		raise M8Exception.new("Array size ?") if bc.get_pc + value >= 0x10000  						# basic validation
+		value 
+	end 
+end
+
+# *******************************************************************************************************************************
+#
+# 														  Loop Handlers
+#
+# *******************************************************************************************************************************
+
+class TimesHandler < ImmediateWord
+	@@address = 0
+	def compile(bc,dict)
+		if get_value == 0 
+			bc.add_byte(0x2B) 																		# dec HL
+			@@address = bc.get_pc 																	# get loop position.
+			bc.add_byte(0xE5) 																		# Push HL			
+		else 
+			dict.get("tend.handler").compile(bc,dict) 												# Compile tend code handler.
+			back = bc.get_pc - @@address 															# loop back amount from offset pos
+			raise M8Exception.new("Times loop too large") if back >= 0x100  						# too far.
+			bc.add_byte back 																		# compile back branch.
+		end
+	end
+end 
 
 # *******************************************************************************************************************************
 #
@@ -218,6 +314,18 @@ class Compiler
 	def initialize
 		@binary = BinaryCode.new
 		@dictionary = Dictionary.new.load_runtime 
+		immediate_words
+	end 
+	#
+	# 		Load immediate words
+	#
+	def immediate_words
+		@dictionary.add LoadModifier.new("@@",-1)
+		@dictionary.add SaveModifier.new("!!",-1)
+		@dictionary.add ConstantHandler.new("constant",-1)
+		@dictionary.add VariableHandler.new("variable",-1)
+		@dictionary.add TimesHandler.new("times",0)
+		@dictionary.add TimesHandler.new("tend",1)
 	end
 	#
 	# 		Compile an array of lines/line
@@ -264,7 +372,7 @@ class Compiler
 		#
 		dict_entry = @dictionary.get word
 		raise M8Exception.new("Unknown word #{word.downcase}") unless dict_entry
-		dict_entry.compile @binary
+		dict_entry.compile @binary,@dictionary
 	end 
 	#
 	# 		Compile code to load constant
@@ -285,7 +393,7 @@ class Compiler
 	# 		Compile a string
 	#
 	def compile_string(text)
-		@dictionary.get("string.inline").compile(@binary)
+		@dictionary.get("string.inline").compile(@binary,@dictionary)
 		text.gsub("_"," ").each_char { |c| @binary.add_byte(c.ord) }
 		@binary.add_byte(0)
 	end
@@ -298,13 +406,23 @@ class Compiler
 end
 
 code = '''
-:test ab>r $2A swap c! r>ab ++ ; // Hello world
-:test2 $F800 test test test "test" break ;
+:screen variable 
+
+:test2 
+	ab>r screen @ c! 1 screen +! r>ab 
+;
+
+:test 
+	$F800 screen ! 
+	1024 times 
+		test2
+	tend
+	break 
 '''.split("\n")
 
 cp = Compiler.new
 cp.compile_block code
 cp.write_binary
 
-# control loops
-# @@ and !! modifiers
+# use of IX in string constant.
+# repeat/until if/else/then

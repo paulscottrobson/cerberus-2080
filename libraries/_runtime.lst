@@ -1,6 +1,6 @@
                         ; --------------------------------------
                         ; zasm: assemble "_runtime.asm"
-                        ; date: 2021-11-07 15:25:48
+                        ; date: 2021-11-07 19:19:44
                         ; --------------------------------------
 
 
@@ -598,6 +598,43 @@
                         ; ***************************************************************************************
                         ; ***************************************************************************************
                         ;
+                        ;		Name : 		structure.asm
+                        ;		Author :	Paul Robson (paul@robsons.org.uk)
+                        ;		Date : 		7th November 2021
+                        ;		Purpose :	Structure handler
+                        ;
+                        ; ***************************************************************************************
+                        ; ***************************************************************************************
+                        
+033D:                   M8_C_tend_c46_handler:
+033D: D9       [ 4]     		exx 								; use alt registers
+033E: E1       [14]     		pop 	hl 							; return/offset address.
+033F: D1       [24]     		pop 	de 							; this is the count
+0340: 7A       [28]     		ld 		a,d 						; check if it is zero.
+0341: B3       [32]     		or 		e
+0342: 2004     [39|44]  		jr 		nz,_tend_loop 				; if non zero, loop back
+                        		;
+0344: 23       [45]     		inc 	hl 							; exit loop, skip the count back.
+0345: E5       [56]     		push 	hl 							; push return address back on stack
+0346: D9       [60]     		exx 								; get original registers back and exit
+0347: C9       [70]     		ret
+                        
+0348:                   _tend_loop:									; we are going round the loop, return HL count DE
+0348: 4E       [ 7]     		ld 		c,(hl) 						; get the loop offset into BC
+0349: 0600     [14]     		ld 		b,0
+034B: AF       [18]     		xor 	a 							; subtract from HL
+034C: ED42     [33]     		sbc 	hl,bc
+034E: E5       [44]     		push 	hl 	 						; push loop address on stack
+034F: 1B       [50]     		dec 	de 							; decrement counter
+0350: D5       [61]     		push 	de  						; push new count on stack
+0351: D9       [65]     		exx 								; original registers
+0352: E1       [75]     		pop 	hl 							; count into HL
+0353: C9       [85]     		ret 								; and exit
+                        
+0354:                   M8_C_tend_c46_handler_end:
+                        ; ***************************************************************************************
+                        ; ***************************************************************************************
+                        ;
                         ;		Name : 		unary.asm
                         ;		Author :	Paul Robson (paul@robsons.org.uk)
                         ;		Date : 		31st October 2021
@@ -606,207 +643,207 @@
                         ; ***************************************************************************************
                         ; ***************************************************************************************
                         
-033D:                   M8_M__c45__c45__c45_:
-033D: 2B       [ 6]     		dec 	hl
-033E: 2B       [12]     		dec 	hl
-033F:                   M8_M__c45__c45__c45__end:
+0354:                   M8_M__c45__c45__c45_:
+0354: 2B       [ 6]     		dec 	hl
+0355: 2B       [12]     		dec 	hl
+0356:                   M8_M__c45__c45__c45__end:
                         
                         ; ***************************************************************************************
                         
-033F:                   M8_M__c45__c45_:
-033F: 2B       [ 6]     		dec 	hl
-0340:                   M8_M__c45__c45__end:
+0356:                   M8_M__c45__c45_:
+0356: 2B       [ 6]     		dec 	hl
+0357:                   M8_M__c45__c45__end:
                         
                         ; ***************************************************************************************
                         
-0340:                   M8_M__c43__c43_:
-0340: 23       [ 6]     		inc 	hl
-0341:                   M8_M__c43__c43__end:
+0357:                   M8_M__c43__c43_:
+0357: 23       [ 6]     		inc 	hl
+0358:                   M8_M__c43__c43__end:
                         
                         ; ***************************************************************************************
                         
-0341:                   M8_M__c43__c43__c43_:
-0341: 23       [ 6]     		inc 	hl
-0342: 23       [12]     		inc 	hl
-0343:                   M8_M__c43__c43__c43__end:
+0358:                   M8_M__c43__c43__c43_:
+0358: 23       [ 6]     		inc 	hl
+0359: 23       [12]     		inc 	hl
+035A:                   M8_M__c43__c43__c43__end:
                         
                         ; ***************************************************************************************
                         
-0343:                   M8_C_0_c45_:
-0343:                   __negate:
-0343: 7C       [ 4]     		ld 		a,h
-0344: 2F       [ 8]     		cpl
-0345: 67       [12]     		ld 		h,a
-0346: 7D       [16]     		ld 		a,l
-0347: 2F       [20]     		cpl
-0348: 6F       [24]     		ld 		l,a
-0349: 23       [30]     		inc 	hl
-034A: C9       [40]     		ret
-034B:                   M8_C_0_c45__end:
+035A:                   M8_C_0_c45_:
+035A:                   __negate:
+035A: 7C       [ 4]     		ld 		a,h
+035B: 2F       [ 8]     		cpl
+035C: 67       [12]     		ld 		h,a
+035D: 7D       [16]     		ld 		a,l
+035E: 2F       [20]     		cpl
+035F: 6F       [24]     		ld 		l,a
+0360: 23       [30]     		inc 	hl
+0361: C9       [40]     		ret
+0362:                   M8_C_0_c45__end:
                         
                         ; ***************************************************************************************
                         
-034B:                   M8_C_0_c60_:
-034B: CB7C     [ 8]     		bit 	7,h
-034D: 210000   [18]     		ld 		hl,$0000
-0350: C8       [23|29]  		ret 	z
-0351: 2B       [29]     		dec 	hl
-0352: C9       [39]     		ret
-0353:                   M8_C_0_c60__end:
+0362:                   M8_C_0_c60_:
+0362: CB7C     [ 8]     		bit 	7,h
+0364: 210000   [18]     		ld 		hl,$0000
+0367: C8       [23|29]  		ret 	z
+0368: 2B       [29]     		dec 	hl
+0369: C9       [39]     		ret
+036A:                   M8_C_0_c60__end:
                         
                         ; ***************************************************************************************
                         
-0353:                   M8_C_0_c61_:
-0353: 7C       [ 4]     		ld 		a,h
-0354: B5       [ 8]     		or 		l
-0355: 210000   [18]     		ld 		hl,$0000
-0358: C0       [23|29]  		ret 	nz
-0359: 2B       [29]     		dec 	hl
-035A: C9       [39]     		ret
-035B:                   M8_C_0_c61__end:
+036A:                   M8_C_0_c61_:
+036A: 7C       [ 4]     		ld 		a,h
+036B: B5       [ 8]     		or 		l
+036C: 210000   [18]     		ld 		hl,$0000
+036F: C0       [23|29]  		ret 	nz
+0370: 2B       [29]     		dec 	hl
+0371: C9       [39]     		ret
+0372:                   M8_C_0_c61__end:
                         
                         ; ***************************************************************************************
                         
-035B:                   M8_M_2_c42_:
-035B: 29       [11]     		add 	hl,hl
-035C:                   M8_M_2_c42__end:
+0372:                   M8_M_2_c42_:
+0372: 29       [11]     		add 	hl,hl
+0373:                   M8_M_2_c42__end:
                         
-035C:                   M8_M_4_c42_:
-035C: 29       [11]     		add 	hl,hl
-035D: 29       [22]     		add 	hl,hl
-035E:                   M8_M_4_c42__end:
+0373:                   M8_M_4_c42_:
+0373: 29       [11]     		add 	hl,hl
+0374: 29       [22]     		add 	hl,hl
+0375:                   M8_M_4_c42__end:
                         
-035E:                   M8_M_8_c42_:
-035E: 29       [11]     		add 	hl,hl
-035F: 29       [22]     		add 	hl,hl
-0360: 29       [33]     		add 	hl,hl
-0361:                   M8_M_8_c42__end:
+0375:                   M8_M_8_c42_:
+0375: 29       [11]     		add 	hl,hl
+0376: 29       [22]     		add 	hl,hl
+0377: 29       [33]     		add 	hl,hl
+0378:                   M8_M_8_c42__end:
                         
-0361:                   M8_M_16_c42_:
-0361: 29       [11]     		add 	hl,hl
-0362: 29       [22]     		add 	hl,hl
-0363: 29       [33]     		add 	hl,hl
-0364: 29       [44]     		add 	hl,hl
-0365:                   M8_M_16_c42__end:
+0378:                   M8_M_16_c42_:
+0378: 29       [11]     		add 	hl,hl
+0379: 29       [22]     		add 	hl,hl
+037A: 29       [33]     		add 	hl,hl
+037B: 29       [44]     		add 	hl,hl
+037C:                   M8_M_16_c42__end:
                         
-0365:                   M8_M_256_c42_:
-0365: 65       [ 4]     		ld 		h,l
-0366: 2E00     [11]     		ld		l,0
-0368:                   M8_M_256_c42__end:
-                        
-                        ; ***************************************************************************************
-                        
-0368:                   M8_M_2_c47_:
-0368: CB2C     [ 8]     		sra 	h
-036A: CB1D     [16]     		rr 		l
-036C:                   M8_M_2_c47__end:
-                        
-036C:                   M8_C_4_c47_:
-036C: CB2C     [ 8]     		sra 	h
-036E: CB1D     [16]     		rr 		l
-0370: CB2C     [24]     		sra 	h
-0372: CB1D     [32]     		rr 		l
-0374:                   M8_C_4_c47__end:
-                        
-0374:                   M8_C_8_c47_:
-0374: CB2C     [ 8]     		sra 	h
-0376: CB1D     [16]     		rr 		l
-0378: CB2C     [24]     		sra 	h
-037A: CB1D     [32]     		rr 		l
-037C: CB2C     [40]     		sra 	h
-037E: CB1D     [48]     		rr 		l
-0380:                   M8_C_8_c47__end:
-                        
-0380:                   M8_C_16_c47_:
-0380: CB2C     [ 8]     		sra 	h
-0382: CB1D     [16]     		rr 		l
-0384: CB2C     [24]     		sra 	h
-0386: CB1D     [32]     		rr 		l
-0388: CB2C     [40]     		sra 	h
-038A: CB1D     [48]     		rr 		l
-038C: CB2C     [56]     		sra 	h
-038E: CB1D     [64]     		rr 		l
-0390:                   M8_C_16_c47__end:
-                        
-0390:                   M8_M_256_c47_:
-0390: 6C       [ 4]     		ld 		l,h
-0391: 2600     [11]     		ld 		h,0
-0393:                   M8_M_256_c47__end:
+037C:                   M8_M_256_c42_:
+037C: 65       [ 4]     		ld 		h,l
+037D: 2E00     [11]     		ld		l,0
+037F:                   M8_M_256_c42__end:
                         
                         ; ***************************************************************************************
                         
-0393:                   M8_C_abs:
-0393: CB7C     [ 8]     		bit 	7,h
-0395: C8       [13|19]  		ret		z
-0396: C34303   [23]     		jp 		__negate
-0399:                   M8_C_abs_end:
+037F:                   M8_M_2_c47_:
+037F: CB2C     [ 8]     		sra 	h
+0381: CB1D     [16]     		rr 		l
+0383:                   M8_M_2_c47__end:
+                        
+0383:                   M8_C_4_c47_:
+0383: CB2C     [ 8]     		sra 	h
+0385: CB1D     [16]     		rr 		l
+0387: CB2C     [24]     		sra 	h
+0389: CB1D     [32]     		rr 		l
+038B:                   M8_C_4_c47__end:
+                        
+038B:                   M8_C_8_c47_:
+038B: CB2C     [ 8]     		sra 	h
+038D: CB1D     [16]     		rr 		l
+038F: CB2C     [24]     		sra 	h
+0391: CB1D     [32]     		rr 		l
+0393: CB2C     [40]     		sra 	h
+0395: CB1D     [48]     		rr 		l
+0397:                   M8_C_8_c47__end:
+                        
+0397:                   M8_C_16_c47_:
+0397: CB2C     [ 8]     		sra 	h
+0399: CB1D     [16]     		rr 		l
+039B: CB2C     [24]     		sra 	h
+039D: CB1D     [32]     		rr 		l
+039F: CB2C     [40]     		sra 	h
+03A1: CB1D     [48]     		rr 		l
+03A3: CB2C     [56]     		sra 	h
+03A5: CB1D     [64]     		rr 		l
+03A7:                   M8_C_16_c47__end:
+                        
+03A7:                   M8_M_256_c47_:
+03A7: 6C       [ 4]     		ld 		l,h
+03A8: 2600     [11]     		ld 		h,0
+03AA:                   M8_M_256_c47__end:
                         
                         ; ***************************************************************************************
                         
-0399:                   M8_M_bswap:
-0399: 7D       [ 4]     		ld 		a,l
-039A: 6C       [ 8]     		ld 		l,h
-039B: 67       [12]     		ld 		h,a
-039C:                   M8_M_bswap_end:
+03AA:                   M8_C_abs:
+03AA: CB7C     [ 8]     		bit 	7,h
+03AC: C8       [13|19]  		ret		z
+03AD: C35A03   [23]     		jp 		__negate
+03B0:                   M8_C_abs_end:
                         
                         ; ***************************************************************************************
                         
-039C:                   M8_C_not:
-039C: 7C       [ 4]     		ld 		a,h
-039D: 2F       [ 8]     		cpl
-039E: 67       [12]     		ld 		h,a
-039F: 7D       [16]     		ld 		a,l
-03A0: 2F       [20]     		cpl
-03A1: 6F       [24]     		ld 		l,a
-03A2: C9       [34]     		ret
-03A3:                   M8_C_not_end:
+03B0:                   M8_M_bswap:
+03B0: 7D       [ 4]     		ld 		a,l
+03B1: 6C       [ 8]     		ld 		l,h
+03B2: 67       [12]     		ld 		h,a
+03B3:                   M8_M_bswap_end:
                         
                         ; ***************************************************************************************
                         
-03A3:                   M8_C_strlen:
-03A3: D5       [11]     		push 	de
-03A4: EB       [15]     		ex 		de,hl
-03A5: 210000   [25]     		ld 		hl,0
-03A8:                   _SLNLoop:
-03A8: 1A       [ 7]     		ld 		a,(de)
-03A9: B7       [11]     		or 		a
-03AA: 2804     [18|23]  		jr 		z,_SLNExit
-03AC: 13       [24]     		inc 	de
-03AD: 23       [30]     		inc 	hl
-03AE: 18F8     [42]     		jr 		_SLNLoop
-03B0:                   _SLNExit:
-03B0: D1       [10]     		pop 	de
-03B1: C9       [20]     		ret
-03B2:                   M8_C_strlen_end:
+03B3:                   M8_C_not:
+03B3: 7C       [ 4]     		ld 		a,h
+03B4: 2F       [ 8]     		cpl
+03B5: 67       [12]     		ld 		h,a
+03B6: 7D       [16]     		ld 		a,l
+03B7: 2F       [20]     		cpl
+03B8: 6F       [24]     		ld 		l,a
+03B9: C9       [34]     		ret
+03BA:                   M8_C_not_end:
                         
                         ; ***************************************************************************************
                         
-03B2:                   M8_C_random:
-03B2: EB       [ 4]     	ex 		de,hl
-03B3: C5       [15]     	push 	bc
-03B4: 2ACF03   [31]         ld 		hl,(_randomSeed1)
-03B7: 44       [35]         ld 		b,h
-03B8: 4D       [39]         ld 		c,l
-03B9: 29       [50]         add 	hl,hl
-03BA: 29       [61]         add 	hl,hl
-03BB: 2C       [65]         inc 	l
-03BC: 09       [76]         add 	hl,bc
-03BD: 22CF03   [92]         ld 		(_randomSeed1),hl
-03C0: 2AD103   [108]        ld 		hl,(_randomSeed2)
-03C3: 29       [119]        add 	hl,hl
-03C4: 9F       [123]        sbc 	a,a
-03C5: E62D     [130]        and 	%00101101
-03C7: AD       [134]        xor 	l
-03C8: 6F       [138]        ld 		l,a
-03C9: 22D103   [154]        ld 		(_randomSeed2),hl
-03CC: 09       [165]        add 	hl,bc
-03CD: C1       [175]        pop 	bc
-03CE: C9       [185]        ret
+03BA:                   M8_C_strlen:
+03BA: D5       [11]     		push 	de
+03BB: EB       [15]     		ex 		de,hl
+03BC: 210000   [25]     		ld 		hl,0
+03BF:                   _SLNLoop:
+03BF: 1A       [ 7]     		ld 		a,(de)
+03C0: B7       [11]     		or 		a
+03C1: 2804     [18|23]  		jr 		z,_SLNExit
+03C3: 13       [24]     		inc 	de
+03C4: 23       [30]     		inc 	hl
+03C5: 18F8     [42]     		jr 		_SLNLoop
+03C7:                   _SLNExit:
+03C7: D1       [10]     		pop 	de
+03C8: C9       [20]     		ret
+03C9:                   M8_C_strlen_end:
                         
-03CF:                   _randomSeed1:
-03CF: CDAB              	.dw 	$ABCD
-03D1:                   _randomSeed2:
-03D1: B9FD              	.dw 	$FDB9
+                        ; ***************************************************************************************
+                        
+03C9:                   M8_C_random:
+03C9: EB       [ 4]     	ex 		de,hl
+03CA: C5       [15]     	push 	bc
+03CB: 2AE603   [31]         ld 		hl,(_randomSeed1)
+03CE: 44       [35]         ld 		b,h
+03CF: 4D       [39]         ld 		c,l
+03D0: 29       [50]         add 	hl,hl
+03D1: 29       [61]         add 	hl,hl
+03D2: 2C       [65]         inc 	l
+03D3: 09       [76]         add 	hl,bc
+03D4: 22E603   [92]         ld 		(_randomSeed1),hl
+03D7: 2AE803   [108]        ld 		hl,(_randomSeed2)
+03DA: 29       [119]        add 	hl,hl
+03DB: 9F       [123]        sbc 	a,a
+03DC: E62D     [130]        and 	%00101101
+03DE: AD       [134]        xor 	l
+03DF: 6F       [138]        ld 		l,a
+03E0: 22E803   [154]        ld 		(_randomSeed2),hl
+03E3: 09       [165]        add 	hl,bc
+03E4: C1       [175]        pop 	bc
+03E5: C9       [185]        ret
+                        
+03E6:                   _randomSeed1:
+03E6: CDAB              	.dw 	$ABCD
+03E8:                   _randomSeed2:
+03E8: B9FD              	.dw 	$FDB9
                         
                         ; *********************************************************************************************
                         ; *********************************************************************************************
@@ -842,40 +879,40 @@
                         ;
                         ; *********************************************************************************************
                         
-03D3:                   M8_C_spr_c46_reset:
+03EA:                   M8_C_spr_c46_reset:
                         
-03D3:                   SPMReset:
-03D3: F5       [11]     		push 	af
-03D4: C5       [22]     		push 	bc
-03D5: D5       [33]     		push 	de
-03D6: E5       [44]     		push 	hl
-03D7: 22DB04   [60]     		ld 		(SPMData),hl 				; save count and address
-03DA: 7B       [64]     		ld 		a,e
-03DB: 32DD04   [77]     		ld 		(SPMCount),a
-03DE: 87       [81]     		add 	a,a 						; double, as we clear it twice (2 x 8 byte blocks)
-03DF: 47       [85]     		ld 		b,a
-03E0:                   _SPMClear:
-03E0: 0E06     [ 7]     		ld 		c,6 						; write out 6 $FFs to position and graphic
-03E2:                   _SPMClear2:
-03E2: 36FF     [10]     		ld 		(hl),$FF
-03E4: 23       [16]     		inc 	hl
-03E5: 0D       [20]     		dec 	c
-03E6: 20FA     [27|32]  		jr 		nz,_SPMClear2
-03E8: 71       [34]     		ld 		(hl),c 						; followed by 2 zeros (control and status/change byte)
-03E9: 23       [40]     		inc 	hl
-03EA: 71       [47]     		ld 		(hl),c
-03EB: 23       [53]     		inc 	hl
-03EC: 10F2     [61|66]  		djnz 	_SPMClear
-03EE: 21E104   [71]     		ld 		hl,SPMUnused 				; no current selection
-03F1: 22DF04   [87]     		ld 		(SPMCurrent),hl
-03F4: CDF104   [104]    		call 	SPRInitialise 				; erase the sprite control records.
-03F7: E1       [114]    		pop 	hl
-03F8: D1       [124]    		pop 	de
-03F9: C1       [134]    		pop 	bc
-03FA: F1       [144]    		pop 	af
-03FB: C9       [154]    		ret
+03EA:                   SPMReset:
+03EA: F5       [11]     		push 	af
+03EB: C5       [22]     		push 	bc
+03EC: D5       [33]     		push 	de
+03ED: E5       [44]     		push 	hl
+03EE: 22F204   [60]     		ld 		(SPMData),hl 				; save count and address
+03F1: 7B       [64]     		ld 		a,e
+03F2: 32F404   [77]     		ld 		(SPMCount),a
+03F5: 87       [81]     		add 	a,a 						; double, as we clear it twice (2 x 8 byte blocks)
+03F6: 47       [85]     		ld 		b,a
+03F7:                   _SPMClear:
+03F7: 0E06     [ 7]     		ld 		c,6 						; write out 6 $FFs to position and graphic
+03F9:                   _SPMClear2:
+03F9: 36FF     [10]     		ld 		(hl),$FF
+03FB: 23       [16]     		inc 	hl
+03FC: 0D       [20]     		dec 	c
+03FD: 20FA     [27|32]  		jr 		nz,_SPMClear2
+03FF: 71       [34]     		ld 		(hl),c 						; followed by 2 zeros (control and status/change byte)
+0400: 23       [40]     		inc 	hl
+0401: 71       [47]     		ld 		(hl),c
+0402: 23       [53]     		inc 	hl
+0403: 10F2     [61|66]  		djnz 	_SPMClear
+0405: 21F804   [71]     		ld 		hl,SPMUnused 				; no current selection
+0408: 22F604   [87]     		ld 		(SPMCurrent),hl
+040B: CD0805   [104]    		call 	SPRInitialise 				; erase the sprite control records.
+040E: E1       [114]    		pop 	hl
+040F: D1       [124]    		pop 	de
+0410: C1       [134]    		pop 	bc
+0411: F1       [144]    		pop 	af
+0412: C9       [154]    		ret
                         
-03FC:                   M8_C_spr_c46_reset_end:
+0413:                   M8_C_spr_c46_reset_end:
                         
                         ; *********************************************************************************************
                         ;
@@ -884,34 +921,34 @@
                         ;
                         ; *********************************************************************************************
                         
-03FC:                   M8_C_spr_c46_select:
+0413:                   M8_C_spr_c46_select:
                         
-03FC:                   SPMSelect:
-03FC: F5       [11]     		push 	af
-03FD: C5       [22]     		push 	bc
-03FE: E5       [33]     		push 	hl
-03FF: 3ADD04   [46]     		ld		a,(SPMCount)
-0402: BD       [50]     		cp 		l 							; compare max vs selected.
-0403: 280E     [57|62]  		jr 		z,_SPMSFail 				; must be >
-0405: FA1304   [67|67]  		jp 		m,_SPMSFail
+0413:                   SPMSelect:
+0413: F5       [11]     		push 	af
+0414: C5       [22]     		push 	bc
+0415: E5       [33]     		push 	hl
+0416: 3AF404   [46]     		ld		a,(SPMCount)
+0419: BD       [50]     		cp 		l 							; compare max vs selected.
+041A: 280E     [57|62]  		jr 		z,_SPMSFail 				; must be >
+041C: FA2A04   [67|67]  		jp 		m,_SPMSFail
                         
-0408: 29       [78]     		add 	hl,hl 						; x 16
-0409: 29       [89]     		add 	hl,hl
-040A: 29       [100]    		add 	hl,hl
-040B: 29       [111]    		add 	hl,hl
-040C: ED5BDB04 [131]    		ld 		de,(SPMData) 				; add base address
-0410: 19       [142]    		add 	hl,de
-0411: 1803     [154]    		jr 		_SPMSExit 					; write and exit
+041F: 29       [78]     		add 	hl,hl 						; x 16
+0420: 29       [89]     		add 	hl,hl
+0421: 29       [100]    		add 	hl,hl
+0422: 29       [111]    		add 	hl,hl
+0423: ED5BF204 [131]    		ld 		de,(SPMData) 				; add base address
+0427: 19       [142]    		add 	hl,de
+0428: 1803     [154]    		jr 		_SPMSExit 					; write and exit
                         
-0413:                   _SPMSFail:
-0413: 21E104   [10]     		ld 		hl,SPMUnused
-0416:                   _SPMSExit:
-0416: 22DF04   [16]     		ld 		(SPMCurrent),hl
-0419: E1       [26]     		pop 	hl
-041A: D1       [36]     		pop 	de
-041B: F1       [46]     		pop 	af
-041C: C9       [56]     		ret
-041D:                   M8_C_spr_c46_select_end:
+042A:                   _SPMSFail:
+042A: 21F804   [10]     		ld 		hl,SPMUnused
+042D:                   _SPMSExit:
+042D: 22F604   [16]     		ld 		(SPMCurrent),hl
+0430: E1       [26]     		pop 	hl
+0431: D1       [36]     		pop 	de
+0432: F1       [46]     		pop 	af
+0433: C9       [56]     		ret
+0434:                   M8_C_spr_c46_select_end:
                         
                         ; *********************************************************************************************
                         ;
@@ -919,19 +956,19 @@
                         ;
                         ; *********************************************************************************************
                         
-041D:                   M8_C_spr_c46_move:
-041D:                   SPMMove:
-041D: DDE5     [15]     		push 	ix
-041F: DD2ADF04 [35]     		ld 		ix,(SPMCurrent)
-0423: DD7308   [54]     		ld 		(ix+8),e 					; write X
-0426: DD7209   [73]     		ld 		(ix+9),d
-0429: DD750A   [92]     		ld 		(ix+10),l 					; write Y
-042C: DD740B   [111]    		ld 		(ix+11),h
-042F:                   _SPMGeneralExit:
-042F: DDCB0FFE [23]     		set 	7,(ix+15)
-0433: DDE1     [37]     		pop 	ix
-0435: C9       [47]     		ret
-0436:                   M8_C_spr_c46_move_end:
+0434:                   M8_C_spr_c46_move:
+0434:                   SPMMove:
+0434: DDE5     [15]     		push 	ix
+0436: DD2AF604 [35]     		ld 		ix,(SPMCurrent)
+043A: DD7308   [54]     		ld 		(ix+8),e 					; write X
+043D: DD7209   [73]     		ld 		(ix+9),d
+0440: DD750A   [92]     		ld 		(ix+10),l 					; write Y
+0443: DD740B   [111]    		ld 		(ix+11),h
+0446:                   _SPMGeneralExit:
+0446: DDCB0FFE [23]     		set 	7,(ix+15)
+044A: DDE1     [37]     		pop 	ix
+044C: C9       [47]     		ret
+044D:                   M8_C_spr_c46_move_end:
                         
                         ; *********************************************************************************************
                         ;
@@ -939,14 +976,14 @@
                         ;
                         ; *********************************************************************************************
                         
-0436:                   M8_C_spr_c46_image:
-0436:                   SPRImage:
-0436: DDE5     [15]     		push 	ix
-0438: DD2ADF04 [35]     		ld 		ix,(SPMCurrent)
-043C: DD750C   [54]     		ld 		(ix+12),l
-043F: DD740D   [73]     		ld 		(ix+13),h
-0442: 18EB     [85]     		jr 		_SPMGeneralExit
-0444:                   M8_C_spr_c46_image_end:
+044D:                   M8_C_spr_c46_image:
+044D:                   SPRImage:
+044D: DDE5     [15]     		push 	ix
+044F: DD2AF604 [35]     		ld 		ix,(SPMCurrent)
+0453: DD750C   [54]     		ld 		(ix+12),l
+0456: DD740D   [73]     		ld 		(ix+13),h
+0459: 18EB     [85]     		jr 		_SPMGeneralExit
+045B:                   M8_C_spr_c46_image_end:
                         
                         ; *********************************************************************************************
                         ;
@@ -954,13 +991,13 @@
                         ;
                         ; *********************************************************************************************
                         
-0444:                   M8_C_spr_c46_control:
-0444:                   SPMControl:
-0444: DDE5     [15]     		push 	ix
-0446: DD2ADF04 [35]     		ld 		ix,(SPMCurrent)
-044A: DD750E   [54]     		ld 		(ix+14),l
-044D: 18E0     [66]     		jr 		_SPMGeneralExit
-044F:                   M8_C_spr_c46_control_end:
+045B:                   M8_C_spr_c46_control:
+045B:                   SPMControl:
+045B: DDE5     [15]     		push 	ix
+045D: DD2AF604 [35]     		ld 		ix,(SPMCurrent)
+0461: DD750E   [54]     		ld 		(ix+14),l
+0464: 18E0     [66]     		jr 		_SPMGeneralExit
+0466:                   M8_C_spr_c46_control_end:
                         
                         ; *********************************************************************************************
                         ;
@@ -968,35 +1005,35 @@
                         ;
                         ; *********************************************************************************************
                         
-044F:                   M8_C_spr_c46_hflip:
-044F:                   SPMHFlip:
-044F: F5       [11]     		push 	af
-0450: DDE5     [26]     		push 	ix
-0452: DD2ADF04 [46]     		ld 		ix,(SPMCurrent)
-0456: DDCB0EAE [69]     		res 	5,(ix+14)
-045A: 7D       [73]     		ld 		a,l
-045B: B4       [77]     		or 		h
-045C: 2819     [84|89]  		jr 		z,_SPCTExit
-045E: DDCB0EEE [107]    		set 	5,(ix+14)
-0462: 1813     [119]    		jr 		_SPCTExit
-0464:                   M8_C_spr_c46_hflip_end:
+0466:                   M8_C_spr_c46_hflip:
+0466:                   SPMHFlip:
+0466: F5       [11]     		push 	af
+0467: DDE5     [26]     		push 	ix
+0469: DD2AF604 [46]     		ld 		ix,(SPMCurrent)
+046D: DDCB0EAE [69]     		res 	5,(ix+14)
+0471: 7D       [73]     		ld 		a,l
+0472: B4       [77]     		or 		h
+0473: 2819     [84|89]  		jr 		z,_SPCTExit
+0475: DDCB0EEE [107]    		set 	5,(ix+14)
+0479: 1813     [119]    		jr 		_SPCTExit
+047B:                   M8_C_spr_c46_hflip_end:
                         
-0464:                   M8_C_spr_c46_vflip:
-0464:                   SPMVFlip:
-0464: F5       [11]     		push 	af
-0465: DDE5     [26]     		push 	ix
-0467: DD2ADF04 [46]     		ld 		ix,(SPMCurrent)
-046B: DDCB0EB6 [69]     		res 	6,(ix+14)
-046F: 7D       [73]     		ld 		a,l
-0470: B4       [77]     		or 		h
-0471: 2804     [84|89]  		jr 		z,_SPCTExit
-0473: DDCB0EFE [107]    		set 	7,(ix+14)
-0477:                   _SPCTExit:
-0477: DDCB0FFE [23]     		set 	7,(ix+15)
-047B: DDE1     [37]     		pop 	ix
-047D: F1       [47]     		pop 	af
-047E: C9       [57]     		ret
-047F:                   M8_C_spr_c46_vflip_end:
+047B:                   M8_C_spr_c46_vflip:
+047B:                   SPMVFlip:
+047B: F5       [11]     		push 	af
+047C: DDE5     [26]     		push 	ix
+047E: DD2AF604 [46]     		ld 		ix,(SPMCurrent)
+0482: DDCB0EB6 [69]     		res 	6,(ix+14)
+0486: 7D       [73]     		ld 		a,l
+0487: B4       [77]     		or 		h
+0488: 2804     [84|89]  		jr 		z,_SPCTExit
+048A: DDCB0EFE [107]    		set 	7,(ix+14)
+048E:                   _SPCTExit:
+048E: DDCB0FFE [23]     		set 	7,(ix+15)
+0492: DDE1     [37]     		pop 	ix
+0494: F1       [47]     		pop 	af
+0495: C9       [57]     		ret
+0496:                   M8_C_spr_c46_vflip_end:
                         
                         ; *********************************************************************************************
                         ;
@@ -1004,49 +1041,49 @@
                         ;
                         ; *********************************************************************************************
                         
-047F:                   M8_C_spr_c46_update:
+0496:                   M8_C_spr_c46_update:
                         
-047F:                   SPMUpdate:
-047F: F5       [11]     		push 	af
-0480: C5       [22]     		push 	bc
-0481: D5       [33]     		push 	de
-0482: E5       [44]     		push 	hl
-0483: DDE5     [59]     		push 	ix
+0496:                   SPMUpdate:
+0496: F5       [11]     		push 	af
+0497: C5       [22]     		push 	bc
+0498: D5       [33]     		push 	de
+0499: E5       [44]     		push 	hl
+049A: DDE5     [59]     		push 	ix
                         
-0485: 3ADD04   [72]     		ld 		a,(SPMCount)
-0488: 47       [76]     		ld 		b,a
-0489: DD2ADB04 [96]     		ld 		ix,(SPMData)
-048D:                   _SPMUpdateLoop:
-048D: DD7E0F   [19]     		ld 		a,(ix+15) 					; check redraw flag
-0490: B7       [23]     		or 		a
-0491: C4A204   [33|40]  		call 	nz,_SPMUpdateOne 			; if non zero update this one
-0494: 111000   [43]     		ld 		de,16
-0497: DD19     [58]     		add 	ix,de
-0499: 10F2     [66|71]  		djnz 	_SPMUpdateLoop
+049C: 3AF404   [72]     		ld 		a,(SPMCount)
+049F: 47       [76]     		ld 		b,a
+04A0: DD2AF204 [96]     		ld 		ix,(SPMData)
+04A4:                   _SPMUpdateLoop:
+04A4: DD7E0F   [19]     		ld 		a,(ix+15) 					; check redraw flag
+04A7: B7       [23]     		or 		a
+04A8: C4B904   [33|40]  		call 	nz,_SPMUpdateOne 			; if non zero update this one
+04AB: 111000   [43]     		ld 		de,16
+04AE: DD19     [58]     		add 	ix,de
+04B0: 10F2     [66|71]  		djnz 	_SPMUpdateLoop
                         
-049B: DDE1     [80]     		pop 	ix
-049D: E1       [90]     		pop 	hl
-049E: C1       [100]    		pop 	bc
-049F: D1       [110]    		pop 	de
-04A0: F1       [120]    		pop 	af
-04A1: C9       [130]    		ret
+04B2: DDE1     [80]     		pop 	ix
+04B4: E1       [90]     		pop 	hl
+04B5: C1       [100]    		pop 	bc
+04B6: D1       [110]    		pop 	de
+04B7: F1       [120]    		pop 	af
+04B8: C9       [130]    		ret
                         ;
                         ;		Updates one sprite from new data if redraw flag found set.
                         ;
-04A2:                   _SPMUpdateOne:
-04A2: C5       [11]     		push 	bc
-04A3: DD360F00 [30]     		ld 		(ix+15),0 					; clear the redraw flag.
-04A7: CD1A05   [47]     		call 	SpriteXErase 				; erase sprite
-04AA: DDE5     [62]     		push 	ix 							; copy target address in DE
-04AC: D1       [72]     		pop 	de
-04AD: 210800   [82]     		ld 		hl,8
-04B0: 19       [93]     		add 	hl,de 						; target DE, source HL
-04B1: 010700   [103]    		ld 		bc,7 						; copy 7 bytes over
-04B4: EDB0     [119|21] 		ldir
-04B6: CD1305   [136]    		call 	SpriteXDraw 				; redraw sprite
-04B9: C1       [146]    		pop 	bc
-04BA: C9       [156]    		ret
-04BB:                   M8_C_spr_c46_update_end:
+04B9:                   _SPMUpdateOne:
+04B9: C5       [11]     		push 	bc
+04BA: DD360F00 [30]     		ld 		(ix+15),0 					; clear the redraw flag.
+04BE: CD3105   [47]     		call 	SpriteXErase 				; erase sprite
+04C1: DDE5     [62]     		push 	ix 							; copy target address in DE
+04C3: D1       [72]     		pop 	de
+04C4: 210800   [82]     		ld 		hl,8
+04C7: 19       [93]     		add 	hl,de 						; target DE, source HL
+04C8: 010700   [103]    		ld 		bc,7 						; copy 7 bytes over
+04CB: EDB0     [119|21] 		ldir
+04CD: CD2A05   [136]    		call 	SpriteXDraw 				; redraw sprite
+04D0: C1       [146]    		pop 	bc
+04D1: C9       [156]    		ret
+04D2:                   M8_C_spr_c46_update_end:
                         
                         ; *********************************************************************************************
                         ;
@@ -1054,38 +1091,38 @@
                         ;
                         ; *********************************************************************************************
                         
-04BB:                   M8_C_spr_c46_hide_c46_all:
+04D2:                   M8_C_spr_c46_hide_c46_all:
                         
-04BB:                   SPMHideAll:
-04BB: F5       [11]     		push 	af
-04BC: C5       [22]     		push 	bc
-04BD: D5       [33]     		push 	de
-04BE: DDE5     [48]     		push 	ix
-04C0: 3ADD04   [61]     		ld 	 	a,(SPMCount)
-04C3: 47       [65]     		ld 		b,a
-04C4: DD2ADB04 [85]     		ld 		ix,(SPMData)
-04C8: 111000   [95]     		ld 		de,16
-04CB:                   _SPMHideLoop:
-04CB: CD1A05   [17]     		call 	SpriteXErase 				; remove sprite
-04CE: DDCB0FFE [40]     		set 	7,(ix+15) 					; force redraw next update
-04D2: DD19     [55]     		add 	ix,de
-04D4: 10F5     [63|68]  		djnz 	_SPMHideLoop
-04D6: E1       [73]     		pop 	hl
-04D7: C1       [83]     		pop 	bc
-04D8: D1       [93]     		pop 	de
-04D9: F1       [103]    		pop 	af
-04DA: C9       [113]    		ret
-04DB:                   M8_C_spr_c46_hide_c46_all_end:
+04D2:                   SPMHideAll:
+04D2: F5       [11]     		push 	af
+04D3: C5       [22]     		push 	bc
+04D4: D5       [33]     		push 	de
+04D5: DDE5     [48]     		push 	ix
+04D7: 3AF404   [61]     		ld 	 	a,(SPMCount)
+04DA: 47       [65]     		ld 		b,a
+04DB: DD2AF204 [85]     		ld 		ix,(SPMData)
+04DF: 111000   [95]     		ld 		de,16
+04E2:                   _SPMHideLoop:
+04E2: CD3105   [17]     		call 	SpriteXErase 				; remove sprite
+04E5: DDCB0FFE [40]     		set 	7,(ix+15) 					; force redraw next update
+04E9: DD19     [55]     		add 	ix,de
+04EB: 10F5     [63|68]  		djnz 	_SPMHideLoop
+04ED: E1       [73]     		pop 	hl
+04EE: C1       [83]     		pop 	bc
+04EF: D1       [93]     		pop 	de
+04F0: F1       [103]    		pop 	af
+04F1: C9       [113]    		ret
+04F2:                   M8_C_spr_c46_hide_c46_all_end:
                         
-04DB:                   SPMData: 									; address of sprite
-04DB: 0000              		.dw 	0
-04DD:                   SPMCount: 									; number of sprites
-04DD: 0000              		.dw 	0
-04DF:                   SPMCurrent: 								; currently selected sprite (may point to unused junk space)
-04DF: 0000              		.dw 	0
-04E1:                   SPMUnused: 									; space for junk writes.
-04E1: 00000000          		.ds 	16,0
-04E5: 00...             
+04F2:                   SPMData: 									; address of sprite
+04F2: 0000              		.dw 	0
+04F4:                   SPMCount: 									; number of sprites
+04F4: 0000              		.dw 	0
+04F6:                   SPMCurrent: 								; currently selected sprite (may point to unused junk space)
+04F6: 0000              		.dw 	0
+04F8:                   SPMUnused: 									; space for junk writes.
+04F8: 00000000          		.ds 	16,0
+04FC: 00...             
                         ; *********************************************************************************************
                         ; *********************************************************************************************
                         ;
@@ -1177,32 +1214,32 @@
                         ;
                         ; *********************************************************************************************
                         
-04F1:                   SPRInitialise:
-04F1: F5       [11]     		push 	af
-04F2: E5       [22]     		push 	hl
+0508:                   SPRInitialise:
+0508: F5       [11]     		push 	af
+0509: E5       [22]     		push 	hl
                         		;
                         		; 		Clear the main data area.
                         		;
-04F3: 210008   [32]     		ld 		hl,SPRDataBlock
-04F6:                   _SPRZeroBlock:
-04F6: 3600     [10]     		ld 		(hl),$00
-04F8: 23       [16]     		inc 	hl
-04F9: 7C       [20]     		ld 		a,h
-04FA: FE0C     [27]     		cp 		SPRDataBlockEnd >> 8
-04FC: 20F8     [34|39]  		jr 		nz,_SPRZeroBlock
+050A: 210008   [32]     		ld 		hl,SPRDataBlock
+050D:                   _SPRZeroBlock:
+050D: 3600     [10]     		ld 		(hl),$00
+050F: 23       [16]     		inc 	hl
+0510: 7C       [20]     		ld 		a,h
+0511: FE0C     [27]     		cp 		SPRDataBlockEnd >> 8
+0513: 20F8     [34|39]  		jr 		nz,_SPRZeroBlock
                         		;
                         		; 		Set all possible original characters to $FF, indicating they are available.
                         		;
-04FE: 3A8407   [47]     		ld 		a,(_SPRFirstUDGSprite)
-0501: 6F       [51]     		ld 		l,a
-0502: 2608     [58]     		ld 		h,SPROriginalChar >> 8
-0504:                   _SPRUsageReset:
-0504: 36FF     [10]     		ld 		(hl),$FF
-0506: 2C       [14]     		inc 	l
-0507: 20FB     [21|26]  		jr 		nz,_SPRUsageReset
-0509: E1       [31]     		pop 	hl
-050A: F1       [41]     		pop 	af
-050B: C9       [51]     		ret
+0515: 3A9407   [47]     		ld 		a,(_SPRFirstUDGSprite)
+0518: 6F       [51]     		ld 		l,a
+0519: 2608     [58]     		ld 		h,SPROriginalChar >> 8
+051B:                   _SPRUsageReset:
+051B: 36FF     [10]     		ld 		(hl),$FF
+051D: 2C       [14]     		inc 	l
+051E: 20FB     [21|26]  		jr 		nz,_SPRUsageReset
+0520: E1       [31]     		pop 	hl
+0521: F1       [41]     		pop 	af
+0522: C9       [51]     		ret
                         
                         ; *********************************************************************************************
                         ;
@@ -1210,14 +1247,14 @@
                         ;
                         ; *********************************************************************************************
                         
-050C:                   M8_C_sprite_c46_udg_c46_base_c33_:
-050C:                   SpriteSetLowestUDG:
-050C: F5       [11]     		push 	af
-050D: 7D       [15]     		ld 		a,l
-050E: 328407   [28]     		ld 		(_SPRFirstUDGSprite),a
-0511: F1       [38]     		pop 	af
-0512: C9       [48]     		ret
-0513:                   M8_C_sprite_c46_udg_c46_base_c33__end:
+0523:                   M8_C_sprite_c46_udg_c46_base_c33_:
+0523:                   SpriteSetLowestUDG:
+0523: F5       [11]     		push 	af
+0524: 7D       [15]     		ld 		a,l
+0525: 329407   [28]     		ld 		(_SPRFirstUDGSprite),a
+0528: F1       [38]     		pop 	af
+0529: C9       [48]     		ret
+052A:                   M8_C_sprite_c46_udg_c46_base_c33__end:
                         
                         ; *********************************************************************************************
                         ;
@@ -1225,267 +1262,267 @@
                         ;
                         ; *********************************************************************************************
                         
-0513:                   SpriteXDraw: 								; draw only
-0513: DDCB077E [20]     		bit 	7,(ix+SPRstatus)
-0517: C0       [25|31]  		ret 	nz
-0518: 1805     [37]     		jr 		SpriteXToggle
-051A:                   SpriteXErase:								; erase only
-051A: DDCB077E [20]     		bit 	7,(ix+SPRstatus)
-051E: C8       [25|31]  		ret 	z
-051F:                   SpriteXToggle:								; flip state
-051F: F5       [11]     		push 	af 							; save registers
-0520: C5       [22]     		push 	bc
-0521: D5       [33]     		push 	de
-0522: E5       [44]     		push 	hl
-0523: FDE5     [59]     		push 	iy
+052A:                   SpriteXDraw: 								; draw only
+052A: DDCB077E [20]     		bit 	7,(ix+SPRstatus)
+052E: C0       [25|31]  		ret 	nz
+052F: 1805     [37]     		jr 		SpriteXToggle
+0531:                   SpriteXErase:								; erase only
+0531: DDCB077E [20]     		bit 	7,(ix+SPRstatus)
+0535: C8       [25|31]  		ret 	z
+0536:                   SpriteXToggle:								; flip state
+0536: F5       [11]     		push 	af 							; save registers
+0537: C5       [22]     		push 	bc
+0538: D5       [33]     		push 	de
+0539: E5       [44]     		push 	hl
+053A: FDE5     [59]     		push 	iy
                         		;
                         		; 		Check actually visible
                         		;
-0525: DDCB067E [79]     		bit 	7,(ix+SPRcontrol)
-0529: C25A06   [89|89]  		jp 		nz,_SPRExit
+053C: DDCB067E [79]     		bit 	7,(ix+SPRcontrol)
+0540: C27106   [89|89]  		jp 		nz,_SPRExit
                         		;
                         		; 		Check range.
                         		;
-052C: DD7E01   [108]    		ld 		a,(ix+SPRx+1) 				; MSB of X must be 0 or 1
-052F: 47       [112]    		ld 		b,a 						; save in B
-0530: E6FE     [119]    		and 	$FE
-0532: DDB603   [138]    		or 		a,(ix+SPRy+1) 				; MSB of Y must be zero.
-0535: 2011     [145|150]		jr 		nz,_SPRRangeFail
+0543: DD7E01   [108]    		ld 		a,(ix+SPRx+1) 				; MSB of X must be 0 or 1
+0546: 47       [112]    		ld 		b,a 						; save in B
+0547: E6FE     [119]    		and 	$FE
+0549: DDB603   [138]    		or 		a,(ix+SPRy+1) 				; MSB of Y must be zero.
+054C: 2011     [145|150]		jr 		nz,_SPRRangeFail
                         		;
-0537: DD7E02   [164]    		ld 		a,(ix+SPRy) 				; check Y < 240
-053A: FEF0     [171]    		cp 		8*30
-053C: 300A     [178|183]		jr 		nc,_SPRRangeFail
+054E: DD7E02   [164]    		ld 		a,(ix+SPRy) 				; check Y < 240
+0551: FEF0     [171]    		cp 		8*30
+0553: 300A     [178|183]		jr 		nc,_SPRRangeFail
                         		;
-053E: 05       [182]    		dec 	b 							; if MSB X was 1, now zero
-053F: 200A     [189|194]		jr 		nz,_SPRCalcPosition
+0555: 05       [182]    		dec 	b 							; if MSB X was 1, now zero
+0556: 200A     [189|194]		jr 		nz,_SPRCalcPosition
                         		;
-0541: DD7E00   [208]    		ld 		a,(ix+SPRx) 				; X.MSB was 1, so must be X.LSB < 64
-0544: FE40     [215]    		cp 		64
-0546: 3803     [222|227]		jr 		c,_SPRCalcPosition
-0548:                   _SPRRangeFail:
-0548: C35A06   [10]     		jp 		_SPRExit
+0558: DD7E00   [208]    		ld 		a,(ix+SPRx) 				; X.MSB was 1, so must be X.LSB < 64
+055B: FE40     [215]    		cp 		64
+055D: 3803     [222|227]		jr 		c,_SPRCalcPosition
+055F:                   _SPRRangeFail:
+055F: C37106   [10]     		jp 		_SPRExit
                         		;
                         		;		Calculate position in IY
                         		;
-054B:                   _SPRCalcPosition:
-054B: 2600     [ 7]     		ld 		h,0							; Y position in HL, with lower 3 bits masked, so already x 8
-054D: DD7E02   [26]     		ld 		a,(ix+SPRy)
-0550: E6F8     [33]     		and 	$F8
-0552: 6F       [37]     		ld 		l,a
-0553: 54       [41]     		ld 		d,h 						; DE = Y x 8
-0554: 5D       [45]     		ld 		e,l
-0555: 29       [56]     		add 	hl,hl 						; HL = Y x 32
-0556: 29       [67]     		add 	hl,hl
-0557: 19       [78]     		add 	hl,de 						; HL = Y x 40
-0558: FD2100F8 [92]     		ld 		iy,$F800 					; IY = $F800 + Y x 40
-055C: EB       [96]     		ex 		de,hl
-055D: FD19     [111]    		add 	iy,de
+0562:                   _SPRCalcPosition:
+0562: 2600     [ 7]     		ld 		h,0							; Y position in HL, with lower 3 bits masked, so already x 8
+0564: DD7E02   [26]     		ld 		a,(ix+SPRy)
+0567: E6F8     [33]     		and 	$F8
+0569: 6F       [37]     		ld 		l,a
+056A: 54       [41]     		ld 		d,h 						; DE = Y x 8
+056B: 5D       [45]     		ld 		e,l
+056C: 29       [56]     		add 	hl,hl 						; HL = Y x 32
+056D: 29       [67]     		add 	hl,hl
+056E: 19       [78]     		add 	hl,de 						; HL = Y x 40
+056F: FD2100F8 [92]     		ld 		iy,$F800 					; IY = $F800 + Y x 40
+0573: EB       [96]     		ex 		de,hl
+0574: FD19     [111]    		add 	iy,de
                         
-055F: DD5E00   [130]    		ld 		e,(ix+SPRx)					; DE = X position
-0562: DD5601   [149]    		ld 		d,(ix+SPRx+1)
-0565: CB3A     [157]    		srl 	d 							; / 8 (after first in range 0-255 hence SRL E)
-0567: CB1B     [165]    		rr 		e
-0569: CB3B     [173]    		srl 	e
-056B: CB3B     [181]    		srl 	e
-056D: 1600     [188]    		ld 		d,0 						; add to screen position.
-056F: FD19     [203]    		add 	iy,de
+0576: DD5E00   [130]    		ld 		e,(ix+SPRx)					; DE = X position
+0579: DD5601   [149]    		ld 		d,(ix+SPRx+1)
+057C: CB3A     [157]    		srl 	d 							; / 8 (after first in range 0-255 hence SRL E)
+057E: CB1B     [165]    		rr 		e
+0580: CB3B     [173]    		srl 	e
+0582: CB3B     [181]    		srl 	e
+0584: 1600     [188]    		ld 		d,0 						; add to screen position.
+0586: FD19     [203]    		add 	iy,de
                         		;
                         		; 		Calculate and patch the fine horizontal shift jump which adjusts the
                         		; 		number of 24 bit left shifts we do to the graphics data.
                         		;
-0571: DD7E00   [222]    		ld 		a,(ix+SPRx)
-0574: E607     [229]    		and 	7
-0576: 87       [233]    		add 	a,a
-0577: 320306   [246]    		ld 		(_SPRFineHorizontalShift+1),a
+0588: DD7E00   [222]    		ld 		a,(ix+SPRx)
+058B: E607     [229]    		and 	7
+058D: 87       [233]    		add 	a,a
+058E: 321A06   [246]    		ld 		(_SPRFineHorizontalShift+1),a
                         		;
                         		; 		Calculate the horizontal offset which makes it start drawing part way through a UDG
                         		;
-057A: DD7E02   [265]    		ld 		a,(ix+SPRy)
-057D: E607     [272]    		and 	7
-057F: 328107   [285]    		ld 		(_SPRInitialYOffset),a
+0591: DD7E02   [265]    		ld 		a,(ix+SPRy)
+0594: E607     [272]    		and 	7
+0596: 329107   [285]    		ld 		(_SPRInitialYOffset),a
                         		;
                         		; 		Calculate the row count from bit 1 of the control byte
                         		; 		(the number of vertical pixels down)
                         		;
-0582: 3E08     [292]    		ld 		a,8
-0584: DDCB064E [312]    		bit 	1,(ix+SPRcontrol)
-0588: 2801     [319|324]		jr 		z,_SPRSingleHeight
-058A: 87       [323]    		add 	a,a
-058B:                   _SPRSingleHeight:
-058B: 328007   [13]     		ld 		(_SPRRowCount),a
+0599: 3E08     [292]    		ld 		a,8
+059B: DDCB064E [312]    		bit 	1,(ix+SPRcontrol)
+059F: 2801     [319|324]		jr 		z,_SPRSingleHeight
+05A1: 87       [323]    		add 	a,a
+05A2:                   _SPRSingleHeight:
+05A2: 329007   [13]     		ld 		(_SPRRowCount),a
                         		;
                         		;		Set the sprite graphic address and incrementer.
                         		;
-058E: DD6E04   [32]     		ld 		l,(ix+SPRgraphics) 			; data address
-0591: DD6605   [51]     		ld 		h,(ix+SPRgraphics+1)
-0594: 110100   [61]     		ld 		de,1 						; increment/decrement
-0597: DDCB0646 [81]     		bit 	0,(ix+SPRcontrol)
-059B: 2801     [88|93]  		jr 		z,_SPRSGANotDoubleWidth
-059D: 13       [94]     		inc 	de 							; 2 if double width
-059E:                   _SPRSGANotDoubleWidth:
-059E: DDCB0676 [20]     		bit 	6,(ix+SPRcontrol) 			; check for vertical flip.
-05A2: 2818     [27|32]  		jr 		z,_SPRSGANotVFlip
+05A5: DD6E04   [32]     		ld 		l,(ix+SPRgraphics) 			; data address
+05A8: DD6605   [51]     		ld 		h,(ix+SPRgraphics+1)
+05AB: 110100   [61]     		ld 		de,1 						; increment/decrement
+05AE: DDCB0646 [81]     		bit 	0,(ix+SPRcontrol)
+05B2: 2801     [88|93]  		jr 		z,_SPRSGANotDoubleWidth
+05B4: 13       [94]     		inc 	de 							; 2 if double width
+05B5:                   _SPRSGANotDoubleWidth:
+05B5: DDCB0676 [20]     		bit 	6,(ix+SPRcontrol) 			; check for vertical flip.
+05B9: 2818     [27|32]  		jr 		z,_SPRSGANotVFlip
                         		;
-05A4: EB       [31]     		ex 		de,hl 						; DE = address, HL = increment x 8
-05A5: E5       [42]     		push 	hl
-05A6: 29       [53]     		add 	hl,hl
-05A7: 29       [64]     		add 	hl,hl
-05A8: 29       [75]     		add 	hl,hl
-05A9: DDCB064E [95]     		bit 	1,(ix+SPRcontrol) 			; x 16 if double height
-05AD: 2801     [102|107]		jr 		z,_SPRSGANotDoubleHeight
-05AF: 29       [113]    		add 	hl,hl
-05B0:                   _SPRSGANotDoubleHeight:
-05B0: 19       [11]     		add 	hl,de 						; add 8/16 x increment to start
-05B1: C1       [21]     		pop 	bc 							; original increment -> BC
-05B2: E5       [32]     		push 	hl 							; save new start on stack.
-05B3: 210000   [42]     		ld 		hl,0 						; HL = - increment
-05B6: AF       [46]     		xor 	a
-05B7: ED42     [61]     		sbc 	hl,bc
-05B9: D1       [71]     		pop 	de 							; DE = new start off stack
-05BA: EB       [75]     		ex 		de,hl 						; swap them back so HL = address, DE = -increment
-05BB: 19       [86]     		add 	hl,de 						; points HL to the last sprite entry.
-05BC:                   _SPRSGANotVFlip:
-05BC: 22E105   [16]     		ld 		(_SPRFetchGraphicPtr+1),hl 	; write out start address in HL and incrementer in DE.
-05BF: ED53F105 [36]     		ld 		(_SPRAdjustGraphicPtr+1),de
+05BB: EB       [31]     		ex 		de,hl 						; DE = address, HL = increment x 8
+05BC: E5       [42]     		push 	hl
+05BD: 29       [53]     		add 	hl,hl
+05BE: 29       [64]     		add 	hl,hl
+05BF: 29       [75]     		add 	hl,hl
+05C0: DDCB064E [95]     		bit 	1,(ix+SPRcontrol) 			; x 16 if double height
+05C4: 2801     [102|107]		jr 		z,_SPRSGANotDoubleHeight
+05C6: 29       [113]    		add 	hl,hl
+05C7:                   _SPRSGANotDoubleHeight:
+05C7: 19       [11]     		add 	hl,de 						; add 8/16 x increment to start
+05C8: C1       [21]     		pop 	bc 							; original increment -> BC
+05C9: E5       [32]     		push 	hl 							; save new start on stack.
+05CA: 210000   [42]     		ld 		hl,0 						; HL = - increment
+05CD: AF       [46]     		xor 	a
+05CE: ED42     [61]     		sbc 	hl,bc
+05D0: D1       [71]     		pop 	de 							; DE = new start off stack
+05D1: EB       [75]     		ex 		de,hl 						; swap them back so HL = address, DE = -increment
+05D2: 19       [86]     		add 	hl,de 						; points HL to the last sprite entry.
+05D3:                   _SPRSGANotVFlip:
+05D3: 22F805   [16]     		ld 		(_SPRFetchGraphicPtr+1),hl 	; write out start address in HL and incrementer in DE.
+05D6: ED530806 [36]     		ld 		(_SPRAdjustGraphicPtr+1),de
                         		;
                         		; 		Try to allocate UDGs for the current row at IY, 2 or 3 UDGs.
                         		;
-05C3:                   _SPRStartNextCharacterRow:
-05C3: CD6906   [17]     		call 	_SPRAllocateRow 			; try to allocate the whole row.
-05C6: DA5A06   [27|27]  		jp 		c,_SPRExit					; it didn't work, so we abandon drawing here.
+05DA:                   _SPRStartNextCharacterRow:
+05DA: CD8006   [17]     		call 	_SPRAllocateRow 			; try to allocate the whole row.
+05DD: DA7106   [27|27]  		jp 		c,_SPRExit					; it didn't work, so we abandon drawing here.
                         		;
                         		; 		Adjust the usage counters.
                         		;
-05C9: FDE5     [42]     		push 	iy
-05CB: CD2107   [59]     		call 	SPRAdjustUsageCounter
-05CE: FD23     [69]     		inc 	iy
-05D0: CD2107   [86]     		call 	SPRAdjustUsageCounter
-05D3: DDCB0646 [106]    		bit 	0,(ix+SPRcontrol)
-05D7: 2805     [113|118]		jr 		z,_SPRAuNotRight
-05D9: FD23     [123]    		inc 	iy
-05DB: CD2107   [140]    		call 	SPRAdjustUsageCounter
-05DE:                   _SPRAuNotRight:
-05DE: FDE1     [14]     		pop 	iy
+05E0: FDE5     [42]     		push 	iy
+05E2: CD3807   [59]     		call 	SPRAdjustUsageCounter
+05E5: FD23     [69]     		inc 	iy
+05E7: CD3807   [86]     		call 	SPRAdjustUsageCounter
+05EA: DDCB0646 [106]    		bit 	0,(ix+SPRcontrol)
+05EE: 2805     [113|118]		jr 		z,_SPRAuNotRight
+05F0: FD23     [123]    		inc 	iy
+05F2: CD3807   [140]    		call 	SPRAdjustUsageCounter
+05F5:                   _SPRAuNotRight:
+05F5: FDE1     [14]     		pop 	iy
                         		;
                         		;		Get the graphics for the next *pixel* line. into ADE
                         		;
-05E0:                   _SPRNextRowUDG:
+05F7:                   _SPRNextRowUDG:
                         		;
-05E0:                   _SPRFetchGraphicPtr:
-05E0: 210000   [10]     		ld 		hl,$0000
-05E3: 1E00     [17]     		ld 		e,0							; DE = $00:(HL)
-05E5: 56       [24]     		ld 		d,(hl)
-05E6: DDCB0646 [44]     		bit 	0,(ix+SPRcontrol) 			; is the width 1 ?
-05EA: 2804     [51|56]  		jr 		z,_SPRHaveGraphicData
-05EC: 23       [57]     		inc 	hl
-05ED: 5A       [61]     		ld 		e,d  						; DE = (HL+1):(HL)
-05EE: 56       [68]     		ld 		d,(hl)
-05EF: 2B       [74]     		dec 	hl
-05F0:                   _SPRHaveGraphicData:
+05F7:                   _SPRFetchGraphicPtr:
+05F7: 210000   [10]     		ld 		hl,$0000
+05FA: 1E00     [17]     		ld 		e,0							; DE = $00:(HL)
+05FC: 56       [24]     		ld 		d,(hl)
+05FD: DDCB0646 [44]     		bit 	0,(ix+SPRcontrol) 			; is the width 1 ?
+0601: 2804     [51|56]  		jr 		z,_SPRHaveGraphicData
+0603: 23       [57]     		inc 	hl
+0604: 5A       [61]     		ld 		e,d  						; DE = (HL+1):(HL)
+0605: 56       [68]     		ld 		d,(hl)
+0606: 2B       [74]     		dec 	hl
+0607:                   _SPRHaveGraphicData:
                         		;
-05F0:                   _SPRAdjustGraphicPtr:
-05F0: 010000   [10]     		ld 		bc,$0000 					; this is changed to account for size and
-05F3: 09       [21]     		add 	hl,bc 						; direction.
-05F4: 22E105   [37]     		ld 		(_SPRFetchGraphicPtr+1),hl
+0607:                   _SPRAdjustGraphicPtr:
+0607: 010000   [10]     		ld 		bc,$0000 					; this is changed to account for size and
+060A: 09       [21]     		add 	hl,bc 						; direction.
+060B: 22F805   [37]     		ld 		(_SPRFetchGraphicPtr+1),hl
                         		;
                         		; 		Check for Horizontal Flip
                         		;
-05F7: DDCB066E [57]     		bit 	5,(ix+SPRcontrol)			; if HFlip bit set
-05FB: 2803     [64|69]  		jr 		z,_SPRNoHFlip
-05FD: CD3D07   [81]     		call 	SPRFlipDE 					; Flip DE
-0600:                   _SPRNoHFlip:
-0600: AF       [ 4]     		xor 	a 							; ADE contains 24 bit graphic data.
-0601: EB       [ 8]     		ex 		de,hl 						; we put it in AHL
-0602:                   _SPRFineHorizontalShift:
-0602: 1800     [12]     		jr 		$+2 						; this is altered to do the fine horizontal shift
-0604: 29       [23]     		add 	hl,hl
-0605: 8F       [27]     		adc 	a,a
-0606: 29       [38]     		add 	hl,hl
-0607: 8F       [42]     		adc 	a,a
-0608: 29       [53]     		add 	hl,hl
-0609: 8F       [57]     		adc 	a,a
-060A: 29       [68]     		add 	hl,hl
-060B: 8F       [72]     		adc 	a,a
-060C: 29       [83]     		add 	hl,hl
-060D: 8F       [87]     		adc 	a,a
-060E: 29       [98]     		add 	hl,hl
-060F: 8F       [102]    		adc 	a,a
-0610: 29       [113]    		add 	hl,hl
-0611: 8F       [117]    		adc 	a,a
-0612: 29       [128]    		add 	hl,hl
-0613: 8F       [132]    		adc 	a,a
-0614: EB       [136]    		ex 		de,hl 						; put it back in ADE
+060E: DDCB066E [57]     		bit 	5,(ix+SPRcontrol)			; if HFlip bit set
+0612: 2803     [64|69]  		jr 		z,_SPRNoHFlip
+0614: CD5407   [81]     		call 	SPRFlipDE 					; Flip DE
+0617:                   _SPRNoHFlip:
+0617: AF       [ 4]     		xor 	a 							; ADE contains 24 bit graphic data.
+0618: EB       [ 8]     		ex 		de,hl 						; we put it in AHL
+0619:                   _SPRFineHorizontalShift:
+0619: 1800     [12]     		jr 		$+2 						; this is altered to do the fine horizontal shift
+061B: 29       [23]     		add 	hl,hl
+061C: 8F       [27]     		adc 	a,a
+061D: 29       [38]     		add 	hl,hl
+061E: 8F       [42]     		adc 	a,a
+061F: 29       [53]     		add 	hl,hl
+0620: 8F       [57]     		adc 	a,a
+0621: 29       [68]     		add 	hl,hl
+0622: 8F       [72]     		adc 	a,a
+0623: 29       [83]     		add 	hl,hl
+0624: 8F       [87]     		adc 	a,a
+0625: 29       [98]     		add 	hl,hl
+0626: 8F       [102]    		adc 	a,a
+0627: 29       [113]    		add 	hl,hl
+0628: 8F       [117]    		adc 	a,a
+0629: 29       [128]    		add 	hl,hl
+062A: 8F       [132]    		adc 	a,a
+062B: EB       [136]    		ex 		de,hl 						; put it back in ADE
                         		;
                         		;		Now XOR the data with the previously calculated addresses.
                         		;		If (ix+5)[0] is clear then don't do the third one, it's an 8x8 sprite
                         		;
                         		;		These addresses (the ld hl,xxxx ones) are modified in situ.
                         		;
-0615:                   _SPRLeftUDGPosition:
-0615: 2108F6   [10]     		ld 		hl,$F000+$C1*8
-0618: AE       [17]     		xor 	(hl)
-0619: 77       [24]     		ld 		(hl),a
-061A:                   _SPRMiddleUDGPosition:
-061A: 2110F6   [10]     		ld 		hl,$F000+$C2*8
-061D: 7A       [14]     		ld 		a,d
-061E: AE       [21]     		xor 	(hl)
-061F: 77       [28]     		ld 		(hl),a
-0620: DDCB0646 [48]     		bit 	0,(ix+SPRcontrol) 					; if width 1, skip the last draw
-0624: 2806     [55|60]  		jr 		z,_SPRDrawEnd
-0626:                   _SPRRightUDGPosition:
-0626: 2118F6   [10]     		ld 		hl,$F000+$C3*8
-0629: 7B       [14]     		ld 		a,e
-062A: AE       [21]     		xor 	(hl)
-062B: 77       [28]     		ld 		(hl),a
-062C:                   _SPRDrawEnd:
+062C:                   _SPRLeftUDGPosition:
+062C: 2108F6   [10]     		ld 		hl,$F000+$C1*8
+062F: AE       [17]     		xor 	(hl)
+0630: 77       [24]     		ld 		(hl),a
+0631:                   _SPRMiddleUDGPosition:
+0631: 2110F6   [10]     		ld 		hl,$F000+$C2*8
+0634: 7A       [14]     		ld 		a,d
+0635: AE       [21]     		xor 	(hl)
+0636: 77       [28]     		ld 		(hl),a
+0637: DDCB0646 [48]     		bit 	0,(ix+SPRcontrol) 					; if width 1, skip the last draw
+063B: 2806     [55|60]  		jr 		z,_SPRDrawEnd
+063D:                   _SPRRightUDGPosition:
+063D: 2118F6   [10]     		ld 		hl,$F000+$C3*8
+0640: 7B       [14]     		ld 		a,e
+0641: AE       [21]     		xor 	(hl)
+0642: 77       [28]     		ld 		(hl),a
+0643:                   _SPRDrawEnd:
                         		;
                         		; 		Check if we have done all the rows
                         		;
-062C: 218007   [10]     		ld 		hl,_SPRRowCount
-062F: 35       [21]     		dec 	(hl)
-0630: 2828     [28|33]  		jr 		z,_SPRExit
+0643: 219007   [10]     		ld 		hl,_SPRRowCount
+0646: 35       [21]     		dec 	(hl)
+0647: 2828     [28|33]  		jr 		z,_SPRExit
                         		;
                         		; 		Now go to the next line down. Initially this just advances the vertical offset
                         		;		in the UDG pointers
                         		;
-0632: 211B06   [38]     		ld 		hl,_SPRMiddleUDGPosition+1
-0635: 34       [49]     		inc 	(hl)
-0636: 212706   [59]     		ld 		hl,_SPRRightUDGPosition+1 	; not guaranteed initialised.
-0639: 34       [70]     		inc 	(hl)
-063A: 211606   [80]     		ld 		hl,_SPRLeftUDGPosition+1
-063D: 34       [91]     		inc 	(hl)
+0649: 213206   [38]     		ld 		hl,_SPRMiddleUDGPosition+1
+064C: 34       [49]     		inc 	(hl)
+064D: 213E06   [59]     		ld 		hl,_SPRRightUDGPosition+1 	; not guaranteed initialised.
+0650: 34       [70]     		inc 	(hl)
+0651: 212D06   [80]     		ld 		hl,_SPRLeftUDGPosition+1
+0654: 34       [91]     		inc 	(hl)
                         		;
-063E: 7E       [98]     		ld 		a,(hl) 						; check crossed 8 byte boundary
-063F: E607     [105]    		and 	7
-0641: 209D     [112|117]		jr 		nz,_SPRNextRowUDG 			; if not complete it.
+0655: 7E       [98]     		ld 		a,(hl) 						; check crossed 8 byte boundary
+0656: E607     [105]    		and 	7
+0658: 209D     [112|117]		jr 		nz,_SPRNextRowUDG 			; if not complete it.
                         
-0643: AF       [116]    		xor 	a 							; clear the initial offset
-0644: 328107   [129]    		ld 		(_SPRInitialYOffset),a
+065A: AF       [116]    		xor 	a 							; clear the initial offset
+065B: 329107   [129]    		ld 		(_SPRInitialYOffset),a
                         
                         
-0647: 112800   [139]    		ld 		de,40 						; advance down one row.
-064A: FD19     [154]    		add 	iy,de
+065E: 112800   [139]    		ld 		de,40 						; advance down one row.
+0661: FD19     [154]    		add 	iy,de
                         
-064C: 11B0FC   [164]    		ld 		de,$F800+40*30 				; the end of the physical display
-064F: FDE5     [179]    		push 	iy
-0651: E1       [189]    		pop 	hl
-0652: 37       [193]    		scf
-0653: ED52     [208]    		sbc 	hl,de
-0655: 3003     [215|220]		jr 		nc,_SPRExit 				; past the bottom,exit.
+0663: 11B0FC   [164]    		ld 		de,$F800+40*30 				; the end of the physical display
+0666: FDE5     [179]    		push 	iy
+0668: E1       [189]    		pop 	hl
+0669: 37       [193]    		scf
+066A: ED52     [208]    		sbc 	hl,de
+066C: 3003     [215|220]		jr 		nc,_SPRExit 				; past the bottom,exit.
                         
-0657: C3C305   [225]    		jp 		_SPRStartNextCharacterRow 	; do the next character row.
+066E: C3DA05   [225]    		jp 		_SPRStartNextCharacterRow 	; do the next character row.
                         
-065A:                   _SPRExit:
-065A: DD7E07   [19]     		ld 		a,(ix+SPRstatus) 			; toggle the drawn status bit
-065D: EE80     [26]     		xor 	$80
-065F: DD7707   [45]     		ld 		(ix+SPRstatus),a
+0671:                   _SPRExit:
+0671: DD7E07   [19]     		ld 		a,(ix+SPRstatus) 			; toggle the drawn status bit
+0674: EE80     [26]     		xor 	$80
+0676: DD7707   [45]     		ld 		(ix+SPRstatus),a
                         
-0662: FDE1     [59]     		pop 	iy 							; restore registers
-0664: E1       [69]     		pop 	hl
-0665: D1       [79]     		pop 	de
-0666: C1       [89]     		pop 	bc
-0667: F1       [99]     		pop 	af
-0668: C9       [109]    		ret
+0679: FDE1     [59]     		pop 	iy 							; restore registers
+067B: E1       [69]     		pop 	hl
+067C: D1       [79]     		pop 	de
+067D: C1       [89]     		pop 	bc
+067E: F1       [99]     		pop 	af
+067F: C9       [109]    		ret
                         
                         ; *********************************************************************************************
                         ;
@@ -1498,87 +1535,87 @@
                         ;
                         ; *********************************************************************************************
                         
-0669:                   _SPRAllocateRow:
-0669: C5       [11]     		push 	bc 							; save BC.
-066A: FDE5     [26]     		push 	iy 							; save IY
-066C: ED738207 [46]     		ld 		(_SPRAllocSPTemp),sp		; save SP as we are using it for temp.
+0680:                   _SPRAllocateRow:
+0680: C5       [11]     		push 	bc 							; save BC.
+0681: FDE5     [26]     		push 	iy 							; save IY
+0683: ED739207 [46]     		ld 		(_SPRAllocSPTemp),sp		; save SP as we are using it for temp.
                         
-0670: DDCB077E [66]     		bit 	7,(ix+SPRstatus) 			; are we erasing ?
-0674: 280A     [73|78]  		jr 		z,_SPRARNotErasing
+0687: DDCB077E [66]     		bit 	7,(ix+SPRstatus) 			; are we erasing ?
+068B: 280A     [73|78]  		jr 		z,_SPRARNotErasing
                         
-0676: 3A8407   [86]     		ld 		a,(_SPRFirstUDGSprite)		; B = first sprite useable
-0679: 47       [90]     		ld 		b,a
-067A: FD7E00   [109]    		ld 		a,(iy+0) 					; if erasing, check if row is drawn on UDGs
-067D: B8       [113]    		cp 		b
-067E: 384C     [120|125]		jr 		c,_SPRAllocateExit 			; and if so don't allocate the row, exit.
+068D: 3A9407   [86]     		ld 		a,(_SPRFirstUDGSprite)		; B = first sprite useable
+0690: 47       [90]     		ld 		b,a
+0691: FD7E00   [109]    		ld 		a,(iy+0) 					; if erasing, check if row is drawn on UDGs
+0694: B8       [113]    		cp 		b
+0695: 384C     [120|125]		jr 		c,_SPRAllocateExit 			; and if so don't allocate the row, exit.
                         
-0680:                   _SPRARNotErasing:
-0680: 210000   [10]     		ld 		hl,$0000 					; we save all the allocated so far on the stack
-0683: E5       [21]     		push 	hl 		 					; this is the end marker.
+0697:                   _SPRARNotErasing:
+0697: 210000   [10]     		ld 		hl,$0000 					; we save all the allocated so far on the stack
+069A: E5       [21]     		push 	hl 		 					; this is the end marker.
                         		;
                         		; 		Do 2 or 3. For each overwrite the XOR code addresses and save
                         		;		it on the stack. If it fails, then unwind everything.
                         		;
-0684: CDD406   [38]     		call 	_SPRAllocateOne 			; do (IY)
-0687: 3821     [45|50]  		jr 		c,_SPRAllocateUndo 			; if done, then Undo.
-0689: 221606   [61]     		ld 		(_SPRLeftUDGPosition+1),hl 	; overwrite the code.
-068C: E5       [72]     		push 	hl
+069B: CDEB06   [38]     		call 	_SPRAllocateOne 			; do (IY)
+069E: 3821     [45|50]  		jr 		c,_SPRAllocateUndo 			; if done, then Undo.
+06A0: 222D06   [61]     		ld 		(_SPRLeftUDGPosition+1),hl 	; overwrite the code.
+06A3: E5       [72]     		push 	hl
                         
-068D: FD23     [82]     		inc 	iy
-068F: CDD406   [99]     		call 	_SPRAllocateOne 			; do (IY+1)
-0692: 3816     [106|111]		jr 		c,_SPRAllocateUndo 			; if done, then Undo.
-0694: 221B06   [122]    		ld 		(_SPRMiddleUDGPosition+1),hl ; overwrite the code.
-0697: E5       [133]    		push 	hl
+06A4: FD23     [82]     		inc 	iy
+06A6: CDEB06   [99]     		call 	_SPRAllocateOne 			; do (IY+1)
+06A9: 3816     [106|111]		jr 		c,_SPRAllocateUndo 			; if done, then Undo.
+06AB: 223206   [122]    		ld 		(_SPRMiddleUDGPosition+1),hl ; overwrite the code.
+06AE: E5       [133]    		push 	hl
                         
-0698: DDCB0646 [153]    		bit 	0,(ix+SPRcontrol) 			; if 8 width then we are done.
-069C: 282D     [160|165]		jr 		z,_SPRAllocateOkay
+06AF: DDCB0646 [153]    		bit 	0,(ix+SPRcontrol) 			; if 8 width then we are done.
+06B3: 282D     [160|165]		jr 		z,_SPRAllocateOkay
                         
-069E: FD23     [170]    		inc 	iy
-06A0: CDD406   [187]    		call 	_SPRAllocateOne 			; do (IY+2)
-06A3: 3805     [194|199]		jr 		c,_SPRAllocateUndo 			; if done, then Undo.
-06A5: 222706   [210]    		ld 		(_SPRRightUDGPosition+1),hl ; overwrite the code.
-06A8: 1821     [222]    		jr 		_SPRAllocateOkay
+06B5: FD23     [170]    		inc 	iy
+06B7: CDEB06   [187]    		call 	_SPRAllocateOne 			; do (IY+2)
+06BA: 3805     [194|199]		jr 		c,_SPRAllocateUndo 			; if done, then Undo.
+06BC: 223E06   [210]    		ld 		(_SPRRightUDGPosition+1),hl ; overwrite the code.
+06BF: 1821     [222]    		jr 		_SPRAllocateOkay
                         		;
                         		; 		Failed, so pop the saved UDG addresses on the stack and reset
                         		;	 	as if we hadn't allocated it. We haven't bumped the usage count yet.
                         		;
-06AA:                   _SPRAllocateUndo:
-06AA: D1       [10]     		pop 	de 							; address of UDG into DE
-06AB: 7A       [14]     		ld 		a,d 						; have we done the whole lot ?
-06AC: B3       [18]     		or 		e
-06AD: 37       [22]     		scf
-06AE: 281C     [29|34]  		jr 		z,_SPRAllocateExit 			; if so, e.g. popped $0000 with carry set.
+06C1:                   _SPRAllocateUndo:
+06C1: D1       [10]     		pop 	de 							; address of UDG into DE
+06C2: 7A       [14]     		ld 		a,d 						; have we done the whole lot ?
+06C3: B3       [18]     		or 		e
+06C4: 37       [22]     		scf
+06C5: 281C     [29|34]  		jr 		z,_SPRAllocateExit 			; if so, e.g. popped $0000 with carry set.
                         
-06B0: CB3A     [37]     		srl 	d 							; divide by 8 - will put the UDG number into E
-06B2: CB1B     [45]     		rr 		e
-06B4: CB3A     [53]     		srl 	d
-06B6: CB1B     [61]     		rr 		e
-06B8: CB3A     [69]     		srl 	d
-06BA: CB1B     [77]     		rr 		e
+06C7: CB3A     [37]     		srl 	d 							; divide by 8 - will put the UDG number into E
+06C9: CB1B     [45]     		rr 		e
+06CB: CB3A     [53]     		srl 	d
+06CD: CB1B     [61]     		rr 		e
+06CF: CB3A     [69]     		srl 	d
+06D1: CB1B     [77]     		rr 		e
                         		;
-06BC: 6B       [81]     		ld 		l,e 						; HL is the address of the original character for this UDG.
-06BD: 2608     [88]     		ld 		h,SPROriginalChar >> 8
-06BF: 7E       [95]     		ld 		a,(hl) 						; character the UDG replaced
-06C0: 36FF     [105]    		ld 		(hl),$FF 					; mark that UDG as now available
+06D3: 6B       [81]     		ld 		l,e 						; HL is the address of the original character for this UDG.
+06D4: 2608     [88]     		ld 		h,SPROriginalChar >> 8
+06D6: 7E       [95]     		ld 		a,(hl) 						; character the UDG replaced
+06D7: 36FF     [105]    		ld 		(hl),$FF 					; mark that UDG as now available
                         
-06C2: 260A     [112]    		ld 		h,SPRLowAddress >> 8 		; get screen address into DE
-06C4: 5E       [119]    		ld 		e,(hl)
-06C5: 260B     [126]    		ld 		h,SPRHighAddress >> 8
-06C7: 56       [133]    		ld 		d,(hl)
+06D9: 260A     [112]    		ld 		h,SPRLowAddress >> 8 		; get screen address into DE
+06DB: 5E       [119]    		ld 		e,(hl)
+06DC: 260B     [126]    		ld 		h,SPRHighAddress >> 8
+06DE: 56       [133]    		ld 		d,(hl)
                         
-06C8: 12       [140]    		ld 		(de),a 						; fix up screen
+06DF: 12       [140]    		ld 		(de),a 						; fix up screen
                         
-06C9: 18DF     [152]    		jr 		_SPRAllocateUndo 			; and see if there are any more to undo
+06E0: 18DF     [152]    		jr 		_SPRAllocateUndo 			; and see if there are any more to undo
                         		;
                         		; 		Worked, exit with carry clear.
                         		;
-06CB:                   _SPRAllocateOkay: 							; clear carry flag and exit.
-06CB: AF       [ 4]     		xor 	a
-06CC:                   _SPRAllocateExit:
-06CC: ED7B8207 [20]     		ld 		sp,(_SPRAllocSPTemp)		; get SP back
-06D0: FDE1     [34]     		pop 	iy 							; restore BC IY
-06D2: C1       [44]     		pop 	bc
-06D3: C9       [54]     		ret
+06E2:                   _SPRAllocateOkay: 							; clear carry flag and exit.
+06E2: AF       [ 4]     		xor 	a
+06E3:                   _SPRAllocateExit:
+06E3: ED7B9207 [20]     		ld 		sp,(_SPRAllocSPTemp)		; get SP back
+06E7: FDE1     [34]     		pop 	iy 							; restore BC IY
+06E9: C1       [44]     		pop 	bc
+06EA: C9       [54]     		ret
                         
                         ; *********************************************************************************************
                         ;
@@ -1587,73 +1624,73 @@
                         ;
                         ; *********************************************************************************************
                         
-06D4:                   _SPRAllocateOne:
-06D4: 3A8407   [13]     		ld 		a,(_SPRFirstUDGSprite)		; L = first sprite UDG
-06D7: 6F       [17]     		ld 		l,a
-06D8: FD7E00   [36]     		ld 		a,(iy+0) 					; is it a UDG already
-06DB: BD       [40]     		cp 		l 							; if so, we don't need to do anything.
-06DC: 3032     [47|52]  		jr 		nc,_SPRAllocateOneExit
+06EB:                   _SPRAllocateOne:
+06EB: 3A9407   [13]     		ld 		a,(_SPRFirstUDGSprite)		; L = first sprite UDG
+06EE: 6F       [17]     		ld 		l,a
+06EF: FD7E00   [36]     		ld 		a,(iy+0) 					; is it a UDG already
+06F2: BD       [40]     		cp 		l 							; if so, we don't need to do anything.
+06F3: 3032     [47|52]  		jr 		nc,_SPRAllocateOneExit
                         		;
                         		; 		Look for a free UDG, e.g. one where the stored character is $FF.
                         		;
-06DE: 2608     [54]     		ld 		h,SPROriginalChar >> 8
-06E0:                   _SPRAOFind: 								; look for an available UDG.
-06E0: 7E       [ 7]     		ld 		a,(hl)
-06E1: FEFF     [14]     		cp 		$FF
-06E3: 2805     [21|26]  		jr 		z,_SPRAOFound
-06E5: 2C       [25]     		inc 	l
-06E6: 20F8     [32|37]  		jr 		nz,_SPRAOFind
-06E8: 37       [36]     		scf 								; nope, we just can't do this one.
-06E9: C9       [46]     		ret
+06F5: 2608     [54]     		ld 		h,SPROriginalChar >> 8
+06F7:                   _SPRAOFind: 								; look for an available UDG.
+06F7: 7E       [ 7]     		ld 		a,(hl)
+06F8: FEFF     [14]     		cp 		$FF
+06FA: 2805     [21|26]  		jr 		z,_SPRAOFound
+06FC: 2C       [25]     		inc 	l
+06FD: 20F8     [32|37]  		jr 		nz,_SPRAOFind
+06FF: 37       [36]     		scf 								; nope, we just can't do this one.
+0700: C9       [46]     		ret
                         ;
                         ;  		Found a sprite we can allocate
                         ;
-06EA:                   _SPRAOFound:
+0701:                   _SPRAOFound:
                         		;
                         		; 		Store the character overwritten by the UDG
                         		;
-06EA: FD7E00   [19]     		ld 		a,(iy+0) 					; this is the original character e.g. what is underneath
-06ED: 77       [26]     		ld 		(hl),a 						; put in storage slot for original character
+0701: FD7E00   [19]     		ld 		a,(iy+0) 					; this is the original character e.g. what is underneath
+0704: 77       [26]     		ld 		(hl),a 						; put in storage slot for original character
                         		;
-06EE: FDE5     [41]     		push 	iy 							; save the address of that character so we can restore it.
-06F0: C1       [51]     		pop 	bc 							; when it drops to zero.
-06F1: 260A     [58]     		ld 		h,SPRLowAddress >> 8
-06F3: 71       [65]     		ld 		(hl),c
-06F4: 260B     [72]     		ld 		h,SPRHighAddress >> 8
-06F6: 70       [79]     		ld 		(hl),b
+0705: FDE5     [41]     		push 	iy 							; save the address of that character so we can restore it.
+0707: C1       [51]     		pop 	bc 							; when it drops to zero.
+0708: 260A     [58]     		ld 		h,SPRLowAddress >> 8
+070A: 71       [65]     		ld 		(hl),c
+070B: 260B     [72]     		ld 		h,SPRHighAddress >> 8
+070D: 70       [79]     		ld 		(hl),b
                         		;
                         		; 		Copy the graphic definition of the original character into the UDG.
                         		;
                         
-06F7: FD7E00   [98]     		ld 		a,(iy+0) 					; get the original character , e.g. the non UDG
-06FA: FD7500   [117]    		ld 		(iy+0),l 					; override it.
+070E: FD7E00   [98]     		ld 		a,(iy+0) 					; get the original character , e.g. the non UDG
+0711: FD7500   [117]    		ld 		(iy+0),l 					; override it.
                         		;
-06FD: CD1A07   [134]    		call 	_SPRCalculateDefinitionAddr ; HL is the graphic of the original character
-0700: EB       [138]    		ex 		de,hl
-0701: FD7E00   [157]    		ld 		a,(iy+0) 					; HL is the graphic of the UDG
-0704: CD1A07   [174]    		call 	_SPRCalculateDefinitionAddr
-0707: EB       [178]    		ex 		de,hl 						; we want it copied there
-0708: 010800   [188]    		ld 		bc,8 						; copy 8 bytes
-070B: EDB0     [204|21] 		ldir
+0714: CD3107   [134]    		call 	_SPRCalculateDefinitionAddr ; HL is the graphic of the original character
+0717: EB       [138]    		ex 		de,hl
+0718: FD7E00   [157]    		ld 		a,(iy+0) 					; HL is the graphic of the UDG
+071B: CD3107   [174]    		call 	_SPRCalculateDefinitionAddr
+071E: EB       [178]    		ex 		de,hl 						; we want it copied there
+071F: 010800   [188]    		ld 		bc,8 						; copy 8 bytes
+0722: EDB0     [204|21] 		ldir
                         
-070D: FD7E00   [223]    		ld 		a,(iy+0) 					; get the address of the UDG and exit with CC
-0710:                   _SPRAllocateOneExit;
-0710: CD1A07   [17]     		call 	_SPRCalculateDefinitionAddr ; get the definition address in HL
-0713: 3A8107   [30]     		ld 		a,(_SPRInitialYOffset) 		; adjust for initial Y offset
-0716: B5       [34]     		or 		l
-0717: 6F       [38]     		ld 		l,a
-0718: AF       [42]     		xor 	a 							; clear carry.
-0719: C9       [52]     		ret
+0724: FD7E00   [223]    		ld 		a,(iy+0) 					; get the address of the UDG and exit with CC
+0727:                   _SPRAllocateOneExit;
+0727: CD3107   [17]     		call 	_SPRCalculateDefinitionAddr ; get the definition address in HL
+072A: 3A9107   [30]     		ld 		a,(_SPRInitialYOffset) 		; adjust for initial Y offset
+072D: B5       [34]     		or 		l
+072E: 6F       [38]     		ld 		l,a
+072F: AF       [42]     		xor 	a 							; clear carry.
+0730: C9       [52]     		ret
                         ;
                         ; 		A is a character #, point HL to CRAM Address
                         ;
-071A:                   _SPRCalculateDefinitionAddr:
-071A: 6F       [ 4]     		ld 		l,a
-071B: 261E     [11]     		ld 		h,$F0/8
-071D: 29       [22]     		add 	hl,hl
-071E: 29       [33]     		add 	hl,hl
-071F: 29       [44]     		add 	hl,hl
-0720: C9       [54]     		ret
+0731:                   _SPRCalculateDefinitionAddr:
+0731: 6F       [ 4]     		ld 		l,a
+0732: 261E     [11]     		ld 		h,$F0/8
+0734: 29       [22]     		add 	hl,hl
+0735: 29       [33]     		add 	hl,hl
+0736: 29       [44]     		add 	hl,hl
+0737: C9       [54]     		ret
                         
                         ; *********************************************************************************************
                         ;
@@ -1661,30 +1698,30 @@
                         ;
                         ; *********************************************************************************************
                         
-0721:                   SPRAdjustUsageCounter:
-0721: FD6E00   [19]     		ld 		l,(iy+0) 					; point HL to the usage counter
-0724: 2609     [26]     		ld 		h,SPRUsageCount >> 8
-0726: DDCB077E [46]     		bit 	7,(ix+SPRstatus)			; if drawn status is non-zero we are erasing
-072A: 2002     [53|58]  		jr 		nz,_SPRDecrementUsage
-072C: 34       [64]     		inc 	(hl)						; increment usage counter and exit
-072D: C9       [74]     		ret
+0738:                   SPRAdjustUsageCounter:
+0738: FD6E00   [19]     		ld 		l,(iy+0) 					; point HL to the usage counter
+073B: 2609     [26]     		ld 		h,SPRUsageCount >> 8
+073D: DDCB077E [46]     		bit 	7,(ix+SPRstatus)			; if drawn status is non-zero we are erasing
+0741: 2002     [53|58]  		jr 		nz,_SPRDecrementUsage
+0743: 34       [64]     		inc 	(hl)						; increment usage counter and exit
+0744: C9       [74]     		ret
                         ;
-072E:                   _SPRDecrementUsage:
-072E: 35       [11]     		dec 	(hl) 						; one fewer usage
-072F: C0       [16|22]  		ret 	nz 							; still in use.
+0745:                   _SPRDecrementUsage:
+0745: 35       [11]     		dec 	(hl) 						; one fewer usage
+0746: C0       [16|22]  		ret 	nz 							; still in use.
                         		;
                         		; 		Count zero, free up. Could consider delaying this until actually needed?
                         		;
-0730: 260A     [23]     		ld 		h,SPRLowAddress >> 8 		; display address in DE
-0732: 5E       [30]     		ld 		e,(hl)
-0733: 260B     [37]     		ld 		h,SPRHighAddress >> 8
-0735: 56       [44]     		ld 		d,(hl)
-0736: 2608     [51]     		ld 		h,SPROriginalChar >> 8 		; original character written to DE
-0738: 7E       [58]     		ld 		a,(hl)
-0739: 12       [65]     		ld 		(de),a
+0747: 260A     [23]     		ld 		h,SPRLowAddress >> 8 		; display address in DE
+0749: 5E       [30]     		ld 		e,(hl)
+074A: 260B     [37]     		ld 		h,SPRHighAddress >> 8
+074C: 56       [44]     		ld 		d,(hl)
+074D: 2608     [51]     		ld 		h,SPROriginalChar >> 8 		; original character written to DE
+074F: 7E       [58]     		ld 		a,(hl)
+0750: 12       [65]     		ld 		(de),a
                         
-073A: 36FF     [75]     		ld 		(hl),$FF 					; mark the UDG as free again.
-073C: C9       [85]     		ret
+0751: 36FF     [75]     		ld 		(hl),$FF 					; mark the UDG as free again.
+0753: C9       [85]     		ret
                         
                         
                         ; *********************************************************************************************
@@ -1693,51 +1730,50 @@
                         ;
                         ; *********************************************************************************************
                         
-073D:                   SPRFlipDE:
-073D: 7A       [ 4]     		ld 	 	a,d 						; flip D
-073E: CD4F07   [21]     		call 	_SPRFlipA
-0741: 57       [25]     		ld 		d,a
-0742: DDCB0646 [45]     		bit 	0,(IX+SPRcontrol)  			; if width 1 exit.
-0746: C8       [50|56]  		ret 	z
+0754:                   SPRFlipDE:
+0754: 7A       [ 4]     		ld 	 	a,d 						; flip D
+0755: CD6607   [21]     		call 	_SPRFlipA
+0758: 57       [25]     		ld 		d,a
+0759: DDCB0646 [45]     		bit 	0,(IX+SPRcontrol)  			; if width 1 exit.
+075D: C8       [50|56]  		ret 	z
                         
-0747: 6B       [54]     		ld 		l,e 						; save E
-0748: 5F       [58]     		ld 		e,a 						; put flipped D into E
-0749: 7D       [62]     		ld 		a,l 						; get old E, flip into D
-074A: CD4F07   [79]     		call 	_SPRFlipA
-074D: 57       [83]     		ld 		d,a
-074E: C9       [93]     		ret
+075E: 6B       [54]     		ld 		l,e 						; save E
+075F: 5F       [58]     		ld 		e,a 						; put flipped D into E
+0760: 7D       [62]     		ld 		a,l 						; get old E, flip into D
+0761: CD6607   [79]     		call 	_SPRFlipA
+0764: 57       [83]     		ld 		d,a
+0765: C9       [93]     		ret
                         ;
                         ; 		Flip A
                         ;
-074F:                   _SPRFlipA:
-074F: B7       [ 4]     		or 		a 							; shortcut, reverse zero.
-0750: C8       [ 9|15]  		ret 	z
-0751: CD5807   [26]     		call 	_SPRFlipLow 				; flip the low nibble
-0754: 0F       [30]     		rrca 								; swap halves
-0755: 0F       [34]     		rrca
-0756: 0F       [38]     		rrca
-0757: 0F       [42]     		rrca 								; then fall through to flip high nibble.
-0758:                   _SPRFlipLow:
-0758: F5       [11]     		push 	af 							; save original
-0759: E60F     [18]     		and 	$0F 						; access the flip value.
-075B: C670     [25]     		add 	_SPRFlipTable & $FF
-075D: 6F       [29]     		ld 		l,a
-075E: 2607     [36]     		ld 		h,_SPRFlipTable >> 8
-0760: F1       [46]     		pop 	af 							; restore original
-0761: E6F0     [53]     		and 	$F0 						; replace lower nibble
-0763: B6       [60]     		or 		(hl)
-0764: C9       [70]     		ret
+0766:                   _SPRFlipA:
+0766: B7       [ 4]     		or 		a 							; shortcut, reverse zero.
+0767: C8       [ 9|15]  		ret 	z
+0768: CD6F07   [26]     		call 	_SPRFlipLow 				; flip the low nibble
+076B: 0F       [30]     		rrca 								; swap halves
+076C: 0F       [34]     		rrca
+076D: 0F       [38]     		rrca
+076E: 0F       [42]     		rrca 								; then fall through to flip high nibble.
+076F:                   _SPRFlipLow:
+076F: F5       [11]     		push 	af 							; save original
+0770: E60F     [18]     		and 	$0F 						; access the flip value.
+0772: C680     [25]     		add 	_SPRFlipTable & $FF
+0774: 6F       [29]     		ld 		l,a
+0775: 2607     [36]     		ld 		h,_SPRFlipTable >> 8
+0777: F1       [46]     		pop 	af 							; restore original
+0778: E6F0     [53]     		and 	$F0 						; replace lower nibble
+077A: B6       [60]     		or 		(hl)
+077B: C9       [70]     		ret
                         ;
                         ;		One Nibble Reversed.
                         ;
-0765: 00000000          		.align 	16,0 						; all in one page.
-0769: 00...             
+077C: 00000000          		.align 	16,0 						; all in one page.
                         
-0770:                   _SPRFlipTable:
-0770: 0008040C          		.db 	0,8,4,12,2,10,6,14
-0774: 020A060E          
-0778: 0109050D          		.db 	1,9,5,13,3,11,7,15
-077C: 030B070F          
+0780:                   _SPRFlipTable:
+0780: 0008040C          		.db 	0,8,4,12,2,10,6,14
+0784: 020A060E          
+0788: 0109050D          		.db 	1,9,5,13,3,11,7,15
+078C: 030B070F          
                         
                         ; *********************************************************************************************
                         ;
@@ -1745,17 +1781,17 @@
                         ;
                         ; *********************************************************************************************
                         
-0780:                   _SPRRowCount: 								; down counter for completed rows.
-0780: 00                		.db 	0
+0790:                   _SPRRowCount: 								; down counter for completed rows.
+0790: 00                		.db 	0
                         
-0781:                   _SPRInitialYOffset: 						; the initial vertical offset.
-0781: 00                		.db 	0
+0791:                   _SPRInitialYOffset: 						; the initial vertical offset.
+0791: 00                		.db 	0
                         
-0782:                   _SPRAllocSPTemp: 							; save SP when storing interim results on stack
-0782: 0000              		.dw 	0
+0792:                   _SPRAllocSPTemp: 							; save SP when storing interim results on stack
+0792: 0000              		.dw 	0
                         
-0784:                   _SPRFirstUDGSprite: 						; first sprite available as UDG.
-0784: 80                		.db 	$80
+0794:                   _SPRFirstUDGSprite: 						; first sprite available as UDG.
+0794: 80                		.db 	$80
                         
                         ; *********************************************************************************************
                         ;
@@ -1764,8 +1800,8 @@
                         ;
                         ; *********************************************************************************************
                         
-0785: 00000000          		.align 	256,0
-0789: 00...             
+0795: 00000000          		.align 	256,0
+0799: 00...             
                         
 0800:                   SPRDataBlock:
                         
@@ -1807,18 +1843,18 @@ Div16_Loop1            = $025D =   605          _runtime.asm:153
 Div16_Loop2            = $026E =   622          _runtime.asm:167
 Div16_NoAdd1           = $0265 =   613          _runtime.asm:159
 Div16_NoAdd2           = $0276 =   630          _runtime.asm:173
-M8_C_0_c45_            = $0343 =   835          _runtime.asm:629 (unused)
-M8_C_0_c45__end        = $034B =   843          _runtime.asm:639 (unused)
-M8_C_0_c60_            = $034B =   843          _runtime.asm:643 (unused)
-M8_C_0_c60__end        = $0353 =   851          _runtime.asm:649 (unused)
-M8_C_0_c61_            = $0353 =   851          _runtime.asm:653 (unused)
-M8_C_0_c61__end        = $035B =   859          _runtime.asm:660 (unused)
-M8_C_16_c47_           = $0380 =   896          _runtime.asm:714 (unused)
-M8_C_16_c47__end       = $0390 =   912          _runtime.asm:723 (unused)
-M8_C_4_c47_            = $036C =   876          _runtime.asm:698 (unused)
-M8_C_4_c47__end        = $0374 =   884          _runtime.asm:703 (unused)
-M8_C_8_c47_            = $0374 =   884          _runtime.asm:705 (unused)
-M8_C_8_c47__end        = $0380 =   896          _runtime.asm:712 (unused)
+M8_C_0_c45_            = $035A =   858          _runtime.asm:666 (unused)
+M8_C_0_c45__end        = $0362 =   866          _runtime.asm:676 (unused)
+M8_C_0_c60_            = $0362 =   866          _runtime.asm:680 (unused)
+M8_C_0_c60__end        = $036A =   874          _runtime.asm:686 (unused)
+M8_C_0_c61_            = $036A =   874          _runtime.asm:690 (unused)
+M8_C_0_c61__end        = $0372 =   882          _runtime.asm:697 (unused)
+M8_C_16_c47_           = $0397 =   919          _runtime.asm:751 (unused)
+M8_C_16_c47__end       = $03A7 =   935          _runtime.asm:760 (unused)
+M8_C_4_c47_            = $0383 =   899          _runtime.asm:735 (unused)
+M8_C_4_c47__end        = $038B =   907          _runtime.asm:740 (unused)
+M8_C_8_c47_            = $038B =   907          _runtime.asm:742 (unused)
+M8_C_8_c47__end        = $0397 =   919          _runtime.asm:749 (unused)
 M8_C__c42_             = $02E8 =   744          _runtime.asm:378 (unused)
 M8_C__c42__end         = $02EB =   747          _runtime.asm:380 (unused)
 M8_C__c43__c33_        = $0286 =   646          _runtime.asm:212 (unused)
@@ -1831,8 +1867,8 @@ M8_C__c60_             = $0208 =   520          _runtime.asm:19 (unused)
 M8_C__c60__end         = $021D =   541          _runtime.asm:38 (unused)
 M8_C__c61_             = $021D =   541          _runtime.asm:42 (unused)
 M8_C__c61__end         = $0229 =   553          _runtime.asm:53 (unused)
-M8_C_abs               = $0393 =   915          _runtime.asm:732 (unused)
-M8_C_abs_end           = $0399 =   921          _runtime.asm:736 (unused)
+M8_C_abs               = $03AA =   938          _runtime.asm:769 (unused)
+M8_C_abs_end           = $03B0 =   944          _runtime.asm:773 (unused)
 M8_C_and               = $0231 =   561          _runtime.asm:74 (unused)
 M8_C_and_end           = $0238 =   568          _runtime.asm:82 (unused)
 M8_C_boot              = $0202 =   514          _runtime.asm:2 (unused)
@@ -1844,66 +1880,68 @@ M8_C_halt              = $02E4 =   740          _runtime.asm:354 (unused)
 M8_C_halt_end          = $02E7 =   743          _runtime.asm:358 (unused)
 M8_C_mod               = $024D =   589          _runtime.asm:132 (unused)
 M8_C_mod_end           = $0253 =   595          _runtime.asm:137 (unused)
-M8_C_not               = $039C =   924          _runtime.asm:748 (unused)
-M8_C_not_end           = $03A3 =   931          _runtime.asm:756 (unused)
+M8_C_not               = $03B3 =   947          _runtime.asm:785 (unused)
+M8_C_not_end           = $03BA =   954          _runtime.asm:793 (unused)
 M8_C_or                = $0238 =   568          _runtime.asm:86 (unused)
 M8_C_or_end            = $023F =   575          _runtime.asm:94 (unused)
 M8_C_p_c33_            = $029C =   668          _runtime.asm:251 (unused)
 M8_C_p_c33__end        = $02A6 =   678          _runtime.asm:261 (unused)
 M8_C_p_c64_            = $0293 =   659          _runtime.asm:239 (unused)
 M8_C_p_c64__end        = $029C =   668          _runtime.asm:247 (unused)
-M8_C_random            = $03B2 =   946          _runtime.asm:778 (unused)
-M8_C_spr_c46_control   = $0444 =  1092          _runtime.asm:951 (unused)
-M8_C_spr_c46_control_end = $044F =  1103          _runtime.asm:957 (unused)
-M8_C_spr_c46_hflip     = $044F =  1103          _runtime.asm:965 (unused)
-M8_C_spr_c46_hflip_end = $0464 =  1124          _runtime.asm:976 (unused)
-M8_C_spr_c46_hide_c46_all = $04BB =  1211          _runtime.asm:1051 (unused)
-M8_C_spr_c46_hide_c46_all_end = $04DB =  1243          _runtime.asm:1072 (unused)
-M8_C_spr_c46_image     = $0436 =  1078          _runtime.asm:936 (unused)
-M8_C_spr_c46_image_end = $0444 =  1092          _runtime.asm:943 (unused)
-M8_C_spr_c46_move      = $041D =  1053          _runtime.asm:916 (unused)
-M8_C_spr_c46_move_end  = $0436 =  1078          _runtime.asm:928 (unused)
-M8_C_spr_c46_reset     = $03D3 =   979          _runtime.asm:839 (unused)
-M8_C_spr_c46_reset_end = $03FC =  1020          _runtime.asm:872 (unused)
-M8_C_spr_c46_select    = $03FC =  1020          _runtime.asm:881 (unused)
-M8_C_spr_c46_select_end = $041D =  1053          _runtime.asm:908 (unused)
-M8_C_spr_c46_update    = $047F =  1151          _runtime.asm:1001 (unused)
-M8_C_spr_c46_update_end = $04BB =  1211          _runtime.asm:1043 (unused)
-M8_C_spr_c46_vflip     = $0464 =  1124          _runtime.asm:978 (unused)
-M8_C_spr_c46_vflip_end = $047F =  1151          _runtime.asm:993 (unused)
-M8_C_sprite_c46_udg_c46_base_c33_ = $050C =  1292          _runtime.asm:1206 (unused)
-M8_C_sprite_c46_udg_c46_base_c33__end = $0513 =  1299          _runtime.asm:1213 (unused)
+M8_C_random            = $03C9 =   969          _runtime.asm:815 (unused)
+M8_C_spr_c46_control   = $045B =  1115          _runtime.asm:988 (unused)
+M8_C_spr_c46_control_end = $0466 =  1126          _runtime.asm:994 (unused)
+M8_C_spr_c46_hflip     = $0466 =  1126          _runtime.asm:1002 (unused)
+M8_C_spr_c46_hflip_end = $047B =  1147          _runtime.asm:1013 (unused)
+M8_C_spr_c46_hide_c46_all = $04D2 =  1234          _runtime.asm:1088 (unused)
+M8_C_spr_c46_hide_c46_all_end = $04F2 =  1266          _runtime.asm:1109 (unused)
+M8_C_spr_c46_image     = $044D =  1101          _runtime.asm:973 (unused)
+M8_C_spr_c46_image_end = $045B =  1115          _runtime.asm:980 (unused)
+M8_C_spr_c46_move      = $0434 =  1076          _runtime.asm:953 (unused)
+M8_C_spr_c46_move_end  = $044D =  1101          _runtime.asm:965 (unused)
+M8_C_spr_c46_reset     = $03EA =  1002          _runtime.asm:876 (unused)
+M8_C_spr_c46_reset_end = $0413 =  1043          _runtime.asm:909 (unused)
+M8_C_spr_c46_select    = $0413 =  1043          _runtime.asm:918 (unused)
+M8_C_spr_c46_select_end = $0434 =  1076          _runtime.asm:945 (unused)
+M8_C_spr_c46_update    = $0496 =  1174          _runtime.asm:1038 (unused)
+M8_C_spr_c46_update_end = $04D2 =  1234          _runtime.asm:1080 (unused)
+M8_C_spr_c46_vflip     = $047B =  1147          _runtime.asm:1015 (unused)
+M8_C_spr_c46_vflip_end = $0496 =  1174          _runtime.asm:1030 (unused)
+M8_C_sprite_c46_udg_c46_base_c33_ = $0523 =  1315          _runtime.asm:1243 (unused)
+M8_C_sprite_c46_udg_c46_base_c33__end = $052A =  1322          _runtime.asm:1250 (unused)
 M8_C_string_c46_inline = $02A7 =   679          _runtime.asm:281 (unused)
-M8_C_strlen            = $03A3 =   931          _runtime.asm:760 (unused)
-M8_C_strlen_end        = $03B2 =   946          _runtime.asm:774 (unused)
+M8_C_strlen            = $03BA =   954          _runtime.asm:797 (unused)
+M8_C_strlen_end        = $03C9 =   969          _runtime.asm:811 (unused)
+M8_C_tend_c46_handler  = $033D =   829          _runtime.asm:603 (unused)
+M8_C_tend_c46_handler_end = $0354 =   852          _runtime.asm:628 (unused)
 M8_C_xor               = $023F =   575          _runtime.asm:98 (unused)
 M8_C_xor_end           = $0246 =   582          _runtime.asm:106 (unused)
-M8_M_16_c42_           = $0361 =   865          _runtime.asm:679 (unused)
-M8_M_16_c42__end       = $0365 =   869          _runtime.asm:684 (unused)
-M8_M_256_c42_          = $0365 =   869          _runtime.asm:686 (unused)
-M8_M_256_c42__end      = $0368 =   872          _runtime.asm:689 (unused)
-M8_M_256_c47_          = $0390 =   912          _runtime.asm:725 (unused)
-M8_M_256_c47__end      = $0393 =   915          _runtime.asm:728 (unused)
-M8_M_2_c42_            = $035B =   859          _runtime.asm:664 (unused)
-M8_M_2_c42__end        = $035C =   860          _runtime.asm:666 (unused)
-M8_M_2_c47_            = $0368 =   872          _runtime.asm:693 (unused)
-M8_M_2_c47__end        = $036C =   876          _runtime.asm:696 (unused)
-M8_M_4_c42_            = $035C =   860          _runtime.asm:668 (unused)
-M8_M_4_c42__end        = $035E =   862          _runtime.asm:671 (unused)
-M8_M_8_c42_            = $035E =   862          _runtime.asm:673 (unused)
-M8_M_8_c42__end        = $0361 =   865          _runtime.asm:677 (unused)
+M8_M_16_c42_           = $0378 =   888          _runtime.asm:716 (unused)
+M8_M_16_c42__end       = $037C =   892          _runtime.asm:721 (unused)
+M8_M_256_c42_          = $037C =   892          _runtime.asm:723 (unused)
+M8_M_256_c42__end      = $037F =   895          _runtime.asm:726 (unused)
+M8_M_256_c47_          = $03A7 =   935          _runtime.asm:762 (unused)
+M8_M_256_c47__end      = $03AA =   938          _runtime.asm:765 (unused)
+M8_M_2_c42_            = $0372 =   882          _runtime.asm:701 (unused)
+M8_M_2_c42__end        = $0373 =   883          _runtime.asm:703 (unused)
+M8_M_2_c47_            = $037F =   895          _runtime.asm:730 (unused)
+M8_M_2_c47__end        = $0383 =   899          _runtime.asm:733 (unused)
+M8_M_4_c42_            = $0373 =   883          _runtime.asm:705 (unused)
+M8_M_4_c42__end        = $0375 =   885          _runtime.asm:708 (unused)
+M8_M_8_c42_            = $0375 =   885          _runtime.asm:710 (unused)
+M8_M_8_c42__end        = $0378 =   888          _runtime.asm:714 (unused)
 M8_M__c33_             = $027E =   638          _runtime.asm:194 (unused)
 M8_M__c33__end         = $0282 =   642          _runtime.asm:199 (unused)
 M8_M__c43_             = $0230 =   560          _runtime.asm:68 (unused)
-M8_M__c43__c43_        = $0340 =   832          _runtime.asm:616 (unused)
-M8_M__c43__c43__c43_   = $0341 =   833          _runtime.asm:622 (unused)
-M8_M__c43__c43__c43__end = $0343 =   835          _runtime.asm:625 (unused)
-M8_M__c43__c43__end    = $0341 =   833          _runtime.asm:618 (unused)
+M8_M__c43__c43_        = $0357 =   855          _runtime.asm:653 (unused)
+M8_M__c43__c43__c43_   = $0358 =   856          _runtime.asm:659 (unused)
+M8_M__c43__c43__c43__end = $035A =   858          _runtime.asm:662 (unused)
+M8_M__c43__c43__end    = $0358 =   856          _runtime.asm:655 (unused)
 M8_M__c43__end         = $0231 =   561          _runtime.asm:70 (unused)
-M8_M__c45__c45_        = $033F =   831          _runtime.asm:610 (unused)
-M8_M__c45__c45__c45_   = $033D =   829          _runtime.asm:603 (unused)
-M8_M__c45__c45__c45__end = $033F =   831          _runtime.asm:606 (unused)
-M8_M__c45__c45__end    = $0340 =   832          _runtime.asm:612 (unused)
+M8_M__c45__c45_        = $0356 =   854          _runtime.asm:647 (unused)
+M8_M__c45__c45__c45_   = $0354 =   852          _runtime.asm:640 (unused)
+M8_M__c45__c45__c45__end = $0356 =   854          _runtime.asm:643 (unused)
+M8_M__c45__c45__end    = $0357 =   855          _runtime.asm:649 (unused)
 M8_M__c59_             = $02A6 =   678          _runtime.asm:275 (unused)
 M8_M__c59__end         = $02A7 =   679          _runtime.asm:277 (unused)
 M8_M__c64_             = $0282 =   642          _runtime.asm:203 (unused)
@@ -1932,8 +1970,8 @@ M8_M_bc_c62_r          = $0331 =   817          _runtime.asm:563 (unused)
 M8_M_bc_c62_r_end      = $0333 =   819          _runtime.asm:566 (unused)
 M8_M_break             = $02E7 =   743          _runtime.asm:362 (unused)
 M8_M_break_end         = $02E8 =   744          _runtime.asm:364 (unused)
-M8_M_bswap             = $0399 =   921          _runtime.asm:740 (unused)
-M8_M_bswap_end         = $039C =   924          _runtime.asm:744 (unused)
+M8_M_bswap             = $03B0 =   944          _runtime.asm:777 (unused)
+M8_M_bswap_end         = $03B3 =   947          _runtime.asm:781 (unused)
 M8_M_c_c33_            = $028F =   655          _runtime.asm:226 (unused)
 M8_M_c_c33__end        = $0290 =   656          _runtime.asm:228 (unused)
 M8_M_c_c62_a           = $030E =   782          _runtime.asm:451 (unused)
@@ -1975,88 +2013,88 @@ M8_M_y_c62_a_end       = $031E =   798          _runtime.asm:482 (unused)
 M8_M_y_c62_r           = $0339 =   825          _runtime.asm:585 (unused)
 M8_M_y_c62_r_end       = $033B =   827          _runtime.asm:587 (unused)
 MULTMultiply16         = $02EB =   747          _runtime.asm:388
-SPMControl             = $0444 =  1092          _runtime.asm:952 (unused)
-SPMCount               = $04DD =  1245          _runtime.asm:1076
-SPMCurrent             = $04DF =  1247          _runtime.asm:1078
-SPMData                = $04DB =  1243          _runtime.asm:1074
-SPMHFlip               = $044F =  1103          _runtime.asm:966 (unused)
-SPMHideAll             = $04BB =  1211          _runtime.asm:1053 (unused)
-SPMMove                = $041D =  1053          _runtime.asm:917 (unused)
-SPMReset               = $03D3 =   979          _runtime.asm:841 (unused)
-SPMSelect              = $03FC =  1020          _runtime.asm:883 (unused)
-SPMUnused              = $04E1 =  1249          _runtime.asm:1080
-SPMUpdate              = $047F =  1151          _runtime.asm:1003 (unused)
-SPMVFlip               = $0464 =  1124          _runtime.asm:979 (unused)
-SPRAdjustUsageCounter  = $0721 =  1825          _runtime.asm:1657
-SPRDataBlock           = $0800 =  2048          _runtime.asm:1759
-SPRDataBlockEnd        = $0C00 =  3072          _runtime.asm:1781
-SPRFlipDE              = $073D =  1853          _runtime.asm:1689
-SPRHighAddress         = $0B00 =  2816          _runtime.asm:1778
-SPRImage               = $0436 =  1078          _runtime.asm:937 (unused)
-SPRInitialise          = $04F1 =  1265          _runtime.asm:1173
-SPRLowAddress          = $0A00 =  2560          _runtime.asm:1776
-SPROriginalChar        = $0800 =  2048          _runtime.asm:1765
-SPRUsageCount          = $0900 =  2304          _runtime.asm:1771
-SPRcontrol             = $0006 =     6          _runtime.asm:1160
-SPRgraphics            = $0004 =     4          _runtime.asm:1159
-SPRstatus              = $0007 =     7          _runtime.asm:1162
-SPRx                   = $0000 =     0          _runtime.asm:1157
-SPRy                   = $0002 =     2          _runtime.asm:1158
-SpriteSetLowestUDG     = $050C =  1292          _runtime.asm:1207 (unused)
-SpriteXDraw            = $0513 =  1299          _runtime.asm:1221
-SpriteXErase           = $051A =  1306          _runtime.asm:1225
-SpriteXToggle          = $051F =  1311          _runtime.asm:1228
+SPMControl             = $045B =  1115          _runtime.asm:989 (unused)
+SPMCount               = $04F4 =  1268          _runtime.asm:1113
+SPMCurrent             = $04F6 =  1270          _runtime.asm:1115
+SPMData                = $04F2 =  1266          _runtime.asm:1111
+SPMHFlip               = $0466 =  1126          _runtime.asm:1003 (unused)
+SPMHideAll             = $04D2 =  1234          _runtime.asm:1090 (unused)
+SPMMove                = $0434 =  1076          _runtime.asm:954 (unused)
+SPMReset               = $03EA =  1002          _runtime.asm:878 (unused)
+SPMSelect              = $0413 =  1043          _runtime.asm:920 (unused)
+SPMUnused              = $04F8 =  1272          _runtime.asm:1117
+SPMUpdate              = $0496 =  1174          _runtime.asm:1040 (unused)
+SPMVFlip               = $047B =  1147          _runtime.asm:1016 (unused)
+SPRAdjustUsageCounter  = $0738 =  1848          _runtime.asm:1694
+SPRDataBlock           = $0800 =  2048          _runtime.asm:1796
+SPRDataBlockEnd        = $0C00 =  3072          _runtime.asm:1818
+SPRFlipDE              = $0754 =  1876          _runtime.asm:1726
+SPRHighAddress         = $0B00 =  2816          _runtime.asm:1815
+SPRImage               = $044D =  1101          _runtime.asm:974 (unused)
+SPRInitialise          = $0508 =  1288          _runtime.asm:1210
+SPRLowAddress          = $0A00 =  2560          _runtime.asm:1813
+SPROriginalChar        = $0800 =  2048          _runtime.asm:1802
+SPRUsageCount          = $0900 =  2304          _runtime.asm:1808
+SPRcontrol             = $0006 =     6          _runtime.asm:1197
+SPRgraphics            = $0004 =     4          _runtime.asm:1196
+SPRstatus              = $0007 =     7          _runtime.asm:1199
+SPRx                   = $0000 =     0          _runtime.asm:1194
+SPRy                   = $0002 =     2          _runtime.asm:1195
+SpriteSetLowestUDG     = $0523 =  1315          _runtime.asm:1244 (unused)
+SpriteXDraw            = $052A =  1322          _runtime.asm:1258
+SpriteXErase           = $0531 =  1329          _runtime.asm:1262
+SpriteXToggle          = $0536 =  1334          _runtime.asm:1265
 _SILAdvance            = $02AC =   684          _runtime.asm:286
-_SLNExit               = $03B0 =   944          _runtime.asm:771
-_SLNLoop               = $03A8 =   936          _runtime.asm:764
-_SPCTExit              = $0477 =  1143          _runtime.asm:988
-_SPMClear              = $03E0 =   992          _runtime.asm:851
-_SPMClear2             = $03E2 =   994          _runtime.asm:853
-_SPMGeneralExit        = $042F =  1071          _runtime.asm:924
-_SPMHideLoop           = $04CB =  1227          _runtime.asm:1062
-_SPMSExit              = $0416 =  1046          _runtime.asm:902
-_SPMSFail              = $0413 =  1043          _runtime.asm:900
-_SPMUpdateLoop         = $048D =  1165          _runtime.asm:1013
-_SPMUpdateOne          = $04A2 =  1186          _runtime.asm:1030
-_SPRAOFind             = $06E0 =  1760          _runtime.asm:1593
-_SPRAOFound            = $06EA =  1770          _runtime.asm:1604
-_SPRARNotErasing       = $0680 =  1664          _runtime.asm:1508
-_SPRAdjustGraphicPtr   = $05F0 =  1520          _runtime.asm:1379
-_SPRAllocSPTemp        = $0782 =  1922          _runtime.asm:1744
-_SPRAllocateExit       = $06CC =  1740          _runtime.asm:1570
-_SPRAllocateOkay       = $06CB =  1739          _runtime.asm:1568
-_SPRAllocateOne        = $06D4 =  1748          _runtime.asm:1583
-_SPRAllocateOneExit    = $0710 =  1808          _runtime.asm:1633
-_SPRAllocateRow        = $0669 =  1641          _runtime.asm:1494
-_SPRAllocateUndo       = $06AA =  1706          _runtime.asm:1538
-_SPRAuNotRight         = $05DE =  1502          _runtime.asm:1360
-_SPRCalcPosition       = $054B =  1355          _runtime.asm:1263
-_SPRCalculateDefinitionAddr = $071A =  1818          _runtime.asm:1643
-_SPRDecrementUsage     = $072E =  1838          _runtime.asm:1665
-_SPRDrawEnd            = $062C =  1580          _runtime.asm:1433
-_SPRExit               = $065A =  1626          _runtime.asm:1471
-_SPRFetchGraphicPtr    = $05E0 =  1504          _runtime.asm:1367
-_SPRFineHorizontalShift = $0602 =  1538          _runtime.asm:1392
-_SPRFirstUDGSprite     = $0784 =  1924          _runtime.asm:1747
-_SPRFlipA              = $074F =  1871          _runtime.asm:1705
-_SPRFlipLow            = $0758 =  1880          _runtime.asm:1713
-_SPRFlipTable          = $0770 =  1904          _runtime.asm:1728
-_SPRHaveGraphicData    = $05F0 =  1520          _runtime.asm:1377
-_SPRInitialYOffset     = $0781 =  1921          _runtime.asm:1741
-_SPRLeftUDGPosition    = $0615 =  1557          _runtime.asm:1417
-_SPRMiddleUDGPosition  = $061A =  1562          _runtime.asm:1421
-_SPRNextRowUDG         = $05E0 =  1504          _runtime.asm:1365
-_SPRNoHFlip            = $0600 =  1536          _runtime.asm:1389
-_SPRRangeFail          = $0548 =  1352          _runtime.asm:1258
-_SPRRightUDGPosition   = $0626 =  1574          _runtime.asm:1428
-_SPRRowCount           = $0780 =  1920          _runtime.asm:1738
-_SPRSGANotDoubleHeight = $05B0 =  1456          _runtime.asm:1330
-_SPRSGANotDoubleWidth  = $059E =  1438          _runtime.asm:1318
-_SPRSGANotVFlip        = $05BC =  1468          _runtime.asm:1340
-_SPRSingleHeight       = $058B =  1419          _runtime.asm:1307
-_SPRStartNextCharacterRow = $05C3 =  1475          _runtime.asm:1346
-_SPRUsageReset         = $0504 =  1284          _runtime.asm:1192
-_SPRZeroBlock          = $04F6 =  1270          _runtime.asm:1180
+_SLNExit               = $03C7 =   967          _runtime.asm:808
+_SLNLoop               = $03BF =   959          _runtime.asm:801
+_SPCTExit              = $048E =  1166          _runtime.asm:1025
+_SPMClear              = $03F7 =  1015          _runtime.asm:888
+_SPMClear2             = $03F9 =  1017          _runtime.asm:890
+_SPMGeneralExit        = $0446 =  1094          _runtime.asm:961
+_SPMHideLoop           = $04E2 =  1250          _runtime.asm:1099
+_SPMSExit              = $042D =  1069          _runtime.asm:939
+_SPMSFail              = $042A =  1066          _runtime.asm:937
+_SPMUpdateLoop         = $04A4 =  1188          _runtime.asm:1050
+_SPMUpdateOne          = $04B9 =  1209          _runtime.asm:1067
+_SPRAOFind             = $06F7 =  1783          _runtime.asm:1630
+_SPRAOFound            = $0701 =  1793          _runtime.asm:1641
+_SPRARNotErasing       = $0697 =  1687          _runtime.asm:1545
+_SPRAdjustGraphicPtr   = $0607 =  1543          _runtime.asm:1416
+_SPRAllocSPTemp        = $0792 =  1938          _runtime.asm:1781
+_SPRAllocateExit       = $06E3 =  1763          _runtime.asm:1607
+_SPRAllocateOkay       = $06E2 =  1762          _runtime.asm:1605
+_SPRAllocateOne        = $06EB =  1771          _runtime.asm:1620
+_SPRAllocateOneExit    = $0727 =  1831          _runtime.asm:1670
+_SPRAllocateRow        = $0680 =  1664          _runtime.asm:1531
+_SPRAllocateUndo       = $06C1 =  1729          _runtime.asm:1575
+_SPRAuNotRight         = $05F5 =  1525          _runtime.asm:1397
+_SPRCalcPosition       = $0562 =  1378          _runtime.asm:1300
+_SPRCalculateDefinitionAddr = $0731 =  1841          _runtime.asm:1680
+_SPRDecrementUsage     = $0745 =  1861          _runtime.asm:1702
+_SPRDrawEnd            = $0643 =  1603          _runtime.asm:1470
+_SPRExit               = $0671 =  1649          _runtime.asm:1508
+_SPRFetchGraphicPtr    = $05F7 =  1527          _runtime.asm:1404
+_SPRFineHorizontalShift = $0619 =  1561          _runtime.asm:1429
+_SPRFirstUDGSprite     = $0794 =  1940          _runtime.asm:1784
+_SPRFlipA              = $0766 =  1894          _runtime.asm:1742
+_SPRFlipLow            = $076F =  1903          _runtime.asm:1750
+_SPRFlipTable          = $0780 =  1920          _runtime.asm:1765
+_SPRHaveGraphicData    = $0607 =  1543          _runtime.asm:1414
+_SPRInitialYOffset     = $0791 =  1937          _runtime.asm:1778
+_SPRLeftUDGPosition    = $062C =  1580          _runtime.asm:1454
+_SPRMiddleUDGPosition  = $0631 =  1585          _runtime.asm:1458
+_SPRNextRowUDG         = $05F7 =  1527          _runtime.asm:1402
+_SPRNoHFlip            = $0617 =  1559          _runtime.asm:1426
+_SPRRangeFail          = $055F =  1375          _runtime.asm:1295
+_SPRRightUDGPosition   = $063D =  1597          _runtime.asm:1465
+_SPRRowCount           = $0790 =  1936          _runtime.asm:1775
+_SPRSGANotDoubleHeight = $05C7 =  1479          _runtime.asm:1367
+_SPRSGANotDoubleWidth  = $05B5 =  1461          _runtime.asm:1355
+_SPRSGANotVFlip        = $05D3 =  1491          _runtime.asm:1377
+_SPRSingleHeight       = $05A2 =  1442          _runtime.asm:1344
+_SPRStartNextCharacterRow = $05DA =  1498          _runtime.asm:1383
+_SPRUsageReset         = $051B =  1307          _runtime.asm:1229
+_SPRZeroBlock          = $050D =  1293          _runtime.asm:1217
 __Core__Mult_Loop      = $02F2 =   754          _runtime.asm:394
 __Core__Mult_Shift     = $02F7 =   759          _runtime.asm:398
 __copy_exit            = $02D0 =   720          _runtime.asm:323
@@ -2065,12 +2103,13 @@ __fill_loop            = $02D9 =   729          _runtime.asm:339
 __halt_loop            = $02E4 =   740          _runtime.asm:355
 __less_returnc         = $0216 =   534          _runtime.asm:32
 __less_samesign        = $0211 =   529          _runtime.asm:27
-__negate               = $0343 =   835          _runtime.asm:630
+__negate               = $035A =   858          _runtime.asm:667
 _end                   = $0C00 =  3072          :1 (unused)
-_randomSeed1           = $03CF =   975          _runtime.asm:800
-_randomSeed2           = $03D1 =   977          _runtime.asm:802
+_randomSeed1           = $03E6 =   998          _runtime.asm:837
+_randomSeed2           = $03E8 =  1000          _runtime.asm:839
 _size                  = $09FE =  2558          :1 (unused)
+_tend_loop             = $0348 =   840          _runtime.asm:616
 
 
-total time: 0.0082 sec.
+total time: 0.0096 sec.
 no errors

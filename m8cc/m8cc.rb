@@ -239,11 +239,11 @@ end
 
 # *******************************************************************************************************************************
 #
-# 														  Loop Handlers
+# 														For/Next Loop Handlers
 #
 # *******************************************************************************************************************************
 
-class TimesHandler < ImmediateWord
+class ForHandler < ImmediateWord
 	@@address = 0
 	def compile(bc,dict)
 		if get_value == 0 
@@ -251,13 +251,34 @@ class TimesHandler < ImmediateWord
 			@@address = bc.get_pc 																	# get loop position.
 			bc.add_byte(0xE5) 																		# Push HL			
 		else 
-			dict.get("tend.handler").compile(bc,dict) 												# Compile tend code handler.
+			dict.get("next.handler").compile(bc,dict) 												# Compile next code handler.
 			back = bc.get_pc - @@address 															# loop back amount from offset pos
-			raise M8Exception.new("Times loop too large") if back >= 0x100  						# too far.
+			raise M8Exception.new("For loop too large") if back >= 0x100  							# too far.
 			bc.add_byte back 																		# compile back branch.
 		end
 	end
 end 
+
+# *******************************************************************************************************************************
+#
+# 														  Repeat Handler
+#
+# *******************************************************************************************************************************
+
+class RepeatHandler < ImmediateWord
+	@@address = 0
+	def compile(bc,dict)
+		if get_value == 0  																			# REPEAT
+			@@address = bc.get_pc 																	# get loop position.
+		else  																						# UNTIL or -UNTIL
+			ctrl = @value < 0 ? "brpos.bwd":"brzero.bwd"											# get check.
+			dict.get(ctrl).compile(bc,dict) 														# Compile until/-until
+			back = bc.get_pc - @@address 															# loop back amount from offset pos
+			raise M8Exception.new("repeat loop too large") if back >= 0x100  						# too far.
+			bc.add_byte back 																		# compile back branch.
+		end
+	end
+end
 
 # *******************************************************************************************************************************
 #
@@ -324,8 +345,11 @@ class Compiler
 		@dictionary.add SaveModifier.new("!!",-1)
 		@dictionary.add ConstantHandler.new("constant",-1)
 		@dictionary.add VariableHandler.new("variable",-1)
-		@dictionary.add TimesHandler.new("times",0)
-		@dictionary.add TimesHandler.new("tend",1)
+		@dictionary.add ForHandler.new("for",0)
+		@dictionary.add ForHandler.new("next",1)
+		@dictionary.add RepeatHandler.new("repeat",0)
+		@dictionary.add RepeatHandler.new("until",1)
+		@dictionary.add RepeatHandler.new("-until",-1)
 	end
 	#
 	# 		Compile an array of lines/line
@@ -406,23 +430,16 @@ class Compiler
 end
 
 code = '''
-:screen variable 
+:scr variable
 
-:test2 
-	ab>r screen @ c! 1 screen +! r>ab 
-;
-
+:writech ab>r scr @@ c! 1 scr +! r>ab ;
 :test 
-	$F800 screen ! 
-	1024 times 
-		test2
-	tend
-	break 
+	$f800 scr !!
+	10 for 65 + writech next halt
 '''.split("\n")
 
 cp = Compiler.new
 cp.compile_block code
 cp.write_binary
 
-# use of IX in string constant.
 # repeat/until if/else/then

@@ -16,16 +16,16 @@
 ; ***************************************************************************************
 
 ;; [CALL] 	string.inline
+		di
 		ex 		de,hl 								; swap of DE & HL required by spec
-		ex 		(sp),hl 							; start of string -> HL & IX
-		push 	hl 									
-		pop 	ix
+		ex 		(sp),hl 							; start of string -> HL
+		push 	hl 									; push start of string on stack.
 _SILAdvance:
-		ld 		a,(ix+0) 							; advance over string
-		inc 	ix
+		ld 		a,(hl) 								; advance over string
+		inc 	hl
 		or 		a
 		jr 		nz,_SILAdvance
-		ex 		(sp),ix 							; correct return address
+		ex 		(sp),hl 							; correct return address
 		ret		
 ; [END]
 

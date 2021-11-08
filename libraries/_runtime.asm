@@ -279,16 +279,16 @@ M8_M__c59__end:
 ; ***************************************************************************************
 
 M8_C_string_c46_inline:
+		di
 		ex 		de,hl 								; swap of DE & HL required by spec
-		ex 		(sp),hl 							; start of string -> HL & IX
-		push 	hl
-		pop 	ix
+		ex 		(sp),hl 							; start of string -> HL
+		push 	hl 									; push start of string on stack.
 _SILAdvance:
-		ld 		a,(ix+0) 							; advance over string
-		inc 	ix
+		ld 		a,(hl) 								; advance over string
+		inc 	hl
 		or 		a
 		jr 		nz,_SILAdvance
-		ex 		(sp),ix 							; correct return address
+		ex 		(sp),hl 							; correct return address
 		ret
 ; [END]
 
@@ -600,7 +600,13 @@ M8_M_r_c62_y_end:
 ; ***************************************************************************************
 ; ***************************************************************************************
 
-M8_C_tend_c46_handler:
+; ***************************************************************************************
+;
+;		Handles NEXT. The loop counter is on TOS below the return address of this call
+;
+; ***************************************************************************************
+
+M8_C_next_c46_handler:
 		exx 								; use alt registers
 		pop 	hl 							; return/offset address.
 		pop 	de 							; this is the count
@@ -625,7 +631,90 @@ _tend_loop:									; we are going round the loop, return HL count DE
 		pop 	hl 							; count into HL
 		ret 								; and exit
 
-M8_C_tend_c46_handler_end:
+M8_C_next_c46_handler_end:
+
+; ***************************************************************************************
+;
+;			Branches Forwards/Backwards Zero/Positive tests and Always
+;
+; ***************************************************************************************
+
+
+M8_C_brzero_c46_fwd:
+		xor 	a
+		jr 		_zeroBranch
+M8_C_brzero_c46_fwd_end:
+
+
+M8_C_brzero_c46_bwd:
+		scf
+		jr 		_zeroBranch
+M8_C_brzero_c46_bwd_end:
+
+M8_C_brpos_c46_fwd:
+		xor 	a
+		jr 		_posBranch
+M8_C_brpos_c46_fwd_end:
+
+M8_C_brpos_c46_bwd:
+		scf
+		jr 		_posBranch
+M8_C_brpos_c46_bwd_end:
+
+M8_C_br_c46_fwd:
+		xor 	a
+		jr 		_Branch
+M8_C_br_c46_fwd_end:
+
+M8_C_br_c46_bwd:
+		scf
+		jr 		_Branch
+M8_C_br_c46_bwd_end:
+
+
+_zeroBranch:
+		ex 		af,af' 						; save the direction in AF' (CC FWD, CS BWD)
+		ld 		a,h 						; check HL is zero
+		or 		l
+		jr 		z,_Branch
+		jr 		_NoBranch
+
+_posBranch:
+		ex 		af,af' 						; save the direction in AF' (CC FWD, CS BWD)
+		bit 	7,h 						; check HL is +ve or zero
+		jr 		z,_Branch
+;
+; 		Not Branching code
+;
+_NoBranch:
+		ex 		(sp),hl 					; skip over the return address
+		inc 	hl
+		ex 		(sp),hl
+		ret
+;
+; 		Branching code.
+;
+_Branch:
+		exx 								; save registers.
+		ex 		(sp),hl 					; get the branch offset into DE, position into HL
+		ld 		e,(hl)
+		ld 		d,0
+		ex 		af,af' 						; get the direction flag back
+		jr 		c,_BranchBackwards
+
+_BranchForwards:
+		add 	hl,de  						; calculate the new address
+		ex 		(sp),hl 					; fix up return address
+		exx 								; restore registers and exit
+		ret
+
+_BranchBackwards:
+		xor 	a 							; calculate new address
+		sbc 	hl,de
+		ex 		(sp),hl 					; fix up return address
+		exx 								; restore registers and exit
+		ret
+
 ; ***************************************************************************************
 ; ***************************************************************************************
 ;

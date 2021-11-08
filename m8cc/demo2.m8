@@ -1,5 +1,7 @@
 :scr variable 		// test
 
+:demo2.boot ;
+
 :writech ab>r scr @@ c! 1 scr +! r>ab ;
 :y 65 24 + writech ;
 :n 65 13 + writech ;

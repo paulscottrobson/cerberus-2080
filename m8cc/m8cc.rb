@@ -368,6 +368,7 @@ class Compiler
 		@binary = BinaryCode.new
 		@dictionary = Dictionary.new.load_runtime 
 		@modules_loaded = {}
+		@boot_words = []
 		immediate_words
 	end 
 	#
@@ -470,8 +471,9 @@ class Compiler
 	# 		Compile a new definition
 	#
 	def compile_definition(word)
-		@binary.set_start(@binary.get_pc)
-		@dictionary.add(CalledWord.new(word,@binary.get_pc))
+		word_def = CalledWord.new(word,@binary.get_pc)
+		@boot_words.append(word_def) if word[-5..] == ".boot"
+		@dictionary.add(word_def)
 	end
 	#
 	# 		Compile a string
@@ -480,6 +482,15 @@ class Compiler
 		@dictionary.get("string.inline").compile(@binary,@dictionary)
 		text.gsub("_"," ").each_char { |c| @binary.add_byte(c.ord) }
 		@binary.add_byte(0)
+	end
+	#
+	#  		Compile main
+	#
+	def compile_boot_word
+		@binary.set_start(@binary.get_pc) 						# Set start address
+		@boot_words.each { |w| w.compile(@binary,@dictionary) } # compile all boots
+		@dictionary.get_last.compile(@binary,@dictionary) 		# start from last word
+		@binary.add_byte 0x76 									# halt
 	end
 	#
 	# 		Write Binary file out
@@ -491,6 +502,6 @@ end
 
 cp = Compiler.new
 cp.compile_file "demo.m8"
+cp.compile_boot_word
 cp.write_binary
-
 	

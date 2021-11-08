@@ -255,6 +255,7 @@ class ForHandler < ImmediateWord
 			back = bc.get_pc - @@address 															# loop back amount from offset pos
 			raise M8Exception.new("For loop too large") if back >= 0x100  							# too far.
 			bc.add_byte back 																		# compile back branch.
+			@@address = 0 																			# unused address
 		end
 	end
 end 
@@ -271,11 +272,42 @@ class RepeatHandler < ImmediateWord
 		if get_value == 0  																			# REPEAT
 			@@address = bc.get_pc 																	# get loop position.
 		else  																						# UNTIL or -UNTIL
-			ctrl = @value < 0 ? "brpos.bwd":"brzero.bwd"											# get check.
+			ctrl = get_value < 0 ? "brpos.bwd":"brzero.bwd"											# get check.
 			dict.get(ctrl).compile(bc,dict) 														# Compile until/-until
 			back = bc.get_pc - @@address 															# loop back amount from offset pos
 			raise M8Exception.new("repeat loop too large") if back >= 0x100  						# too far.
 			bc.add_byte back 																		# compile back branch.
+			@@address = 0 																			# unused address
+		end
+	end
+end
+
+# *******************************************************************************************************************************
+#
+# 													If/-If Else Then Handler
+#
+# *******************************************************************************************************************************
+
+class IfHandler < ImmediateWord
+	@@address = 0
+	def compile(bc,dict)
+		if get_value.abs == 1  																		# IF/-IF
+			ctrl = get_value < 0 ? "brpos.fwd":"brzero.fwd"											# get check.
+			dict.get(ctrl).compile(bc,dict) 														# Compile until/-until
+			@@address = bc.get_pc 																	# get branch forward position
+			bc.add_byte 0 																			# dummy branch
+		elsif get_value == 2 																		# ELSE
+			dict.get("br.fwd").compile(bc,dict) 													# compile branch forward over else block
+			new_addr = bc.get_pc 																	# new address to patch and dummy branch
+			bc.add_byte 0 
+			fwd = bc.get_pc - @@address 															# how far we have to go forward to skip to else clause
+			raise M8Exception.new("if test too large") if fwd >= 0x100  							# too far.
+			bc.write(@@address,fwd) 																# patch the forward branch			
+			@@address = new_addr 																	# this is the new addresss to patch
+		else 				 																		# THEN
+			fwd = bc.get_pc - @@address 															# how far we have to go forward.
+			raise M8Exception.new("if test too large") if fwd >= 0x100  							# too far.
+			bc.write(@@address,fwd) 																# patch the forward branch
 		end
 	end
 end
@@ -335,6 +367,7 @@ class Compiler
 	def initialize
 		@binary = BinaryCode.new
 		@dictionary = Dictionary.new.load_runtime 
+		@modules_loaded = {}
 		immediate_words
 	end 
 	#
@@ -350,6 +383,23 @@ class Compiler
 		@dictionary.add RepeatHandler.new("repeat",0)
 		@dictionary.add RepeatHandler.new("until",1)
 		@dictionary.add RepeatHandler.new("-until",-1)
+		@dictionary.add IfHandler.new("if",1)
+		@dictionary.add IfHandler.new("-if",-1)
+		@dictionary.add IfHandler.new("else",2)
+		@dictionary.add IfHandler.new("then",3)
+	end
+	#
+	# 		Compile a file 
+	#
+	def compile_file(file_name)
+		if File.file? file_name
+			src = open(file_name)
+			compile_block(src,file_name)
+		else
+			puts("Cannot load file #{file_name}")
+			exit(false)
+		end
+		self
 	end
 	#
 	# 		Compile an array of lines/line
@@ -357,8 +407,18 @@ class Compiler
 	def compile_block(block,file_name = "(Body)")
 		M8Exception.restart file_name
 		begin
-			block.each do|b| 
-				compile_line b
+			block.each do|b|
+				m = b.match(/^require\s*\"(.*?)\"$/) 
+				if m 
+					req_file = m[1]
+					req_file += ".m8" unless req_file[-3..] == ".m8"
+					unless @modules_loaded.key? req_file
+						@modules_loaded[req_file] = true 
+						compile_file req_file
+					end
+				else
+					compile_line b
+				end
 				M8Exception.bump
 			end
 		rescue M8Exception => e 
@@ -429,17 +489,8 @@ class Compiler
 	end
 end
 
-code = '''
-:scr variable
-
-:writech ab>r scr @@ c! 1 scr +! r>ab ;
-:test 
-	$f800 scr !!
-	10 for 65 + writech next halt
-'''.split("\n")
-
 cp = Compiler.new
-cp.compile_block code
+cp.compile_file "demo.m8"
 cp.write_binary
 
-# repeat/until if/else/then
+	

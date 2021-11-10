@@ -1,6 +1,6 @@
 :scr variable 		// test
 
-:demo2.boot ;
+:demo2.boot $f850 scr !! ;
 
 :writech ab>r scr @@ c! 1 scr +! r>ab ;
 :y 65 24 + writech ;

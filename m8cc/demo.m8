@@ -3,7 +3,6 @@ require "demo2"
 require "demo2"
 
 :test 
-	$f800 scr !!
 	10 for a>r 48 + writech r>a
-	2 and  if y else n then
+	1 and  if y else n then
 	32 writech next halt

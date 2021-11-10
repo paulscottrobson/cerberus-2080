@@ -500,8 +500,17 @@ class Compiler
 	end
 end
 
-cp = Compiler.new
-cp.compile_file "demo.m8"
-cp.compile_boot_word
-cp.write_binary
-	
+class M8CC
+	def compile(argv)
+		cp = Compiler.new
+		if argv.length == 0
+			puts("m8cc <source file list>")
+			puts("\tWritten by Paul Robson November 2021")
+			exit(false)
+		end
+		argv.each { |f| cp.compile_file f }
+		cp.compile_boot_word
+		cp.write_binary
+	end
+end
+			

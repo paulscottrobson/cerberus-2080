@@ -1,6 +1,6 @@
                         ; --------------------------------------
                         ; zasm: assemble "_runtime.asm"
-                        ; date: 2021-11-08 18:35:37
+                        ; date: 2021-11-10 12:49:15
                         ; --------------------------------------
 
 
@@ -2219,5 +2219,5 @@ _tend_loop              = $0343 =   835          _runtime.asm:622
 _zeroBranch             = $0361 =   865          _runtime.asm:675
 
 
-total time: 0.0100 sec.
+total time: 0.0090 sec.
 no errors

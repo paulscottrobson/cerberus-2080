@@ -1,0 +1,3 @@
+#!/usr/bin/env ruby
+require 'm8cc'
+M8CC.new.compile(ARGV)

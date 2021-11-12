@@ -429,6 +429,8 @@ class Compiler
 		self
 	end
 	#
+	# 		Compile a single line
+	#
 	def compile_line(line)
 		line = line[..line.index("//")-1] if line.include?("//") 
 		line.split { |w| compile_word w if w != "" }
@@ -452,6 +454,10 @@ class Compiler
 		return compile_constant word.to_i if word.match(/^[0-9]+$/)
 		return compile_constant word[1..].to_i(16) if word.match(/^\$[0-9A-Fa-f]+$/)
 		return compile_constant word[1].ord if word.match(/^\'.?\'$/)
+		#
+		#  		Raw data
+		#
+		return compile_data word[1..-2].strip if word[0] == '[' and word [-1] == ']'
 		#
 		#  		Word in dictionary
 		#
@@ -482,6 +488,18 @@ class Compiler
 		@dictionary.get("string.inline").compile(@binary,@dictionary)
 		text.gsub("_"," ").each_char { |c| @binary.add_byte(c.ord) }
 		@binary.add_byte(0)
+	end
+	#
+	# 		Compile hexadecimal data
+	#
+	def compile_data(bytes)
+		while bytes != ""
+			raise M8Exception.new("Bad data construct") if bytes.length == 1
+			hex = bytes[0..1]
+			raise M8Exception.new("Bad hexadecimal data") unless hex.match(/[0-9a-fA-F]+/)
+			@binary.add_byte hex.to_i(16)
+			bytes = bytes[2..].strip
+		end
 	end
 	#
 	#  		Compile main

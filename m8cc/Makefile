@@ -16,7 +16,7 @@ runtime:
 
 gem : runtime 
 	gem build m8cc.gemspec
-	gem install ./m8cc-1.0.0.gem
+	gem install ./m8cc-1.0.1.gem
 	
 test:
 	m8cc demo.m8

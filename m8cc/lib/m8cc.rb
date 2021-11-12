@@ -9,7 +9,7 @@
 # *******************************************************************************************************************************
 # *******************************************************************************************************************************
 
-require "./runtime.rb"
+require "runtime.rb"
 
 # *******************************************************************************************************************************
 #
@@ -379,6 +379,7 @@ class Compiler
 		@dictionary.add SaveModifier.new("!!",-1)
 		@dictionary.add ConstantHandler.new("constant",-1)
 		@dictionary.add VariableHandler.new("variable",-1)
+		@dictionary.add ArrayHandler.new("array",-1)
 		@dictionary.add ForHandler.new("for",0)
 		@dictionary.add ForHandler.new("next",1)
 		@dictionary.add RepeatHandler.new("repeat",0)
@@ -432,6 +433,7 @@ class Compiler
 	# 		Compile a single line
 	#
 	def compile_line(line)
+		return self if line.strip[0..1] == "//"
 		line = line[..line.index("//")-1] if line.include?("//") 
 		line.split { |w| compile_word w if w != "" }
 		self

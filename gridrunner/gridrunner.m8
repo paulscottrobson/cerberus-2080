@@ -1,0 +1,4 @@
+require "characters.m8"
+
+
+:test break character.set ;

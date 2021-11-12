@@ -1,0 +1,76 @@
+:character.set 0 array
+
+// Character GRID 00
+        [181818FFFF181818]
+
+// Character SHIP 01
+        [183C66187EFFE7C3]
+
+// Character LEFT_ZAPPER 02
+        [F020101F1F1020F0]
+
+// Character BOTTOM_ZAPPER 03
+        [18181818BDC38181]
+
+// Character HORIZ_LASER1 04    
+        [002060A32C300000]
+
+// Character HORIZ_LASER2 05
+        [000205C830000000]
+
+// Character VERTICAL_LASER1 06
+        [08043E2010100808]
+
+// Character VERTICAL_LASER2 07
+        [0808101008040204]
+
+// Character POD1        08
+        [0000001818000000]
+
+// Character POD2        09
+        [0000183C3C180000]
+
+// Character POD3        10
+        [18245ABDBD5A2418]
+
+// Character POD4        11
+        [997E5AFFFF5A7E99]
+
+// Character POD5        12
+        [6699BD5A5ABD9966]
+
+// Character POD6        13
+        [2442A50000A54224]
+
+// Character BULLET_UP1  14
+        [000000183C181818]
+
+// Character BULLET_UP2  15
+        [183C181818000000]
+
+// Character BOMB_DOWN   16
+        [4266243C18183C18]
+
+// Character BOMB_RIGHT  17
+        [00C0721F1F72C000]
+
+// Character BOMB_LEFT   18
+        [00034EF8F84E0300]
+
+// Character DROID1      19
+        [304648FFFF12620C]
+
+// Character DROID2      20
+        [C0FC72F81F4E3F03]
+
+// Character DROID3      21
+        [0B2F4E5E7A72F4D0]
+
+// Character EXPLOSION1  22
+        [0046288016082042]
+
+// Character EXPLOSION2  23
+        [4021060000608201]
+
+// Character EXPLOSION3  24
+        [0280000000000140]

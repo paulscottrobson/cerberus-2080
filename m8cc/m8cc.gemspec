@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = 'm8cc'
-  s.version     = '1.0.1'
+  s.version     = '1.0.2'
   s.summary     = "m8cc"
   s.description = "A threaded programming language"
   s.authors     = ["Paul Robson"]

@@ -44,6 +44,18 @@ _tend_loop:									; we are going round the loop, return HL count DE
 
 ; ***************************************************************************************
 ;
+;									Get index (TOS)
+;
+; ***************************************************************************************
+
+;; [MACRO] 	i
+		ex 		de,hl
+		pop 	hl
+		push 	hl
+;; [END]
+
+; ***************************************************************************************
+;
 ;			Branches Forwards/Backwards Zero/Positive tests and Always
 ;
 ; ***************************************************************************************
@@ -72,11 +84,13 @@ _tend_loop:									; we are going round the loop, return HL count DE
 
 ;; [CALL] 	br.fwd
 		xor 	a
+		ex 		af,af' 						; save the direction in AF' (CC FWD, CS BWD)
 		jr 		_Branch
 ;; [END]
 
 ;; [CALL] 	br.bwd
 		scf
+		ex 		af,af' 						; save the direction in AF' (CC FWD, CS BWD)
 		jr 		_Branch
 ;; [END]
 

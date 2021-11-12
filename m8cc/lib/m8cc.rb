@@ -271,8 +271,9 @@ class RepeatHandler < ImmediateWord
 	def compile(bc,dict)
 		if get_value == 0  																			# REPEAT
 			@@address = bc.get_pc 																	# get loop position.
-		else  																						# UNTIL or -UNTIL
+		else  																						# UNTIL or -UNTIL or FOREVER
 			ctrl = get_value < 0 ? "brpos.bwd":"brzero.bwd"											# get check.
+			ctrl = "br.bwd" if get_value == 2 														# handle FOREVER
 			dict.get(ctrl).compile(bc,dict) 														# Compile until/-until
 			back = bc.get_pc - @@address 															# loop back amount from offset pos
 			raise M8Exception.new("repeat loop too large") if back >= 0x100  						# too far.
@@ -385,6 +386,7 @@ class Compiler
 		@dictionary.add RepeatHandler.new("repeat",0)
 		@dictionary.add RepeatHandler.new("until",1)
 		@dictionary.add RepeatHandler.new("-until",-1)
+		@dictionary.add RepeatHandler.new("forever",2)
 		@dictionary.add IfHandler.new("if",1)
 		@dictionary.add IfHandler.new("-if",-1)
 		@dictionary.add IfHandler.new("else",2)

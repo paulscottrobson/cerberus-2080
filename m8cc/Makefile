@@ -8,15 +8,15 @@ LIBRARIES = kernel xsprites
 
 .PHONY: all 
 
-all: runtime gem test
+all: runtime gem	
 
 runtime:
 	make -C ..$(S)libraries
-	$(CCOPY) ..$(S)libraries$(S)runtime.rb .
+	$(CCOPY) ..$(S)libraries$(S)runtime.rb lib
 
 gem : runtime 
 	gem build m8cc.gemspec
-	gem install ./m8cc-1.0.1.gem
+	gem install ./m8cc-1.0.2.gem
 	
 test:
 	m8cc demo.m8

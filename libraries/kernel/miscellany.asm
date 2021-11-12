@@ -16,9 +16,8 @@
 ; ***************************************************************************************
 
 ;; [CALL] 	string.inline
-		di
 		ex 		de,hl 								; swap of DE & HL required by spec
-		ex 		(sp),hl 							; start of string -> HL
+		pop 	hl 									; start of string -> HL
 		push 	hl 									; push start of string on stack.
 _SILAdvance:
 		ld 		a,(hl) 								; advance over string

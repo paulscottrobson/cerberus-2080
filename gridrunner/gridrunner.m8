@@ -1,4 +1,43 @@
 require "characters.m8"
 
+:clear.screen
+	ab>r
+	1200 for $F800 + $20	 swap c! next
+	r>ab 
+;
 
-:test break character.set ;
+:_string.write.addr variable
+:_string.src.addr variable
+
+:string.write
+	swap 			// A = String B = Address
+	repeat
+		a>r c@ 0= if r>a ; then r>a
+		a>r c@ swap c! r>b ++ swap ++
+	forever
+;
+
+:_grid_char 
+	c>b swap c! ++ a>c
+;
+
+:_grid_line 
+	32 _grid_char
+	38 for 0 _grid_char next 
+	32 _grid_char
+;
+
+:init.screen
+	abc>r
+	32 8* a>c $F000 character.set copy
+	clear.screen
+	"1_UP" $F806 string.write
+	"HIGH" $F81C string.write
+	"000000" $F82D string.write 
+	"000000" $F843 string.write
+	$F850 a>c 27 for _grid_line next
+	r>abc 
+;
+
+:test init.screen 
+halt ;

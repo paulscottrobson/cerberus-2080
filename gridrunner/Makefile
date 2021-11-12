@@ -6,6 +6,9 @@ endif
 
 all: build run
 
+system:
+	make -C ..$(S)m8cc 
+	
 build:
 	m8cc gridrunner.m8
 

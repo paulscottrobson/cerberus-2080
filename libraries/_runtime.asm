@@ -279,9 +279,8 @@ M8_M__c59__end:
 ; ***************************************************************************************
 
 M8_C_string_c46_inline:
-		di
 		ex 		de,hl 								; swap of DE & HL required by spec
-		ex 		(sp),hl 							; start of string -> HL
+		pop 	hl 									; start of string -> HL
 		push 	hl 									; push start of string on stack.
 _SILAdvance:
 		ld 		a,(hl) 								; advance over string
@@ -635,6 +634,18 @@ M8_C_next_c46_handler_end:
 
 ; ***************************************************************************************
 ;
+;									Get index (TOS)
+;
+; ***************************************************************************************
+
+M8_M_i:
+		ex 		de,hl
+		pop 	hl
+		push 	hl
+M8_M_i_end:
+
+; ***************************************************************************************
+;
 ;			Branches Forwards/Backwards Zero/Positive tests and Always
 ;
 ; ***************************************************************************************
@@ -663,11 +674,13 @@ M8_C_brpos_c46_bwd_end:
 
 M8_C_br_c46_fwd:
 		xor 	a
+		ex 		af,af' 						; save the direction in AF' (CC FWD, CS BWD)
 		jr 		_Branch
 M8_C_br_c46_fwd_end:
 
 M8_C_br_c46_bwd:
 		scf
+		ex 		af,af' 						; save the direction in AF' (CC FWD, CS BWD)
 		jr 		_Branch
 M8_C_br_c46_bwd_end:
 

@@ -11,8 +11,8 @@ LIBRARIES = kernel xsprites
 all: runtime gem	
 
 runtime:
-	make -C ..$(S)libraries
-	$(CCOPY) ..$(S)libraries$(S)runtime.rb lib
+	make -C libraries
+	$(CCOPY) libraries$(S)runtime.rb lib
 
 gem : runtime 
 	gem build m8cc.gemspec

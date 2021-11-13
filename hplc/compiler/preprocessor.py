@@ -22,7 +22,7 @@ class Preprocessor(object):
 	def __init__(self,compiler):
 		self.compiler = compiler
 		self.locals = {}
-		self.globals = {}
+		self.globals = { "_":0xFFFF } 																	# _ is universal do nothing.
 		self.keywords = compiler.getKeywords()
 	#
 	# 		Compile a block passed as a list of strings
@@ -39,7 +39,6 @@ class Preprocessor(object):
 			#
 			if isGlobal:
 				s = self.processBlock(s,True) 															# process for globals
-				s = re.sub("GLOBAL\\s*[0-9\\@\\,]+","",s)												# remove global <const>,<const> etc.
 				s = s.replace(" ","").replace(";","")													# remove spaces and semicolons
 				for c in s: 																			# check remainder are line seps
 					if c != Preprocessor.LINESEP: 
@@ -62,9 +61,9 @@ class Preprocessor(object):
 					if re.match("^"+Preprocessor.IDENT+"$",params[i]) is None:							# check it's a valid name.
 						raise HPLException("Bad identifier "+params[i])
 					params[i] = self.createVariable(params[i].lower(),False) 							# Convert to an address
+				body = self.processBlock(m.group(3),False)												# preprocess main body
 				if len(params) > 0: 																	# code to store parameters passed
 					self.compiler.compileSaveParameters(params)
-				body = self.processBlock(m.group(3),False)												# preprocess main body
 				self.compiler.compileFunction(body)														# compile body of function
 	#
 	# 		Do all processing
@@ -72,8 +71,9 @@ class Preprocessor(object):
 	def processBlock(self,s,isGlobal):
 		s = self.processStrings(s)																		# handle strings.
 		s = self.processConstants(s)																	# handle constants
-		s = self.processIdentifiers(s,isGlobal) 														# handle variables/func calls
-		return s
+		s = self.processDeclarations(s,isGlobal)														# handle INT
+		s = self.processIdentifiers(s) 																	# handle variables/func calls
+		return s	
 	#
 	# 		Extract quoted strings out and replace with constant values
 	#
@@ -97,12 +97,28 @@ class Preprocessor(object):
 				s[i] = str(ord(s[i][1]))		
 		return "".join(s)
 	#
+	#		Look for INT <varlist>, create variables and chop out.
+	#
+	def processDeclarations(self,s,isGlobal):
+		s = re.split("(int\\s+"+Preprocessor.IDENT_LIST+")",s)
+		for i in range(0,len(s)):
+			if s[i].startswith("int"):
+				for newVar in [x for x in s[i][3:].lower().strip().split(",") if x.strip() != ""]:
+					if re.match(Preprocessor.IDENT,newVar) is None:
+						raise HPLException("Bad int declaration")
+					tgt = self.globals if isGlobal else self.locals
+					if newVar in tgt:
+						raise HPLException("Duplicate integer variable "+newVar)
+					tgt[newVar] = self.compiler.allocateVariable()
+				s[i] = ""
+		return "".join(s)
+	#
 	# 		Replace identifiers with function calls or variable references.
 	#
-	def processIdentifiers(self,s,isGlobal):
+	def processIdentifiers(self,s):
 		s = re.split("("+Preprocessor.IDENT+"\\(?)",s)													# split with optional (
 		for i in range(0,len(s)):
-			if re.match(Preprocessor.IDENT+"\\(?",s[i]):
+			if re.match(Preprocessor.IDENT+"\\(?",s[i].lower()):
 				s[i] = self.identToValue(s[i])
 		return "".join(s)
 	#
@@ -128,9 +144,7 @@ class Preprocessor(object):
 		srctab = self.locals if id in self.locals else self.globals 									# where to look
 		if id in srctab: 																				# already known
 			return "{0}{1}".format(Preprocessor.VARMARKER,srctab[id])
-		#
-		newVar = self.createVariable(id,False) 															# create new local.
-		return "{0}{1}".format(Preprocessor.VARMARKER,newVar)
+		raise HPLException("Unknown identifier {0}".format(id))
 	#
 	#		Create a new variable, local or global
 	#
@@ -143,13 +157,12 @@ class Preprocessor(object):
 			self.locals[name] = value
 		return value
 
+Preprocessor.LINESEP = chr(449) 						# double bar is line seperator.
+Preprocessor.VARMARKER = chr(415) 						# 0 wih line through is variable.
+Preprocessor.CALLMARKER = chr(643)						# Integral is call marker
 
-
-Preprocessor.LINESEP = "|"
-Preprocessor.VARMARKER = "@"
-Preprocessor.CALLMARKER = "#"
-
-Preprocessor.IDENT = "[A-Za-z\\_][A-Za-z0-9\\.\\_]*"
+Preprocessor.IDENT = "[A-Za-z\\_][A-Za-z0-9\\.\\_]*"	# Regex for identifier (accurate)
+Preprocessor.IDENT_LIST = "[A-Za-z0-9\\.\\_\\,]+" 		# Regex for list of identifiers (approx,checked)
 
 # *******************************************************************************************
 #
@@ -163,16 +176,13 @@ class DummyCompiler:
 		self.strSpace = 60000
 	#
 	def getKeywords(self):
-		return "global,func,endfunc,if,then,else,endif,while,wend,repeat,until,for,next".split(",")
+		return "int,func,endfunc,if,then,else,endif,while,wend,repeat,until,for,next,break,case,when,endcase,default".split(",")
 	#
 	def compileSaveParameters(self,params):
 		print("[SAVE] {0}".format(",".join([str(n) for n in params])))
 	#
 	def compileFunction(self,c):
 		print("[CODE] {0}".format(c))
-	#
-	def compileReturn(self):
-		print("[RETN]")
 	#
 	def allocateVariable(self):
 		self.varSpace += 2
@@ -190,27 +200,30 @@ class DummyCompiler:
 if __name__ == '__main__':	
 	src = """
 	// Hello world
-	global a,b,c
+	int a,b,c
 
 	func t1()
 	endfunc
 
 	func test(x,y) 
 		while if endif
-		global z,w;
+		int z,w;
 		z = "Hello";
 		x = "demo"
 	endfunc
 
-	global w,z;
+	int w,z;
 
-	func testmain(a,b,c) 
+	func test.main(b,c) 
 		a = w;
 		b = 99
 		c = $2A
+		int d
 		d = '*'+d
 		test(42)
 	endfunc
 	""".split("\n")
 	pp = Preprocessor(DummyCompiler())
 	pp.compileBlock(src)
+
+

@@ -64,10 +64,6 @@ class Compiler:
 	def compileOneItem(self):
 		head = self.get() 																			# what is up front ?
 		#
-		#		TODO:
-		#			Structure handlers
-
-		#
 		# 			Call a function.
 		#
 		if head == Preprocessor.CALLMARKER:
@@ -98,6 +94,12 @@ class Compiler:
 				self.codeGenerator.accessRegister(0,Compiler.CONST,0xFFFF if head == "TRUE" else 0)
 			return
 		#
+		# 		All other keywords (structures)
+		#
+		if head.isalpha():
+			self.compileStructures()
+			return
+		#
 		# 		Must be a constant or a variable.
 		#
 		self.compileLoadValue(0)																	# Must be [var]addr or constant
@@ -125,7 +127,7 @@ class Compiler:
 		self.check("(","Missing ( on function call") 												# check next is (
 		paramCount = 0
 		while self.get() != ")":																	# while parameters
-			self.compileLoadValue(paramCount)														# parameter
+			self.compileLoadValue(paramCount)														# parameter, can only be var or const.
 			paramCount += 1
 			nextToken = self.get()
 			if nextToken != "," and nextToken != ")":												# check syntax
@@ -156,6 +158,41 @@ class Compiler:
 			self.codeGenerator.accessRegister(0,Compiler.WRITE,int(value))
 		else:
 			self.codeGenerator.binaryOperation(opcode,mode,int(value))
+	#
+	# 		Structure compilers
+	#
+	def compileStructures(self):
+		kwd = self.get() 																			# get the structure word.
+		self.next()
+		if kwd == "REPEAT":
+			self.pushStack("REPEAT",{ "loop":self.codeGenerator.getCodeAddress() })
+		if kwd == "UNTIL":
+			loopAddress = self.popStack("REPEAT")["loop"]
+			self.compileCondition()
+			self.codeGenerator.compileBranch(Compiler.ZERO,loopAddress)
+	#
+	# 		Compile a condition
+	#
+	def compileCondition(self):
+		self.check("(","Missing ( in test") 														# check ( of condition
+		while self.get() != ")":																	# compile code in test until )
+			self.compileOneItem()
+			if self.isEmpty():
+				raise HPLException("Missing ) in test")
+		self.next() 																				# skip closing )
+	# 
+	# 		Push on structure stack
+	#
+	def pushStack(self,marker,info):
+		info["marker"] = marker
+		self.compileStack.append(info)
+	#
+	# 		Pop/Check structure stack
+	#
+	def popStack(self,marker):
+		if self.compileStack[-1]["marker"] != marker:
+			raise HPLException("Missing {0} in structures".format(marker.lower()))
+		return self.compileStack.pop()
 	#
 	#		Get current first element
 	#
@@ -215,6 +252,10 @@ Compiler.READ = 0 							# Code Generation ReadMem,WriteMem,Const
 Compiler.WRITE = 1
 Compiler.CONST = 2
 
+Compiler.ZERO = 3
+Compiler.NONZERO = 4
+Compiler.ALWAYS = 5
+
 # *******************************************************************************************
 #
 #									Dummy code generator
@@ -232,6 +273,13 @@ class DummyCodeGenerator(object):
 	#
 	def callRoutine(self,addr):
 		print("{0:04x} : call {1}".format(self.pc,addr))
+		self.pc += 1
+	#
+	def compileBranch(self,test,address):
+		brTest = "jmp"
+		if test != Compiler.ALWAYS:
+			brTest = "jz" if test == Compiler.ZERO else "jnz"
+		print("{0:04x} : {2} {1}".format(self.pc,address,brTest))
 		self.pc += 1
 	#
 	def accessRegister(self,reg,mode,operand):
@@ -267,14 +315,10 @@ if __name__ == '__main__':
 	src = """
 	int s1
 
-	func dummy() true false break endfunc
-
-	func t1(xxx,y,z)
-		"hello" +4 *xxx => s1 ++ => y _
-	endfunc
 
 	func main()
-		1234 t1(_,s1,4)
+		int c 4->c
+		repeat c -- ->c until (c == 0)
 	endfunc
 
 	""".split("\n")
@@ -282,4 +326,6 @@ if __name__ == '__main__':
 	pp = Preprocessor(compiler)
 	pp.compileBlock(src)
 
-
+#
+#	TODO: 	While, For, If then write library and Z80 Code Generator
+#			@ operator

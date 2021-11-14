@@ -32,13 +32,14 @@ class Compiler:
 							"=>":"str","->":"str"
 		}
 		self.unaryOps = {
-							"++":"inc","--":"dec","<<":"shl",">>":"shr"
+							"++":"inc","--":"dec","<<":"shl",">>":"shr",
+							"~":"not"
 		}
 	#
 	# 		List of keywords that won't be used as variables
 	#
 	def getKeywords(self):
-		return "int,func,endfunc,if,then,else,endif,while,wend,repeat,until,for,next,break,case,when,endcase,default".split(",")
+		return "int,func,endfunc,if,then,else,endif,while,wend,repeat,until,for,next,break,case,when,endcase,default,true,false".split(",")
 	#
 	#		Write out the parameters to the addresses in the array at the start of the routine
 	#
@@ -49,7 +50,7 @@ class Compiler:
 	#		Compile a whole function
 	#
 	def compileFunction(self,c):
-		print("CODEBLOCK:"+c)
+		#print("CODEBLOCK:"+c)
 		self.compileStack = [] 																		# Compiler stack
 		self.source = c.strip() 																	# Data source
 		while (not self.isEmpty()): 																# Compile body
@@ -63,31 +64,21 @@ class Compiler:
 	def compileOneItem(self):
 		head = self.get() 																			# what is up front ?
 		#
-		#		Various checks .....
-		#			CALLing functions with _
-		#			Structure handler
+		#		TODO:
+		#			Structure handlers
 
+		#
+		# 			Call a function.
+		#
+		if head == Preprocessor.CALLMARKER:
+			self.next()
+			self.compileFunctionCall()
+			return
 		#
 		# 		Binary operator check.
 		#
 		if head in self.binaryOps:																	# is it a binary operator ?
-			opcode = self.binaryOps[head]															# command to do.
-			self.next() 																			# skip
-			value = self.get() 																		# get operand and skip it.
-			self.next()
-			mode = Compiler.CONST 																	# and mode 
-			if value == Preprocessor.VARMARKER:														# is it [VAR]addr
-				value = self.get() 																	# get and skip operand
-				self.next()
-				mode = Compiler.READ 																# it's read memory.
-			if not value.isdigit():																	# missing var/const
-				raise HPLException("Missing constant/variable in binary operation")
-			if opcode == "str":																		# gazinta is different.
-				if mode == Compiler.CONST:
-					raise HPLException("Cannot gazinta constant")
-				self.codeGenerator.accessRegister(0,Compiler.WRITE,int(value))
-			else:
-				self.codeGenerator.binaryOperation(opcode,mode,int(value))
+			self.compileBinaryOperator()
 			return
 		#
 		#		Unary operator
@@ -95,6 +86,16 @@ class Compiler:
 		if head in self.unaryOps:
 			self.codeGenerator.unaryOperation(self.unaryOps[head])
 			self.next()
+			return
+		#
+		# 		Special keywords BREAK TRUE FALSE ;
+		#
+		if head == "BREAK" or head == "TRUE" or head == "FALSE" or head == ";":
+			self.next()
+			if head == "BREAK":
+				self.codeGenerator.compileDebugBreak()
+			if head == "TRUE" or head == "FALSE":
+				self.codeGenerator.accessRegister(0,Compiler.CONST,0xFFFF if head == "TRUE" else 0)
 			return
 		#
 		# 		Must be a constant or a variable.
@@ -110,10 +111,51 @@ class Compiler:
 		if value == Preprocessor.VARMARKER:															# is it [VMRK] address
 			value = self.get() 																		# get and skip address
 			self.next()
-			operator = Compiler.READ
+			operator = Compiler.READ			
 		if not value.isdigit():																		# if not digit, simply wrong.
 			raise HPLException("Syntax Error")
-		self.codeGenerator.accessRegister(register,operator,int(value))								# generate the code.
+		if operator == Compiler.CONST or int(value) != 0xFFFF: 										# If not var $FFFF (_)
+			self.codeGenerator.accessRegister(register,operator,int(value))							# generate the code.
+	#
+	# 		Function call compiler
+	#
+	def compileFunctionCall(self):
+		addr = int(self.get())																		# get and skip address
+		self.next()
+		self.check("(","Missing ( on function call") 												# check next is (
+		paramCount = 0
+		while self.get() != ")":																	# while parameters
+			self.compileLoadValue(paramCount)														# parameter
+			paramCount += 1
+			nextToken = self.get()
+			if nextToken != "," and nextToken != ")":												# check syntax
+				raise HPLException("Syntax error in function call")
+			if nextToken == ",": 																	# skip ,
+				self.next()
+		self.next()																					# skip )
+		self.codeGenerator.callRoutine(addr)														# code to call function.
+	#
+	# 		Binary operator code
+	#
+	def compileBinaryOperator(self):
+		head = self.get()
+		opcode = self.binaryOps[head]																# command to do.
+		self.next() 																				# skip
+		value = self.get() 																			# get operand and skip it.
+		self.next()
+		mode = Compiler.CONST 																		# and mode 
+		if value == Preprocessor.VARMARKER:															# is it [VAR]addr
+			value = self.get() 																		# get and skip operand
+			self.next()	
+			mode = Compiler.READ 																	# it's read memory.
+		if not value.isdigit():																		# missing var/const
+			raise HPLException("Missing constant/variable in binary operation")
+		if opcode == "str":																			# gazinta is different.
+			if mode == Compiler.CONST:
+				raise HPLException("Cannot gazinta constant")
+			self.codeGenerator.accessRegister(0,Compiler.WRITE,int(value))
+		else:
+			self.codeGenerator.binaryOperation(opcode,mode,int(value))
 	#
 	#		Get current first element
 	#
@@ -139,6 +181,13 @@ class Compiler:
 	def isEmpty(self):
 		self.skipLineMarkers()
 		return self.source == ""
+	#
+	# 		Check next token and skip
+	#
+	def check(self,token,message):
+		if self.get() != token:
+			raise HPLException(message)
+		self.next()
 	#
 	# 		Skip line markers
 	#
@@ -181,8 +230,12 @@ class DummyCodeGenerator(object):
 	def getCodeAddress(self):
 		return self.pc 
 	#
+	def callRoutine(self,addr):
+		print("{0:04x} : call {1}".format(self.pc,addr))
+		self.pc += 1
+	#
 	def accessRegister(self,reg,mode,operand):
-		print("{0:04x} : {1} {2}${3:04x}".format(self.pc,"str" if mode == Compiler.WRITE else "ldr","#" if mode == Compiler.CONST else "",operand))
+		print("{0:04x} : {1} r{4},{2}${3:04x}".format(self.pc,"str" if mode == Compiler.WRITE else "ldr","#" if mode == Compiler.CONST else "",operand,reg))
 		self.pc += 1
 	#
 	def unaryOperation(self,opcode):
@@ -205,12 +258,23 @@ class DummyCodeGenerator(object):
 		print("{0:04x} : asciiz \"{1}\"".format(self.strings,s))
 		self.strings += len(s) + 1
 		return self.strings - (len(s)+1)
+	#
+	def compileDebugBreak(self):
+		print("{0:04x} : debug".format(self.pc))
+		self.pc += 1
 
 if __name__ == '__main__':	
 	src = """
 	int s1
+
+	func dummy() true false break endfunc
+
 	func t1(xxx,y,z)
 		"hello" +4 *xxx => s1 ++ => y _
+	endfunc
+
+	func main()
+		1234 t1(_,s1,4)
 	endfunc
 
 	""".split("\n")

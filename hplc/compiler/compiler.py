@@ -39,7 +39,7 @@ class Compiler:
 	# 		List of keywords that won't be used as variables
 	#
 	def getKeywords(self):
-		return "int,func,endfunc,if,then,else,endif,while,wend,repeat,until,for,next,break,case,when,endcase,default,true,false".split(",")
+		return "int,func,endfunc,if,else,endif,while,wend,repeat,until,for,next,break,case,when,endcase,default,true,false,index".split(",")
 	#
 	#		Write out the parameters to the addresses in the array at the start of the routine
 	#
@@ -53,7 +53,8 @@ class Compiler:
 		#print("CODEBLOCK:"+c)
 		self.compileStack = [] 																		# Compiler stack
 		self.source = c.strip() 																	# Data source
-		while (not self.isEmpty()): 																# Compile body
+		self.source = self.source.replace("@"+Preprocessor.VARMARKER,"") 							# Converts @<var><addr> to just <addr>
+		while (not self.isEmpty()): 																# Compile body		
 			self.compileOneItem()
 		self.codeGenerator.compileReturn() 															# Return
 		if len(self.compileStack) > 0:
@@ -84,17 +85,18 @@ class Compiler:
 			self.next()
 			return
 		#
-		# 		Special keywords BREAK TRUE FALSE ;
+		# 		Ignores ; which is syntactic sugar
 		#
-		if head == "BREAK" or head == "TRUE" or head == "FALSE" or head == ";":
-			self.next()
-			if head == "BREAK":
-				self.codeGenerator.compileDebugBreak()
-			if head == "TRUE" or head == "FALSE":
-				self.codeGenerator.accessRegister(0,Compiler.CONST,0xFFFF if head == "TRUE" else 0)
+		if head == ";":
 			return
 		#
-		# 		All other keywords (structures)
+		# 		Data block
+		#
+		if head == "[":
+			self.compileDataBlock()
+			return
+		#	
+		# 		All other keywords (structures and others)
 		#
 		if head.isalpha():
 			self.compileStructures()
@@ -166,10 +168,57 @@ class Compiler:
 		self.next()
 		if kwd == "REPEAT":
 			self.pushStack("REPEAT",{ "loop":self.codeGenerator.getCodeAddress() })
+		#
 		if kwd == "UNTIL":
 			loopAddress = self.popStack("REPEAT")["loop"]
 			self.compileCondition()
 			self.codeGenerator.compileBranch(Compiler.ZERO,loopAddress)
+		#
+		if kwd == "FOR":
+			self.compileCondition() 																# actually a constant here
+			self.pushStack("FOR",{ "loop":self.codeGenerator.getCodeAddress() })
+			self.codeGenerator.compileDecrementPush()
+		#
+		if kwd == "NEXT":
+			loopAddress = self.popStack("FOR")["loop"]
+			self.codeGenerator.compilePop()
+			self.codeGenerator.compileBranch(Compiler.NONZERO,loopAddress)
+		#
+		if kwd == "WHILE":
+			loopAddress = self.codeGenerator.getCodeAddress()
+			self.compileCondition() 														
+			branchPatch = self.codeGenerator.compileBranch(Compiler.ZERO)
+			self.pushStack("WHILE",{ "loop":loopAddress, "patch":branchPatch })
+		#
+		if kwd == "WEND":
+			info = self.popStack("WHILE")
+			self.codeGenerator.compileBranch(Compiler.ALWAYS,info["loop"])
+			self.codeGenerator.setBranchOffset(info["patch"],self.getCodeAddress())
+		#
+		if kwd == "IF":
+			self.compileCondition() 															
+			branchPatch = self.codeGenerator.compileBranch(Compiler.ZERO)
+			self.pushStack("IF",{ "patch":branchPatch })
+		#
+		if kwd == "ELSE":
+			elseBranchPatch = self.codeGenerator.compileBranch(Compiler.ALWAYS)
+			self.codeGenerator.setBranchOffset(self.popStack("IF")["patch"],self.codeGenerator.getCodeAddress())			
+			self.pushStack("IF",{ "patch":elseBranchPatch })
+		#
+		if kwd == "ENDIF":
+			self.codeGenerator.setBranchOffset(self.popStack("IF")["patch"],self.codeGenerator.getCodeAddress())			
+		#
+		if kwd == "BREAK":
+			self.codeGenerator.compileDebugBreak()
+		#
+		if kwd == "TRUE":
+			self.codeGenerator.accessRegister(0,0xFFFF)
+		#
+		if kwd == "FALSE":
+			self.codeGenerator.accessRegister(0,0)
+		#
+		if kwd == "INDEX":
+			self.codeGenerator.compileGetOuterIndex()
 	#
 	# 		Compile a condition
 	#
@@ -190,9 +239,21 @@ class Compiler:
 	# 		Pop/Check structure stack
 	#
 	def popStack(self,marker):
-		if self.compileStack[-1]["marker"] != marker:
+		if len(self.compileStack) == 0 or self.compileStack[-1]["marker"] != marker:
 			raise HPLException("Missing {0} in structures".format(marker.lower()))
 		return self.compileStack.pop()
+	#
+	# 		Compile a data block. In octal so the preprocessor leaves it alone.
+	#
+	def compileDataBlock(self):
+		self.next()
+		block = self.get()
+		if re.match("^[0-7]+$",block) is None or len(block) % 3 != 0:
+			raise HPLException("Bad data block")
+		for i in range(0,len(block),3):
+			self.codeGenerator.compileByteData(int(block[i:i+3],8))
+		self.next()
+		self.check("]","Missing ] on data block")
 	#
 	#		Get current first element
 	#
@@ -230,6 +291,7 @@ class Compiler:
 	#
 	def skipLineMarkers(self):
 		while self.source.startswith(Preprocessor.LINESEP): 										# Handle seperators, bumping line number.
+			print(HPLException.LINE)
 			self.source = self.source[1:].strip()
 			HPLException.LINE += 1
 	# 
@@ -275,12 +337,17 @@ class DummyCodeGenerator(object):
 		print("{0:04x} : call {1}".format(self.pc,addr))
 		self.pc += 1
 	#
-	def compileBranch(self,test,address):
+	def compileBranch(self,test,address=0):
 		brTest = "jmp"
 		if test != Compiler.ALWAYS:
 			brTest = "jz" if test == Compiler.ZERO else "jnz"
-		print("{0:04x} : {2} {1}".format(self.pc,address,brTest))
+		print("{0:04x} : {2} ${1:04x}".format(self.pc,address,brTest))
+		patchAddress = self.pc
 		self.pc += 1
+		return patchAddress
+	#
+	def setBranchOffset(self,patchAddress,target):
+		print("     : Patch ${0:04x} to branch to ${1:04x}".format(patchAddress,target))
 	#
 	def accessRegister(self,reg,mode,operand):
 		print("{0:04x} : {1} r{4},{2}${3:04x}".format(self.pc,"str" if mode == Compiler.WRITE else "ldr","#" if mode == Compiler.CONST else "",operand,reg))
@@ -298,27 +365,48 @@ class DummyCodeGenerator(object):
 		print("{0:04x} : retn".format(self.pc))
 		self.pc += 1
 	#
-	def allocateVariable(self):
-		self.variables += 2
-		return self.variables-2
+	def compileDecrementPush(self):
+		print("{0:04x} : dec r0".format(self.pc))
+		print("{0:04x} : push r0".format(self.pc+1))
+		self.pc += 2
+	#
+	def compileGetOuterIndex(self):
+		print("{0:04x} : pop r0".format(self.pc))
+		print("{0:04x} : push r0".format(self.pc+1))
+		self.pc += 2
+	#
+	def compilePop(self):
+		print("{0:04x} : pop r0".format(self.pc))
+		self.pc += 1
+	#
+	def compileDebugBreak(self):
+		print("{0:04x} : debug".format(self.pc))
+		self.pc += 1
+	#
+	def compileByteData(self,byte):
+		print("{0:04x} : byte ${1:02x}".format(self.pc,byte))
+		self.pc += 1
+	#
+	#		Because strings/variables are handled in the preprocessor, these can simply be put in the code without
+	#		affecting it, they don't need to be skipped over or anything.
 	#
 	def allocateString(self,s):
 		print("{0:04x} : asciiz \"{1}\"".format(self.strings,s))
 		self.strings += len(s) + 1
 		return self.strings - (len(s)+1)
 	#
-	def compileDebugBreak(self):
-		print("{0:04x} : debug".format(self.pc))
-		self.pc += 1
+	def allocateVariable(self):
+		self.variables += 2
+		return self.variables-2
+	#
 
 if __name__ == '__main__':	
 	src = """
 	int s1
 
-
 	func main()
-		int c 4->c
-		repeat c -- ->c until (c == 0)
+		int c @c -> c index
+		[040137] 
 	endfunc
 
 	""".split("\n")
@@ -326,6 +414,3 @@ if __name__ == '__main__':
 	pp = Preprocessor(compiler)
 	pp.compileBlock(src)
 
-#
-#	TODO: 	While, For, If then write library and Z80 Code Generator
-#			@ operator

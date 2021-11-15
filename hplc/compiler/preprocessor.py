@@ -22,7 +22,7 @@ class Preprocessor(object):
 	def __init__(self,compiler):
 		self.compiler = compiler
 		self.locals = {}
-		self.globals = { "_":0xFFFF } 																	# _ is universal do nothing.
+		self.globals = { "_":0xFFFF } 																	# _ is universal do nothing in params.
 		self.keywords = compiler.getKeywords()
 	#
 	# 		Compile a block passed as a list of strings
@@ -65,6 +65,7 @@ class Preprocessor(object):
 				if len(params) > 0: 																	# code to store parameters passed
 					self.compiler.compileSaveParameters(params)
 				self.compiler.compileFunction(body)														# compile body of function
+		self.stripUnderscore()
 	#
 	# 		Do all processing
 	#
@@ -156,6 +157,13 @@ class Preprocessor(object):
 		else:
 			self.locals[name] = value
 		return value
+	#
+	# 		Remove all globals beginning with _ except _ itself
+	#
+	def stripUnderscore(self):
+		for k in list(self.globals.keys()):
+			if k != "_" and k.startswith("_"):
+				del self.globals[k]
 
 Preprocessor.LINESEP = chr(449) 						# double bar is line seperator.
 Preprocessor.VARMARKER = chr(415) 						# 0 wih line through is variable.
@@ -202,7 +210,7 @@ if __name__ == '__main__':
 	// Hello world
 	int a,b,c
 
-	func t1()
+	func _t1()
 	endfunc
 
 	func test(x,y) 
@@ -225,5 +233,5 @@ if __name__ == '__main__':
 	""".split("\n")
 	pp = Preprocessor(DummyCompiler())
 	pp.compileBlock(src)
-
+	print(pp.globals)
 

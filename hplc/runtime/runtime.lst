@@ -1,6 +1,6 @@
               	; --------------------------------------
               	; zasm: assemble "runtime.asm"
-              	; date: 2021-11-15 10:06:58
+              	; date: 2021-11-15 16:52:41
               	; --------------------------------------
 
 
@@ -21,36 +21,145 @@
               	;
               	; ***************************************************************************************
               	
-1000:         			.org 	$1000
+0202:         			.org 	$202
               	
-1000:         	RuntimeStart:
-1000: 210010  			ld 	hl,RuntimeStart 				; Identify the base address
-1003: 210F10  			ld 	hl,EndRuntime 					; Point HL to the end of the runtime
-1006: 3100F0  			ld 	sp,$F000 						; initialise the stack to High Memory
-1009:         	Start:
-1009: C30910  			jp	Start 							; patched to jump to main()
+0202:         	RuntimeStart:
+0202: 210202  			ld 		hl,RuntimeStart 			; Identify the base address
+0205: 214402  			ld 		hl,EndRuntime 				; Point HL to the end of the runtime
+0208: 3100F0  			ld 		sp,$F000 					; initialise the stack to High Memory
+020B:         	Start:
+020B: C30B02  			jp		Start 						; patched to jump to main()
               	
               	
-100C:         	RTF_System_Halt:
-100C: 76      			halt 
-100D: 18FD    			jr 	RTF_System_Halt
+020E:         	RTF_System_Halt:
+020E: 76      			halt 
+020F: 18FD    			jr 		RTF_System_Halt
               	
-100F:         	EndRuntime:		
+0211:         	RTF_System_Not:
+0211: 7C      			ld 		a,h 						; Set Z flag if HL = 0
+0212: B5      			or 		l
+0213: 2B      			dec 	hl 							; if HL is zero, now -1
+0214: C8      			ret 	z 							; correct answer if zero
+0215: 210000  			ld 		hl,0 						; otherwise return
+0218: C9      			ret
+              			
+0219:         	RTF_System_Add_Const:
+0219: AF      			xor 	a
+021A: 2801    			jr 		z,.+3
+021C:         	RTF_System_Add_Var:
+              			.include "binary.inc"
+              	; *******************************************************************************************
+              	; *******************************************************************************************
+              	;
+              	;		Name : 		binary.inc
+              	;		Purpose :	Binary include
+              	;		Date :		15th November 2021
+              	;		Author : 	Paul Robson (paul@robsons.org.uk)
+              	;
+              	; *******************************************************************************************
+              	; *******************************************************************************************
+              	;
+              	; 		This is in every binary operation, see binary.asm for examples. 
+              	;
+              	; 		Entered at the top, or skipping the SCF with CC, it gets the following word
+              	;		in the return code into DE, if CS does an indirect DE = (DE)
+              	;
+              	; 		Trying to avoid variable Macro syntax *and* CALL overheads.
+              	;
+021C: 37      			scf 								; variable version enters here.
+021D: E3      			ex 		(sp),hl 					; old value on TOS, HL is address of parameter
+021E: 5E      			ld 		e,(hl) 						; fetch parameter, DE
+021F: 23      			inc 	hl
+0220: 56      			ld 		d,(hl)
+0221: 23      			inc 	hl
+0222: 3006    			jr 		nc,.+8 						; if constant skip the read.
+              	
+0224: 1A      			ld 		a,(de) 						; low byte -> B
+0225: 47      			ld 		b,a
+0226: 13      			inc 	de
+0227: 1A      			ld 		a,(de) 						; high byte -> A
+0228: 57      			ld 		d,a 						; put in DE.
+0229: 58      			ld 		e,b 
+              	
+022A: E3      			ex 		(sp),hl 					; return address TOS, HL is current, DE parameter.
+              	
+022B: 19      			add 	hl,de
+022C: C9      			ret
+              	
+022D:         	RTF_System_Sub_Const:
+022D: AF      			xor 	a
+022E: 2801    			jr 		z,.+3
+0230:         	RTF_System_Sub_Var:
+              			.include "binary.inc"
+              	; *******************************************************************************************
+              	; *******************************************************************************************
+              	;
+              	;		Name : 		binary.inc
+              	;		Purpose :	Binary include
+              	;		Date :		15th November 2021
+              	;		Author : 	Paul Robson (paul@robsons.org.uk)
+              	;
+              	; *******************************************************************************************
+              	; *******************************************************************************************
+              	;
+              	; 		This is in every binary operation, see binary.asm for examples. 
+              	;
+              	; 		Entered at the top, or skipping the SCF with CC, it gets the following word
+              	;		in the return code into DE, if CS does an indirect DE = (DE)
+              	;
+              	; 		Trying to avoid variable Macro syntax *and* CALL overheads.
+              	;
+0230: 37      			scf 								; variable version enters here.
+0231: E3      			ex 		(sp),hl 					; old value on TOS, HL is address of parameter
+0232: 5E      			ld 		e,(hl) 						; fetch parameter, DE
+0233: 23      			inc 	hl
+0234: 56      			ld 		d,(hl)
+0235: 23      			inc 	hl
+0236: 3006    			jr 		nc,.+8 						; if constant skip the read.
+              	
+0238: 1A      			ld 		a,(de) 						; low byte -> B
+0239: 47      			ld 		b,a
+023A: 13      			inc 	de
+023B: 1A      			ld 		a,(de) 						; high byte -> A
+023C: 57      			ld 		d,a 						; put in DE.
+023D: 58      			ld 		e,b 
+              	
+023E: E3      			ex 		(sp),hl 					; return address TOS, HL is current, DE parameter.
+              	
+023F: AF      			xor 	a
+0240: ED52    			sbc 	hl,de
+0242: C9      			ret
+              	
+              	
+0243:         	RTF_System_Jump:
+0243:         	RTF_System_Jump_Zero:
+0243:         	RTF_System_Jump_NonZero:
+0243: C9      			ret
+              	
+0244:         	EndRuntime:		
 
 
 ; +++ segments +++
 
-#CODE          = $1000 =  4096,  size = $000F =    15
+#CODE          = $0202 =   514,  size = $0042 =    66
 
 ; +++ global symbols +++
 
-EndRuntime      = $100F =  4111          runtime.asm:32
-RTF_System_Halt = $100C =  4108          runtime.asm:28
-RuntimeStart    = $1000 =  4096          runtime.asm:20
-Start           = $1009 =  4105          runtime.asm:24
-_end            = $100F =  4111          runtime.asm:17 (unused)
-_size           = $000F =    15          runtime.asm:17 (unused)
+EndRuntime              = $0244 =   580          runtime.asm:63
+RTF_System_Add_Const    = $0219 =   537          runtime.asm:40 (unused)
+RTF_System_Add_Var      = $021C =   540          runtime.asm:43 (unused)
+RTF_System_Halt         = $020E =   526          runtime.asm:28
+RTF_System_Jump         = $0243 =   579          runtime.asm:58 (unused)
+RTF_System_Jump_NonZero = $0243 =   579          runtime.asm:60 (unused)
+RTF_System_Jump_Zero    = $0243 =   579          runtime.asm:59 (unused)
+RTF_System_Not          = $0211 =   529          runtime.asm:32 (unused)
+RTF_System_Sub_Const    = $022D =   557          runtime.asm:48 (unused)
+RTF_System_Sub_Var      = $0230 =   560          runtime.asm:51 (unused)
+RuntimeStart            = $0202 =   514          runtime.asm:20
+Start                   = $020B =   523          runtime.asm:24
+_end                    = $0244 =   580          runtime.asm:17 (unused)
+_size                   = $0042 =    66          runtime.asm:17 (unused)
 
 
-total time: 0.0005 sec.
+total time: 0.0009 sec.
 no errors

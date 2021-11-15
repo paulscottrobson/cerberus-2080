@@ -55,13 +55,13 @@ class Preprocessor(object):
 				newFunc = m.group(1).lower()+"(" 														# name of function
 				if newFunc in self.globals:																# already known
 					raise HPLException("Duplicate function name {0}".format(newFunc))
-				self.globals[newFunc] = self.compiler.getCodeAddress()				 					# record function address.
 				params = [x for x in m.group(2).strip().split(",") if x.strip() != ""]					# parameters ?
 				for i in range(0,len(params)): 															# for each parameter.
 					if re.match("^"+Preprocessor.IDENT+"$",params[i]) is None:							# check it's a valid name.
 						raise HPLException("Bad identifier "+params[i])
 					params[i] = self.createVariable(params[i].lower(),False) 							# Convert to an address
 				body = self.processBlock(m.group(3),False)												# preprocess main body
+				self.globals[newFunc] = self.compiler.getCodeAddress()				 					# record function address.
 				if len(params) > 0: 																	# code to store parameters passed
 					self.compiler.compileSaveParameters(params)
 				self.compiler.compileFunction(body)														# compile body of function
@@ -82,7 +82,7 @@ class Preprocessor(object):
 		s = re.split("(\".*?\")",s)																		# split up into strings.
 		for i in range(0,len(s)): 																		# for each bit
 			if s[i].startswith('"') and s[i].endswith('"'): 											# if quoted string
-				s[i] = str(self.compiler.allocateString(s[i][1:-2])) 									# convert to string in memory.
+				s[i] = str(self.compiler.allocateString(s[i][1:-1])) 									# convert to string in memory.
 		return "".join(s)
 	#
 	#		Convert hexadecimal $[Hex] and character constants '<character>' to integers

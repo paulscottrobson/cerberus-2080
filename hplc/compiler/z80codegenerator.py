@@ -12,6 +12,7 @@
 from compiler import *
 from preprocessor import *
 from error import *
+from binary import *
 
 # *******************************************************************************************
 #
@@ -21,6 +22,31 @@ from error import *
 
 class Z80:	
 	pass
+Z80.CALL = 0xCD	
+Z80.RETURN = 0xC9
+
+Z80.LDI_BC = 0x01
+Z80.LDI_DE = 0x11
+Z80.LDI_HL = 0x21
+
+Z80.LDM_HL = 0x2A
+Z80.LDM_BC = 0xED4B
+Z80.LDM_DE = 0xED5B
+
+Z80.STM_HL = 0x22
+Z80.STM_BC = 0xED43
+Z80.STM_DE = 0xED53
+
+Z80.ADD_HLDE = 0x19
+Z80.ADD_HLHL = 0x29
+
+Z80.SRL_H = 0xCB3C
+Z80.RR_L = 0xCB1D
+
+Z80.PUSH_HL = 0xE5
+Z80.POP_HL = 0xE1
+Z80.INC_HL = 0x23
+Z80.DEC_HL = 0x2B
 
 # *******************************************************************************************
 #
@@ -30,88 +56,144 @@ class Z80:
 
 class Z80CodeGenerator(object):
 	def __init__(self):
-		pass
+		self.bin = Z80BinaryBlob()
 	#	
+	# 		Get current program counter
+	#
 	def getCodeAddress(self):
-		return 0
+		return self.bin.getCodeAddress()
+	#
+	# 		Compile code to call another routine
 	#
 	def callRoutine(self,addr):
-#		print("{0:04x} : call {1}".format(self.pc,addr))
-		pass
+		self.bin.add(Z80.CALL)
+		self.bin.addWord(addr)
+	#
+	# 		Compile a branch, offset may be patched later.
 	#
 	def compileBranch(self,test,address=0):
-#		brTest = "jmp"
-#		if test != Compiler.ALWAYS:
-#			brTest = "jz" if test == Compiler.ZERO else "jnz"
-#		print("{0:04x} : {2} ${1:04x}".format(self.pc,address,brTest))
-#		patchAddress = self.pc
-		pass
-#		return patchAddress
+		func = "jump"
+		if test != Compiler.ALWAYS:
+			func = "jump.zero" if test == Compiler.ZERO else "jump.nonzero"
+		self.compileSystem(func)
+		patch = self.bin.getCodeAddress()
+		self.bin.a
+		ddByte(0)
+		if address != 0:
+			self.setBranchOffset(patch,address)
+		return patch
+	#
+	# 		Calculate and write a branch offset.
 	#
 	def setBranchOffset(self,patchAddress,target):
-#		print("     : Patch ${0:04x} to branch to ${1:04x}".format(patchAddress,target))
-		pass
+		offset = target - patchAddress
+		if offset < -0x80 or offset > 0x7F:
+			raise HPLException("Jump out of range - structure too large")
+		self.bin.write(patchAddress,offset & 0xFF)
+	#
+	# 		Compile code to load, read or write a register
 	#
 	def accessRegister(self,reg,mode,operand):
-#		print("{0:04x} : {1} r{4},{2}${3:04x}".format(self.pc,"str" if mode == Compiler.WRITE else "ldr","#" if mode == Compiler.CONST else "",operand,reg))
-		pass
+		opc = [Z80.LDI_HL,Z80.LDI_DE,Z80.LDI_BC][reg]
+		if mode == Compiler.READ:
+			opc = [Z80.LDM_HL,Z80.LDM_DE,Z80.LDM_BC][reg]
+		if mode == Compiler.WRITE:
+			opc = [Z80.STM_HL,Z80.STM_DE,Z80.STM_BC][reg]
+		self.bin.add(opc)
+		self.bin.addWord(operand)
+	#
+	# 		Handle unary operations.
 	#
 	def unaryOperation(self,opcode):
-#		print("{0:04x} : {1}".format(self.pc,opcode))
-		pass
+		if opcode == "inc":
+			self.binaryOps("add",Compiler.CONST,1)
+		if opcode == "dec":
+			self.binaryOps("sub",Compiler.CONST,1)
+		if opcode == "shl":
+			self.bin.add(Z80.ADD_HLHL)
+		if opcode == "shr":
+			self.bin.add(Z80.SRL_H)
+			self.bin.add(Z80.RR_L)
+		if opcode == "not":
+			self.compileSystem("not")
+	#
+	# 		Handle calls to system functions.
+	#
+	def compileSystem(self,func):
+		fn = self.bin.find("system."+func)
+		if fn is None:
+			raise HPLException("Cannot find system.{0}".format(func))
+		self.callRoutine(fn)
+	#
+	# 		Handle binary operations.
 	#
 	def binaryOperation(self,opcode,mode,operand):
-#		print("{0:04x} : {1} {2}${3:04x}".format(self.pc,opcode,"#" if mode == Compiler.CONST else "",operand))
-		pass
+		fn = opcode+".const" if mode == Compiler.CONST else opcode+".var"
+		self.compileSystem(fn)
+		self.bin.addWord(operand)
+	#
+	# 		Compile a function return.
 	#
 	def compileReturn(self):
-#		print("{0:04x} : retn".format(self.pc))
-		pass
+		self.bin.add(Z80.RETURN)
+	#
+	# 		Decrement R and push (start of FOR)
 	#
 	def compileDecrementPush(self):
-#		print("{0:04x} : dec r0".format(self.pc))
-#		print("{0:04x} : push r0".format(self.pc+1))
-		pass
+		self.bin.add(Z80.DEC_HL)
+		self.bin.add(Z80.PUSH_HL)
+	#
+	# 		Pop/Push (INDEX keyword)
 	#
 	def compileGetOuterIndex(self):
-#		print("{0:04x} : pop r0".format(self.pc))
-#		print("{0:04x} : push r0".format(self.pc+1))
-		pass
+		self.bin.add(Z80.POP_HL)
+		self.bin.add(Z80.PUSH_HL)
+	#
+	# 		Pop Index.
 	#
 	def compilePop(self):
-#		print("{0:04x} : pop r0".format(self.pc))
-		pass
+		self.bin.add(Z80.POP_HL)
+	#
+	# 		Compile a breakpoint - this is currently $F3 (DI)
 	#
 	def compileDebugBreak(self):
-#		print("{0:04x} : debug".format(self.pc))
-		pass
+		self.bin.add(0xF3) 								
+	#
+	# 		Compile a single byte as data
 	#
 	def compileByteData(self,byte):
-#		print("{0:04x} : byte ${1:02x}".format(self.pc,byte))
-		pass
+		self.bin.addByte(byte)
 	#
 	#		Because strings/variables are handled in the preprocessor, these can simply be put in the code without
 	#		affecting it, they don't need to be skipped over or anything.
 	#
 	def allocateString(self,s):
-#		print("{0:04x} : asciiz \"{1}\"".format(self.strings,s))
-#		self.strings += len(s) + 1
-		return 0
+		addr = self.bin.getCodeAddress()
+		for c in s:
+			self.bin.addByte(ord(c))
+		self.bin.addByte(0)
+		return addr
+	#
+	# 		Allocate a 2 byte variable
 	#
 	def allocateVariable(self):
-#		self.variables += 2
-		return 0
-	#
+		addr = self.bin.getCodeAddress()
+		self.bin.addWord(0)
+		return addr
 
 if __name__ == '__main__':	
 	src = """
 	int s1
-
 	func main()
+		break
+		10->s1
+		42 -5-s1
 	endfunc
 
 	""".split("\n")
-	compiler = Compiler(Z80CodeGenerator())
+	zg = Z80CodeGenerator()
+	compiler = Compiler(zg)
 	pp = Preprocessor(compiler)
 	pp.compileBlock(src)
-
+	zg.bin.setStartFunction(compiler.getStartFunction())
+	zg.bin.writeBinaryFile()

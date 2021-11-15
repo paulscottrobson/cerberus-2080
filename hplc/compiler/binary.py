@@ -30,10 +30,9 @@ class BinaryBlob(object):
 		return self.base + len(self.code)
 	#
 	def add(self,v):
-		if v < 256:
-			self.addByte(v)
-		else:
-			self.addWord(v)
+		if v >= 256:
+			self.addByte(v >> 8)
+		self.addByte(v & 0xFF)
 	#
 	def addByte(self,b):
 		assert b >= 0 and b < 256
@@ -62,7 +61,10 @@ class BinaryBlob(object):
 	def writeBinaryFile(self,fileName = "a80.bin"):
 		open(fileName,"wb").write(bytes(self.code))
 	#
-	def setMainFunction(self,address):
+	def setStartFunction(self,address):
+		assert False
+	#
+	def find(self,name):
 		assert False
 
 # *******************************************************************************************
@@ -73,13 +75,17 @@ class BinaryBlob(object):
 
 class Z80BinaryBlob(BinaryBlob):
 	def __init__(self):
-		runtimeCode = HPLCRuntime().getCode()
+		self.runtimeFunctions = HPLCRuntime().getRoutines()
+		runtimeCode = HPLCRuntime().getCode()		
 		BinaryBlob.__init__(self,runtimeCode[1]+runtimeCode[2]*256,runtimeCode)
 	#
-	def setMainFunction(self,address):
+	def setStartFunction(self,address):
 		self.code[0x0A] = address & 0xFF 					# see runtime.lst, overwriting the jump target
 		self.code[0x0B] = address >> 8
-
+	#
+	def find(self,function):
+		function = function.strip().lower()
+		return self.runtimeFunctions[function] if function in self.runtimeFunctions else None
 
 if __name__ == '__main__':	
 	zb = Z80BinaryBlob()

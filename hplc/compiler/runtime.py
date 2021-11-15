@@ -3,10 +3,18 @@
 #
 class HPLCRuntime(object):
 	def getCode(self):
-		return [33,0,16,33,15,16,49,0,240,195,9,16,118,24,253]
+		return [33,2,2,33,68,2,49,0,240,195,11,2,118,24,253,124,181,43,200,33,0,0,201,175,40,1,55,227,94,35,86,35,48,6,26,71,19,26,87,88,227,25,201,175,40,1,55,227,94,35,86,35,48,6,26,71,19,26,87,88,227,175,237,82,201,201]
 
 	def getRoutines(self):
 		return {
-			"system.halt":0x100c,
-			"base.address":0x1000
+			"system.add.const":0x0219,
+			"system.add.var":0x021c,
+			"system.halt":0x020e,
+			"system.jump":0x0243,
+			"system.jump.nonzero":0x0243,
+			"system.jump.zero":0x0243,
+			"system.not":0x0211,
+			"system.sub.const":0x022d,
+			"system.sub.var":0x0230,
+			"base.address":0x0202
 		}

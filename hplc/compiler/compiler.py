@@ -23,12 +23,14 @@ from dummycodegenerator import *
 class Compiler:
 	def __init__(self,codeGenerator):
 		self.codeGenerator = codeGenerator
+		self.lastFunction = None
 		self.twoParam = { 
 							">=":True, "=>":True, "->":True, "==":True,"<>":True,
 							"++":True, "--":True, ">>":True, "<<":True
 		}
 		self.binaryOps = { 	
-							"+":"add","-":"sub","*":"mlt","/":"div","&":"and","|":"or","^":"xor",
+							"+":"add","-":"sub","*":"mlt","/":"div","%":"mod",
+							"&":"and","|":"or","^":"xor",
 							">=":"tge","==":"teq","!=":"tne","<":"tlt",
 							"=>":"str","->":"str"
 		}
@@ -54,6 +56,7 @@ class Compiler:
 		#print("CODEBLOCK:"+c)
 		self.compileStack = [] 																		# Compiler stack
 		self.source = c.strip() 																	# Data source
+		self.lastFunction = self.codeGenerator.getCodeAddress()
 		self.source = self.source.replace("@"+Preprocessor.VARMARKER,"") 							# Converts @<var><addr> to just <addr>
 		while (not self.isEmpty()): 																# Compile body		
 			self.compileOneItem()
@@ -294,6 +297,11 @@ class Compiler:
 		while self.source.startswith(Preprocessor.LINESEP): 										# Handle seperators, bumping line number.
 			self.source = self.source[1:].strip()
 			HPLException.LINE += 1
+	#
+	# 		Get last defined function which starts it
+	#
+	def getStartFunction(self):
+		return self.lastFunction
 	# 
 	# 		Allocate space for a variable
 	#

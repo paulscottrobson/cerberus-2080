@@ -1,9 +1,11 @@
 TODO
-	Z80 Codegen 
+	Add support routines to runtime and test them.
+		Binary Ops (not + / -)
+		Jump operations.
+		
 	.boot system 
 	Project system
 	local to compiler/dummy, then to Z80 CodeGen
 	Python Zip Executable
 	Makefile
-	Add support routines to runtime.
 	Testing.

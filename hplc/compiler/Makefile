@@ -7,4 +7,7 @@ endif
 .PHONY: all 
 
 all: 
+	make -C ../runtime
+	python z80codegenerator.py
+	../../emulator/cerberus a80.bin go
 

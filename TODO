@@ -1,6 +1,7 @@
 TODO
 	Add support routines to runtime and test them.
-		Binary Ops (not + / -)
+		Test mult,div,mod.
+		Compare operators
 		Jump operations.
 		
 	.boot system 

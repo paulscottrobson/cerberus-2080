@@ -31,7 +31,7 @@ class Compiler:
 		self.binaryOps = { 	
 							"+":"add","-":"sub","*":"mlt","/":"div","%":"mod",
 							"&":"and","|":"or","^":"xor",
-							">=":"tge","==":"teq","!=":"tne","<":"tlt",
+							">=":"tge","<=":"tle","==":"teq","!=":"tne","<":"tlt",">":"tgt",
 							"=>":"str","->":"str"
 		}
 		self.unaryOps = {

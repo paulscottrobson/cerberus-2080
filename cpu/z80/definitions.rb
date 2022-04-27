@@ -25,8 +25,8 @@ class Definition
 		@subst = []
 		m[2].strip.split(",").each_with_index do |e,n| 
 			if e[0..5].strip.downcase == "shift:"
-				raise "Bad shift "+e if not e[6..].match(/^\d$/)
-				@shift = e[6..].to_i
+				raise "Bad shift "+e if not e[6..e.length-1].match(/^\d$/)
+				@shift = e[6..e.length-1].to_i
 			elsif e.strip != "_"
 				@subst.append (e.include?(":") ? e.strip : e.strip+":"+e.strip).split(":").collect { |a| a.strip }
 			else

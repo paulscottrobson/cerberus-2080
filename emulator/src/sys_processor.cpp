@@ -216,8 +216,8 @@ void CPUWriteMemory(WORD16 address,BYTE8 data) {
 void CPULoadBinary(char *fileName) {
 	FILE *f = fopen(fileName,"rb");
 	if (f != NULL) {
-		int n = fread(ramMemory+0x202,1,RAMSIZE,f);
-		fclose(f);	
+		int n = fread(ramMemory+0x202,1,RAMSIZE-0x202,f);
+		fclose(f);
 	}
 	forceRun = -1;
 }

@@ -22,6 +22,7 @@
 #define DBGC_ADDRESS 	(0x0F0)														// Colour scheme.
 #define DBGC_DATA 		(0x0FF)														// (Background is in main.c)
 #define DBGC_HIGHLIGHT 	(0xFF0)
+#define CERB_COLOUR	(0x0F0)		// Cerberus will display in green color
 
 static int renderCount = 0;
 
@@ -43,7 +44,7 @@ void DBGXRender(int *address,int showDisplay) {
 	if (CPUIsZ80()) { 																// Draw registers
 		z_showRegisters(address);
 	} else {
-		c_showRegisters(address);		
+		c_showRegisters(address);
 	}
 
 	n = 0;
@@ -53,10 +54,10 @@ void DBGXRender(int *address,int showDisplay) {
 		for (int col = 0;col < 8;col++) {
 			GFXNumber(GRID(5+col*3,row),CPUReadMemory(a),16,2,GRIDSIZE,DBGC_DATA,-1);
 			a = (a + 1) & 0xFFFF;
-		}		
+		}
 	}
 
-	int p = address[0];																// Dump program code. 
+	int p = address[0];																// Dump program code.
 	int opc,osel;
 	char *instr,*t;
 	char indexReg,code;
@@ -75,13 +76,13 @@ void DBGXRender(int *address,int showDisplay) {
 				instr = (char *)z_mnemonics_dd[opc];
 				if (opc == 0xCB) {
 					opc = CPUReadMemory(p+1);
-					instr = (char *)z_mnemonics_ddcb[opc];				
+					instr = (char *)z_mnemonics_ddcb[opc];
 				}
 			}
 			if (opc == 0xED || opc == 0xCB) {
 				osel = opc;
 				opc = CPUReadMemory(p++);
-				instr = (char *)(osel == 0xED ? z_mnemonics_ed[opc] : z_mnemonics_cb[opc]);			
+				instr = (char *)(osel == 0xED ? z_mnemonics_ed[opc] : z_mnemonics_cb[opc]);
 			}
 		} else {
 			instr = (char *)c_mnemonics_0[opc];
@@ -105,7 +106,7 @@ void DBGXRender(int *address,int showDisplay) {
 						if (code == 'O') {
 							opc = CPUReadMemory(p++);
 						} else {
-							opc = CPUReadMemory(p);							
+							opc = CPUReadMemory(p);
 							p += 2;
 						}
 						if (opc & 0x80)
@@ -115,7 +116,7 @@ void DBGXRender(int *address,int showDisplay) {
 						t = t + strlen(t);
 						break;
 				}
-				
+
 			} else {
 				*t++ = *instr++;
 			}
@@ -142,7 +143,7 @@ void DBGXRender(int *address,int showDisplay) {
 			GFXRectangle(&r,0x0);
 			b = b - 4;
 			r.x = x1-b;r.y = y1-b;r.w = xs*xSize*8+b*2;r.h=ys*ySize*8+b*2;
-			for (int x = 0;x < xs;x++) 
+			for (int x = 0;x < xs;x++)
 			{
 				for (int y = 0;y < ys;y++)
 			 	{
@@ -159,8 +160,9 @@ void DBGXRender(int *address,int showDisplay) {
 		 				rc.y = yc + y * ySize;
 		 				int f = CPUReadMemory(ch*8+0xF000+y);
 				 		for (int x = 0;x < 8;x++) {						// 8 Across
-			 				if (f & 0x80) {		
-			 					GFXRectangle(&rc,0xC60);			
+			 				if (f & 0x80) {
+			 					// Original colour was 0xC60
+			 					GFXRectangle(&rc,CERB_COLOUR);
 			 				}
 			 				f <<= 1;
 			 				rc.x += xSize;
@@ -170,4 +172,4 @@ void DBGXRender(int *address,int showDisplay) {
 			}
 		}
 	}
-}	
+}

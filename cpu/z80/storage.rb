@@ -42,7 +42,7 @@ class CodeStore
 			section = parts[0].match(/(\@[a-zA-Z][a-zA-Z0-9\.]*)/)
 			raise "Bad definition "+parts.to_s if not section
 			raise "Missing #{section[0]} from both parts" if not parts[1].include? section[0]
-			defn = @dictionary.find(section[0][1..])			
+			defn = @dictionary.find(section[0][1..section[0].length-1])			
 			raise "Don't understand #{section[0]}" if not defn
 			(0..defn.count-1).each do |n|
 				subst = defn.sub(n)
